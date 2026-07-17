@@ -29,6 +29,7 @@ arduino-esp32 core, and esptool; Bazel compiles/links and packages flashable
 | `apps/tag/` | tag firmware — DS-TWR cycle + WiFi/TCP JSON streaming |
 | `host/` | Python: TCP ingest, trilateration solver, web floor view, simulator |
 | `swarm/` | station-free cooperative localization: Rust ESKF core + swarm sim + web viewer (see `docs/station-free-design.md`) |
+| `swarm/tools/` | sensor characterization: AoA plane/precision, range bias/σ, IMU Allan deviation, mag calibration (`bazelisk run //swarm/tools:characterize -- aoa --demo`) |
 | `docs/` | design documents |
 
 ## Building

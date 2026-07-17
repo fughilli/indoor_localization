@@ -298,3 +298,27 @@ convergence 1–10 s.
 - Distributed TDMA (id-hashed slot selection) + clock sync budget.
 - Full 6-DOF truth trajectories (current sim: yaw-only attitude).
 - Component extrinsics (IMU↔antenna lever arm) in the measurement models.
+
+## 10. Sensor characterization (swarm/tools)
+
+Before the fusion parameters (§6) can be trusted on hardware, each sensor is
+characterized against ground truth with `//swarm/tools:characterize`. The
+firmware needs only a *capture mode*: stream raw sensor records as newline
+JSON (schema in `swarm/tools/records.py`) over the existing WiFi/TCP path;
+ground truth lives in a session manifest describing the physical rig. Every
+analysis is validated closed-loop against synthetic captures with known
+truth (`analysis_test.py`), and `--demo` dry-runs any pipeline today.
+
+| Analysis | Rig | What it reports |
+|---|---|---|
+| `aoa` | peer fixed at known position; DUT on a turntable, captures at discrete known angles across several elevations; manifest gives `true_dir_body` per segment from rig geometry | **which body-frame plane the reported angle is measured in** (fitted plane normal), sign convention, mounting offset, precision σ, and σ binned by out-of-plane angle (PDoA degradation off-axis) |
+| `range` | static captures at tape-measured distances (e.g. 2/5/10/20/40 m) | per-distance bias + σ + outlier fraction (robust MAD gate), linear error model `err(d) = bias0 + scale·d` (antenna delay ↔ bias0, clock trim ↔ scale) |
+| `imu` | widget stationary ≥10 min | per-axis Allan deviation → white-noise density + bias instability (these feed `Params` directly), gyro bias, accel scale error via the gravity-magnitude check |
+| `mag` | rotate the widget through all orientations | hard-iron offset + unit-determinant soft-iron matrix (ellipsoid fit), residual field spread after correction |
+
+The AoA plane fit is the piece that answers the mounting question: it
+searches all candidate plane normals for the one where the reported angle
+best matches `sign · azimuth(direction projected into plane) + offset`,
+weighting out near-normal directions where azimuth is unobservable. On the
+synthetic reference it recovers a plane normal to <1°, the offset to
+<0.01 rad, and the σ within noise.

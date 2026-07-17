@@ -1,0 +1,57 @@
+# Sensor characterization tooling: capture/manifest formats, analysis
+# numerics (AoA plane fit, range stats, IMU Allan deviation, mag ellipsoid
+# calibration), synthetic capture generation, and the characterize CLI.
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+
+package(default_visibility = ["//visibility:public"])
+
+py_library(
+    name = "records_lib",
+    srcs = ["records.py"],
+)
+
+py_library(
+    name = "analysis_lib",
+    srcs = ["analysis.py"],
+    deps = [
+        "@pypi//numpy",
+        "@pypi//scipy",
+    ],
+)
+
+py_library(
+    name = "synth_lib",
+    srcs = ["synth.py"],
+    deps = [
+        ":analysis_lib",
+        "@pypi//numpy",
+    ],
+)
+
+py_library(
+    name = "characterize_lib",
+    srcs = ["characterize.py"],
+    deps = [
+        ":analysis_lib",
+        ":records_lib",
+        ":synth_lib",
+    ],
+)
+
+py_binary(
+    name = "characterize",
+    srcs = ["characterize.py"],
+    main = "characterize.py",
+    deps = [":characterize_lib"],
+)
+
+py_test(
+    name = "analysis_test",
+    size = "medium",
+    srcs = ["analysis_test.py"],
+    deps = [
+        ":analysis_lib",
+        ":records_lib",
+        ":synth_lib",
+    ],
+)

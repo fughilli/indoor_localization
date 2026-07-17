@@ -37,7 +37,15 @@ Two stacked scopes:
   metrics in run_sim; "relative view" checkbox in the viewer.
 - `docs/station-free-design.md` — architecture, protocol (33 B advert @
   10 Hz, DS-TWR piggyback, TDMA), requirements grounded in sweeps, porting
-  plan, negative results.
+  plan, negative results, characterization methodology (§10).
+- `swarm/tools` — sensor characterization (user request): capture JSONL
+  schema (`records.py`, what the firmware capture mode must emit) +
+  manifest ground truth; analyses = AoA plane/sign/offset/σ fit (answers
+  "which plane is AoA measured in") with out-of-plane degradation bins,
+  range bias/σ/outliers + linear error model, IMU Allan deviation
+  (noise density/bias instability feed estimator Params), mag hard/soft-
+  iron ellipsoid fit. All validated closed-loop vs synthetic captures
+  (`analysis_test.py`); every subcommand has `--demo`.
 - All cooperative-fusion rules live in the sim's network layer
   (`world.py::_run_slot`) + `Estimator::update_zero_vel`; design doc §4.2
   is the authoritative description of the regime logic.
@@ -46,6 +54,8 @@ Two stacked scopes:
 
 1. **Embedded port** of `swarm_core` per design doc §8: `#![no_std]` + libm,
    link into firmware; extend `libs/dw3000` with DS-TWR payload piggyback.
+   Also add a firmware *capture mode* emitting the `swarm/tools/records.py`
+   JSONL schema over TCP so `characterize` runs against real sensors.
 2. Algorithm hill-climbs (design doc §9): split-CI for mutual refinement,
    relative-frame formulation, NLOS classification, distributed TDMA.
 3. Sim realism: full 6-DOF truth attitude (now yaw-only), IMU↔antenna
