@@ -42,3 +42,14 @@ RUN chmod -R go+rwX /nix \
 RUN NIXBIN="$(find /nix/store -maxdepth 2 -type d -name bin -path '*-determinate-nix-*' | head -1)" \
     && for b in "$NIXBIN"/*; do ln -sf "$b" /usr/local/bin/"$(basename "$b")"; done \
     && nix --version
+
+# 2026-07-17: passwordless sudo so `sudo apt-get install ...` works at
+# runtime. The rule matches ALL users because the runtime user is created at
+# container start with a host-mapped UID (no fixed name to grant). Packages
+# installed this way live on the container fs and vanish on relaunch —
+# anything worth keeping still gets its own RUN block in this file.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        sudo \
+    && rm -rf /var/lib/apt/lists/* \
+    && echo 'ALL ALL=(ALL:ALL) NOPASSWD:ALL' > /etc/sudoers.d/anyuser-nopasswd \
+    && chmod 0440 /etc/sudoers.d/anyuser-nopasswd
