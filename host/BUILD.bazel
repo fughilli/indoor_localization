@@ -1,0 +1,55 @@
+# Host-side RTLS: trilateration solver, TCP-ingest + web floor-view server,
+# and a synthetic-tag simulator for headless full-stack runs.
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+
+package(default_visibility = ["//visibility:public"])
+
+py_library(
+    name = "solver_lib",
+    srcs = ["solver.py"],
+    deps = [
+        "@pypi//numpy",
+        "@pypi//scipy",
+    ],
+)
+
+py_library(
+    name = "server_lib",
+    srcs = ["server.py"],
+    deps = [":solver_lib"],
+)
+
+py_library(
+    name = "simulator_lib",
+    srcs = ["simulator.py"],
+    deps = ["@pypi//numpy"],
+)
+
+py_binary(
+    name = "server",
+    srcs = ["server.py"],
+    main = "server.py",
+    deps = [":solver_lib"],
+)
+
+py_binary(
+    name = "simulator",
+    srcs = ["simulator.py"],
+    main = "simulator.py",
+    deps = ["@pypi//numpy"],
+)
+
+py_test(
+    name = "solver_test",
+    srcs = ["solver_test.py"],
+    deps = [":solver_lib"],
+)
+
+py_test(
+    name = "integration_test",
+    srcs = ["integration_test.py"],
+    deps = [
+        ":server_lib",
+        ":simulator_lib",
+    ],
+)

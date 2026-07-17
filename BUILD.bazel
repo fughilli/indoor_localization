@@ -1,0 +1,10 @@
+load("@rules_uv//uv:pip.bzl", "pip_compile")
+
+package(default_visibility = ["//visibility:public"])
+
+# Regenerate the Python lockfile:  bazel run //:generate_requirements_lock
+pip_compile(
+    name = "generate_requirements_lock",
+    requirements_in = "//:requirements.in",
+    requirements_txt = "//:requirements.lock",
+)
