@@ -1,0 +1,19 @@
+"""UWB indoor positioning system (ESP32-WROOM + Qorvo DWM3000).
+
+Firmware (3 anchors + 1 tag) builds on the `firmware` bzlmod module vendored at
+third_party/embedded — Nix supplies the xtensa cross toolchain and the
+arduino-esp32 core; Bazel compiles/links with native cc_* rules. Host-side
+positioning software (TCP ingest + trilateration + web floor view) is added
+under //host with rules_python.
+"""
+
+module(
+    name = "uwb_rtls",
+    version = "0.0.0",
+)
+
+bazel_dep(name = "firmware", version = "0.0.0")
+local_path_override(
+    module_name = "firmware",
+    path = "third_party/embedded",
+)

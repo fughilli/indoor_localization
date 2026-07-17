@@ -1,0 +1,25 @@
+# bzlmod is the source of truth; no WORKSPACE.
+common --enable_bzlmod
+
+# The firmware module's nix_repo/nix_pkg extension usages are isolated (see
+# third_party/embedded/MODULE.bazel); isolation is experimental in Bazel 7 and
+# must be enabled by the root module.
+common --experimental_isolated_extension_usages
+
+# Hermetic action env so the on-disk cache is correct across machines.
+build --incompatible_strict_action_env
+
+# Bare-metal: toolchain resolution via the firmware module's registered
+# cc_toolchains.
+build --incompatible_enable_cc_toolchain_resolution
+
+# Persist caches in the workspace tree (dot-prefixed, gitignored) so they
+# survive container restarts that wipe ~/.cache. Both are content-addressable.
+build  --disk_cache=.bazel-disk-cache        # action outputs
+common --repository_cache=.bazel-repo-cache  # downloaded external archives
+
+test --test_output=errors
+
+# aarch64 SIGILL guard: some Bazel/bundled-JDK combos emit SVE instructions that
+# crash the JVM on certain aarch64 hosts. Harmless on hosts without SVE.
+startup --host_jvm_args=-XX:UseSVE=0

@@ -1,2 +1,13 @@
 # Creds
 credentials/
+
+# Bazel: convenience symlinks + workspace-local caches (see .bazelrc/.bazeliskrc)
+bazel-*
+.bazel-disk-cache/
+.bazel-repo-cache/
+.bazelisk/
+
+# Per-user firmware config (WiFi credentials, host IP) — see apps/tag
+config_local.h
+
+__pycache__/
