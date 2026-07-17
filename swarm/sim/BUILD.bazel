@@ -41,6 +41,25 @@ py_binary(
     deps = [":run_sim_lib"],
 )
 
+py_library(
+    name = "viewer_lib",
+    srcs = ["viewer.py"],
+    deps = [":world_lib"],
+)
+
+py_binary(
+    name = "viewer",
+    srcs = ["viewer.py"],
+    main = "viewer.py",
+    deps = [":viewer_lib"],
+)
+
+py_test(
+    name = "viewer_test",
+    srcs = ["viewer_test.py"],
+    deps = [":viewer_lib"],
+)
+
 py_test(
     name = "sim_test",
     size = "large",
