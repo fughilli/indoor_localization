@@ -30,7 +30,7 @@ py_library(
     srcs = ["run_sim.py"],
     deps = [
         ":world_lib",
-        "//swarm/tools:intrinsics_lib",
+        "//swarm/tools:widget_config_lib",
         "@pypi//numpy",
     ],
 )

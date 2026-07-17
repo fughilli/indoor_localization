@@ -38,18 +38,18 @@ Two stacked scopes:
 - `docs/station-free-design.md` — architecture, protocol (33 B advert @
   10 Hz, DS-TWR piggyback, TDMA), requirements grounded in sweeps, porting
   plan, negative results, characterization methodology (§10).
-- `swarm/tools` — widget configuration standard (user request):
-  **extrinsics** (`widget-extrinsics` v1) — sensor poses w.r.t. the widget
-  frame, authored via the graphical configurator
-  (`//swarm/tools:extrinsics_configurator`, :8082, live 3D triads) —
-  and **intrinsics** (`widget-intrinsics` v1) — per-unit sensor quality
-  from characterization, optional, improves estimator over defaults
-  (`characterize <kind> --intrinsics f.json` merges; `run_sim
-  --intrinsics` consumes). Both: JSON source of truth -> C header
-  (build-time) + CRC'd blob (WEXT/WINT, dynamic load) parsed on-device by
-  `swarm/core/src/{extrinsics,intrinsics}.rs`; genrule-encoded example
-  blobs are parsed by the Rust tests (cross-language contract in CI).
-  Design doc §11.
+- **widget.v1 protobuf config standard** (user request; supersedes the
+  earlier WEXT/WINT/JSON iteration): all firmware config/transport/storage
+  is protocol buffers. Schema `swarm/proto/widget_config.proto`
+  (Extrinsics + Intrinsics + PoseAdvertisement); forms: .txtpb source of
+  truth, proto JSON over the configurator HTTP API, binary proto for
+  firmware (no_std micropb bindings via `//swarm/config`; C byte-array
+  header for baking). Codegen base is SHARED in the embedded repo
+  (`@firmware//proto`, branch `micropb-support`, pushed; ported from
+  led_mapper feat/esp32-led-mapping per user direction — dedup led_mapper
+  onto it later). Byte-parity conformance test (Python canonical encode ->
+  micropb decode -> identical re-encode) in CI. Root Rust bumped to
+  1.85.0 to match; pip dep `protobuf==6.33.5`. Design doc §11.
 - `swarm/tools` — sensor characterization (user request): capture JSONL
   schema (`records.py`, what the firmware capture mode must emit) +
   manifest ground truth; analyses = AoA plane/sign/offset/σ fit (answers
@@ -72,13 +72,17 @@ Two stacked scopes:
    boot path + apply extrinsics/intrinsics in the measurement ingest
    (sim currently applies intrinsics only; extrinsics application in the
    sim measurement path is future work — sensors are modeled co-located).
-2. Algorithm hill-climbs (design doc §9): split-CI for mutual refinement,
+2. Dedup led_mapper's feat/esp32-led-mapping micropb setup onto
+   `@firmware//proto` (user direction); merge embedded `micropb-support`
+   after led_mapper adopts it. Eventually this repo becomes a submodule of
+   the embedded monorepo.
+3. Algorithm hill-climbs (design doc §9): split-CI for mutual refinement,
    relative-frame formulation, NLOS classification, distributed TDMA.
-3. Sim realism: full 6-DOF truth attitude (now yaw-only), IMU↔antenna
+4. Sim realism: full 6-DOF truth attitude (now yaw-only), IMU↔antenna
    extrinsics, bias random-walk in truth (now constant per run).
-4. (Carried over) RTLS hardware bring-up per README §Bring-up when boards
+5. (Carried over) RTLS hardware bring-up per README §Bring-up when boards
    arrive; merge embedded-repo branch `uwb-esp32-wifi` after hardware proof.
-5. (Carried over) Root-repo force-push to origin still **pending user
+6. (Carried over) Root-repo force-push to origin still **pending user
    confirmation** (history rewrite from 2026-07-17); now ~9 unpushed commits.
 
 ## Open questions / blockers
@@ -108,6 +112,11 @@ Two stacked scopes:
   (both endpoints share the accept/reject decision).
 - **Letting GPS-anchored widgets take mean-only consensus pulls** — 33 Hz
   mesh relaxation overpowers 1 Hz GPS, drags the swarm gauge ~6 m off.
+- **micropb 0.5 + proto3 implicit packed repeated scalars** — micropb only
+  honors the explicit descriptor option; annotate `[packed = true]` in the
+  .proto or byte-parity with canonical protobuf breaks.
+- **rules_rust crate universes in non-root modules** — must ship BOTH
+  `lockfile` and `cargo_lockfile`; repin from the embedded repo as root.
 - **Whole-state scalar covariance intersection** in the ESKF — 1/w prior
   inflation compounds exponentially in unobserved directions (biases/vel)
   → f32 overflow. If revisited, it must be split-CI on the position block.

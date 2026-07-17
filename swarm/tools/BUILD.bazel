@@ -33,9 +33,9 @@ py_library(
     srcs = ["characterize.py"],
     deps = [
         ":analysis_lib",
-        ":intrinsics_lib",
         ":records_lib",
         ":synth_lib",
+        ":widget_config_lib",
     ],
 )
 
@@ -47,77 +47,53 @@ py_binary(
 )
 
 py_library(
-    name = "extrinsics_lib",
-    srcs = ["extrinsics.py"],
-    deps = ["@pypi//numpy"],
+    name = "widget_config_lib",
+    srcs = ["widget_config.py"],
+    deps = [
+        "//swarm/proto:widget_config_py_proto",
+        "@pypi//numpy",
+        "@pypi//protobuf",
+    ],
 )
 
 py_binary(
-    name = "extrinsics",
-    srcs = ["extrinsics.py"],
-    main = "extrinsics.py",
-    deps = [":extrinsics_lib"],
+    name = "widget_config_tool",
+    srcs = ["widget_config.py"],
+    main = "widget_config.py",
+    deps = [":widget_config_lib"],
 )
 
-# Reference blob from the example config: the cross-language contract —
-# Python encodes it here, the on-device Rust parser proves it can read it
-# (//swarm/core:swarm_core_test).
+# Reference binary proto from the example config: the cross-language
+# contract — Python (canonical protobuf) encodes it here, the on-device
+# micropb bindings prove byte-identical round-trip
+# (//swarm/config:widget_config_test).
 genrule(
-    name = "example_extrinsics_blob",
-    srcs = ["examples/widget_v1.json"],
-    outs = ["examples/widget_v1.wext"],
-    cmd = "$(location :extrinsics) export-blob " +
-          "--config $(location examples/widget_v1.json) --out $@",
-    tools = [":extrinsics"],
+    name = "example_config_binpb",
+    srcs = ["examples/widget_v1.txtpb"],
+    outs = ["examples/widget_v1.binpb"],
+    cmd = "$(location :widget_config_tool) export-binpb " +
+          "--config $(location examples/widget_v1.txtpb) --out $@",
+    tools = [":widget_config_tool"],
     visibility = ["//visibility:public"],
 )
 
 py_test(
-    name = "extrinsics_test",
-    srcs = ["extrinsics_test.py"],
-    data = ["examples/widget_v1.json"],
-    deps = [":extrinsics_lib"],
-)
-
-py_library(
-    name = "intrinsics_lib",
-    srcs = ["intrinsics.py"],
-)
-
-py_binary(
-    name = "intrinsics",
-    srcs = ["intrinsics.py"],
-    main = "intrinsics.py",
-    deps = [":intrinsics_lib"],
-)
-
-genrule(
-    name = "example_intrinsics_blob",
-    srcs = ["examples/widget_v1_intrinsics.json"],
-    outs = ["examples/widget_v1_intrinsics.wint"],
-    cmd = "$(location :intrinsics) export-blob " +
-          "--config $(location examples/widget_v1_intrinsics.json) --out $@",
-    tools = [":intrinsics"],
-    visibility = ["//visibility:public"],
-)
-
-py_test(
-    name = "intrinsics_test",
-    srcs = ["intrinsics_test.py"],
-    data = ["examples/widget_v1_intrinsics.json"],
+    name = "widget_config_test",
+    srcs = ["widget_config_test.py"],
+    data = ["examples/widget_v1.txtpb"],
     deps = [
         ":analysis_lib",
-        ":intrinsics_lib",
         ":records_lib",
         ":synth_lib",
+        ":widget_config_lib",
     ],
 )
 
 py_library(
     name = "extrinsics_configurator_lib",
     srcs = ["extrinsics_configurator.py"],
-    data = ["examples/widget_v1.json"],
-    deps = [":extrinsics_lib"],
+    data = ["examples/widget_v1.txtpb"],
+    deps = [":widget_config_lib"],
 )
 
 py_binary(
@@ -130,7 +106,7 @@ py_binary(
 py_test(
     name = "extrinsics_configurator_test",
     srcs = ["extrinsics_configurator_test.py"],
-    data = ["examples/widget_v1.json"],
+    data = ["examples/widget_v1.txtpb"],
     deps = [":extrinsics_configurator_lib"],
 )
 

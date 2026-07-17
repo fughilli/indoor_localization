@@ -40,7 +40,9 @@ bazel_dep(name = "rules_rust", version = "0.71.3")
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
     edition = "2021",
-    versions = ["1.84.0"],
+    # 1.85.0: matches the firmware module's toolchain and the validated MSRV
+    # for the micropb 0.5.1 runtime + generator line.
+    versions = ["1.85.0"],
 )
 use_repo(rust, "rust_toolchains")
 

@@ -1,14 +1,14 @@
 """Graphical extrinsics configurator: a browser UI for placing every sensor
 frame on the widget (axis mapping + fine Euler trim + offset), with a live
-3D preview, persisted to the standard widget-extrinsics JSON schema and
-exportable as the firmware C header or WEXT blob.
+3D preview, persisted to the widget.v1 WidgetConfig textproto and
+exportable as the firmware forms (C byte-array header for build-time
+baking, binary proto for dynamic load via the micropb bindings).
 
-  bazel run //swarm/tools:extrinsics_configurator -- --config my_widget.json
+  bazel run //swarm/tools:extrinsics_configurator -- --config my_widget.txtpb
 
 Open http://<host>:8082/. Drag to orbit. RGB triads = sensor x/y/z axes in
-the widget frame; the grey triad is the widget reference frame itself.
-Export buttons download the C header (build-time baking) and the WEXT blob
-(dynamic load; parsed by swarm/core/src/extrinsics.rs).
+the widget frame; the grey triad is the widget reference frame itself. The
+HTTP API speaks canonical proto JSON (snake_case field names).
 """
 
 import argparse
@@ -19,7 +19,9 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from swarm.tools import extrinsics
+from google.protobuf import json_format
+
+from swarm.tools import widget_config
 
 PAGE = """<!DOCTYPE html>
 <html><head><title>Widget extrinsics configurator</title><style>
@@ -44,9 +46,9 @@ PAGE = """<!DOCTYPE html>
     <th>off x mm</th><th>off y mm</th><th>off z mm</th>
   </tr></thead><tbody></tbody></table>
   <p>
-    <a href="/export/header" download="widget_extrinsics.h">export C header</a>
+    <a href="/export/header" download="widget_config_pb.h">export C header</a>
     &nbsp;|&nbsp;
-    <a href="/export/blob" download="widget_extrinsics.wext">export WEXT blob</a>
+    <a href="/export/binpb" download="widget_config.binpb">export binary proto</a>
   </p>
   <p style="font-size:12px;color:#889">Convention: v_widget = R &middot;
   v_sensor + offset. Fine Euler trim (roll/pitch/yaw about sensor x/y/z)
@@ -102,9 +104,11 @@ function draw() {
   ctx.fillText('X', lx[0], lx[1]); ctx.fillText('Y', ly[0], ly[1]);
   ctx.fillText('Z', lz[0], lz[1]);
   // Sensor triads: RGB = sensor x/y/z mapped into the widget frame.
-  for (const [name, s] of Object.entries(cfg.sensors)) {
-    const off = (s.offset_m || [0,0,0]).map(v => v * 1000);
-    const q = s.rotation_wxyz || [1,0,0,0];
+  for (const s of cfg.extrinsics.sensors) {
+    const om = s.offset_m || {};
+    const off = [(om.x || 0) * 1000, (om.y || 0) * 1000, (om.z || 0) * 1000];
+    const r = s.rotation || {};
+    const q = [r.w || 1, r.x || 0, r.y || 0, r.z || 0];
     const cols = ['#f55', '#5d5', '#59f'];
     [[1,0,0],[0,1,0],[0,0,1]].forEach((ax, i) => {
       const d = qrot(q, ax);
@@ -112,7 +116,7 @@ function draw() {
     });
     const lp = project(off);
     ctx.fillStyle = '#ddd';
-    ctx.fillText(name, lp[0] + 6, lp[1] - 6);
+    ctx.fillText(s.name || ('#' + s.id), lp[0] + 6, lp[1] - 6);
   }
 }
 let drag = null;
@@ -129,14 +133,16 @@ window.onmousemove = (e) => {
 function buildTable() {
   const tb = document.querySelector('#tbl tbody');
   tb.innerHTML = '';
-  for (const [name, s] of Object.entries(cfg.sensors)) {
+  const AXK = ['x', 'y', 'z'];
+  for (const s of cfg.extrinsics.sensors) {
     const tr = document.createElement('tr');
-    const sel = (val, key) => {
+    const sel = (key) => {
       const el = document.createElement('select');
       AXES.forEach(a => {
         const op = document.createElement('option');
         op.value = a; op.textContent = a;
-        if (a === val) op.selected = true;
+        if (a === (s.mapping[key] || (key === 'x' ? '+x' : '+z')))
+          op.selected = true;
         el.appendChild(op);
       });
       el.onchange = () => { s.mapping[key] = el.value; push(); };
@@ -148,15 +154,16 @@ function buildTable() {
       el.onchange = () => { setter(parseFloat(el.value) || 0); push(); };
       return el;
     };
-    const cells = [document.createTextNode(name),
-                   sel(s.mapping.x, 'x'), sel(s.mapping.z, 'z')];
-    s.euler_deg = s.euler_deg || [0,0,0];
-    s.offset_m = s.offset_m || [0,0,0];
-    for (let i = 0; i < 3; i++)
-      cells.push(num(s.euler_deg[i], v => s.euler_deg[i] = v, 0.5));
-    for (let i = 0; i < 3; i++)
-      cells.push(num(Math.round(s.offset_m[i]*1000*100)/100,
-                     v => s.offset_m[i] = v / 1000, 0.5));
+    s.mapping = s.mapping || {};
+    s.euler_deg = s.euler_deg || {};
+    s.offset_m = s.offset_m || {};
+    const cells = [document.createTextNode(s.name || ('#' + s.id)),
+                   sel('x'), sel('z')];
+    AXK.forEach(k =>
+      cells.push(num(s.euler_deg[k] || 0, v => s.euler_deg[k] = v, 0.5)));
+    AXK.forEach(k =>
+      cells.push(num(Math.round((s.offset_m[k] || 0) * 1000 * 100) / 100,
+                     v => s.offset_m[k] = v / 1000, 0.5)));
     cells.forEach(c => {
       const td = document.createElement('td'); td.appendChild(c);
       tr.appendChild(td);
@@ -201,19 +208,20 @@ class Handler(BaseHTTPRequestHandler):
 
     def _config(self):
         with self.lock:
-            return extrinsics.load(self.config_path)
+            return widget_config.load(self.config_path)
 
     def do_GET(self):
         if self.path == "/":
             self._send(200, PAGE, "text/html; charset=utf-8")
         elif self.path == "/config":
-            self._send(200, json.dumps(extrinsics.derive(self._config())))
+            cfg = widget_config.derive(self._config())
+            self._send(200, json.dumps(widget_config.to_dict(cfg)))
         elif self.path == "/export/header":
-            self._send(200, extrinsics.c_header(self._config()),
-                       "text/plain; charset=utf-8", "widget_extrinsics.h")
-        elif self.path == "/export/blob":
-            self._send(200, extrinsics.encode_blob(self._config()),
-                       "application/octet-stream", "widget_extrinsics.wext")
+            self._send(200, widget_config.c_array_header(self._config()),
+                       "text/plain; charset=utf-8", "widget_config_pb.h")
+        elif self.path == "/export/binpb":
+            self._send(200, widget_config.encode_binary(self._config()),
+                       "application/octet-stream", "widget_config.binpb")
         else:
             self.send_error(404)
 
@@ -223,13 +231,14 @@ class Handler(BaseHTTPRequestHandler):
             return
         n = int(self.headers.get("Content-Length", 0))
         try:
-            config = extrinsics.derive(json.loads(self.rfile.read(n)))
-        except (ValueError, KeyError) as e:
+            cfg = widget_config.from_dict(json.loads(self.rfile.read(n)))
+            widget_config.derive(cfg)
+        except (ValueError, KeyError, json_format.ParseError) as e:
             self._send(400, json.dumps({"error": str(e)}))
             return
         with self.lock:
-            extrinsics.save(config, self.config_path)
-        self._send(200, json.dumps(config))
+            widget_config.save(cfg, self.config_path)
+        self._send(200, json.dumps(widget_config.to_dict(cfg)))
 
     def log_message(self, fmt, *args):
         pass
@@ -244,14 +253,14 @@ def serve(config_path, http_port=8082):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--config", default="/tmp/widget_extrinsics.json",
-                    help="config JSON to edit (seeded from the example if "
-                         "missing)")
+    ap.add_argument("--config", default="/tmp/widget_config.txtpb",
+                    help="WidgetConfig textproto to edit (seeded from the "
+                         "example if missing)")
     ap.add_argument("--http-port", type=int, default=8082)
     args = ap.parse_args()
     if not os.path.exists(args.config):
         example = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                               "examples", "widget_v1.json")
+                               "examples", "widget_v1.txtpb")
         shutil.copy(example, args.config)
         print("seeded %s from the widget-v1 example" % args.config)
     serve(args.config, args.http_port)

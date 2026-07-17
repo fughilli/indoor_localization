@@ -1,0 +1,133 @@
+// widget.v1 — the widget configuration schema (single source of truth).
+//
+// One WidgetConfig carries both halves of the configuration standard:
+//   - extrinsics: where every sensor sits w.r.t. the widget reference frame
+//     (authoring fields: axis mapping + Euler trim; derived field: canonical
+//     sensor->widget quaternion, v_widget = R * v_sensor + offset).
+//   - intrinsics: optional per-unit sensor quality, exactly what
+//     //swarm/tools:characterize measures. Absent message/field = "use the
+//     firmware default" (proto3 explicit presence).
+//
+// Transport/storage forms, all this one schema:
+//   - .txtpb textproto on disk (human-authored source of truth),
+//   - canonical proto JSON over the configurator's HTTP API,
+//   - binary proto for firmware storage and transport, decoded on-device by
+//     the micropb-generated no_std bindings (//swarm/proto:widget_pb).
+
+syntax = "proto3";
+
+package widget.v1;
+
+message Vec3f {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+// Scalar-first unit quaternion.
+message Quatf {
+  float w = 1;
+  float x = 2;
+  float y = 3;
+  float z = 4;
+}
+
+enum SensorKind {
+  SENSOR_KIND_UNSPECIFIED = 0;
+  SENSOR_KIND_IMU = 1;
+  SENSOR_KIND_MAG = 2;
+  SENSOR_KIND_UWB = 3;
+  SENSOR_KIND_GPS = 4;
+  SENSOR_KIND_ALT = 5;
+  // Custom sensors use ids >= 128 in SensorExtrinsic.id.
+}
+
+// Authoring form of a rotation: coarse axis mapping ("sensor +x points along
+// widget -y") plus a fine Euler trim applied in the sensor frame.
+message AxisMapping {
+  string x = 1;  // one of "+x" "-x" "+y" "-y" "+z" "-z"
+  string z = 2;  // orthogonal to x; y completes the right-handed frame
+}
+
+message SensorExtrinsic {
+  uint32 id = 1;            // SensorKind value, or >= 128 for custom
+  string name = 2;
+  AxisMapping mapping = 3;  // authoring
+  Vec3f euler_deg = 4;      // authoring: roll/pitch/yaw fine trim
+  Vec3f offset_m = 5;       // sensor origin in the widget frame
+  Quatf rotation = 6;       // DERIVED sensor->widget; what firmware consumes
+}
+
+message Extrinsics {
+  string widget_model = 1;
+  repeated SensorExtrinsic sensors = 2;
+}
+
+message ImuIntrinsics {
+  optional float accel_noise_density = 1;     // m/s^2/sqrt(Hz)
+  optional float gyro_noise_density = 2;      // rad/s/sqrt(Hz)
+  optional float accel_bias_instability = 3;  // m/s^2
+  optional float gyro_bias_instability = 4;   // rad/s
+  Vec3f gyro_bias = 5;                        // rad/s initial estimate
+}
+
+message UwbRangeIntrinsics {
+  optional float bias0_m = 1;  // err(d) = bias0 + scale * d
+  optional float scale_ppm = 2;
+  optional float sigma_m = 3;
+  optional float outlier_frac = 4;
+}
+
+message UwbAoaIntrinsics {
+  // Measurement plane normal in the UWB *sensor* frame; compose with the
+  // UWB extrinsic rotation for the widget frame.
+  Vec3f plane_normal = 1;
+  optional float sign = 2;
+  optional float offset_rad = 3;
+  optional float sigma_rad = 4;
+}
+
+message MagIntrinsics {
+  Vec3f hard_iron = 1;
+  // 9 values, row-major, unit determinant. packed is explicit: micropb
+  // 0.5 only honors the descriptor option, not proto3 implicit packing.
+  repeated float soft_iron = 2 [packed = true];
+  optional float sigma = 3;
+}
+
+message GpsIntrinsics {
+  optional float sigma_h_m = 1;
+  optional float sigma_v_m = 2;
+}
+
+message AltIntrinsics {
+  optional float sigma_m = 1;
+}
+
+message Intrinsics {
+  string widget_model = 1;
+  string widget_serial = 2;  // per-unit calibration provenance
+  ImuIntrinsics imu = 3;
+  UwbRangeIntrinsics uwb_range = 4;
+  UwbAoaIntrinsics uwb_aoa = 5;
+  MagIntrinsics mag = 6;
+  GpsIntrinsics gps = 7;
+  AltIntrinsics alt = 8;
+}
+
+message WidgetConfig {
+  Extrinsics extrinsics = 1;
+  Intrinsics intrinsics = 2;
+}
+
+// Over-the-air pose advertisement (broadcast at ~10 Hz, piggybacked on UWB
+// ranging frames; design doc section 5.2). Kept tiny: ~40 B encoded.
+message PoseAdvertisement {
+  uint32 widget_id = 1;
+  uint32 seq = 2;       // staleness detection
+  Vec3f p = 3;          // world ENU, m
+  Vec3f v = 4;          // m/s — receivers dead-reckon stale adverts
+  float quality = 5;    // mean position variance, m^2
+  uint32 flags = 6;     // bit 0: anchored (healthy absolute source)
+                        // bit 1: static  bit 2: gps-equipped
+}

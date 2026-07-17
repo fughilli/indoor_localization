@@ -1,0 +1,23 @@
+# On-device widget configuration: micropb decode of widget.v1 + views onto
+# swarm_core math types. The conformance test parses the Python-encoded
+# golden (genrule in //swarm/tools) and re-encodes byte-identically.
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+rust_library(
+    name = "widget_config",
+    srcs = ["src/lib.rs"],
+    edition = "2021",
+    deps = [
+        "//swarm/core:swarm_core",
+        "//swarm/proto:widget_pb",
+        "@firmware//proto:micropb",
+    ],
+)
+
+rust_test(
+    name = "widget_config_test",
+    crate = ":widget_config",
+    data = ["//swarm/tools:example_config_binpb"],
+)

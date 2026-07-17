@@ -21,8 +21,4 @@ rust_shared_library(
 rust_test(
     name = "swarm_core_test",
     crate = ":swarm_core",
-    data = [
-        "//swarm/tools:example_extrinsics_blob",
-        "//swarm/tools:example_intrinsics_blob",
-    ],
 )

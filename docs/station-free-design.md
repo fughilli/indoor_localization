@@ -167,7 +167,8 @@ mean-only pulls on anchored widgets.
 Simulation shows the loop is insensitive to advertisement rate down to 2 Hz
 (§7.3) because the estimator consumes advertised *variance*, and static /
 slow peers dominate the downhill flow. 10 Hz is chosen to bound staleness
-error at ≤0.1 s × v.
+error at ≤0.1 s × v. On the wire this is the `widget.v1.PoseAdvertisement`
+protobuf message (§11), ~40 B encoded with micropb on-device.
 
 ### 5.3 Ranging exchange (per TDMA slot)
 
@@ -323,35 +324,48 @@ weighting out near-normal directions where azimuth is unobservable. On the
 synthetic reference it recovers a plane normal to <1°, the offset to
 <0.01 rad, and the σ within noise.
 
-## 11. Widget configuration standard (extrinsics + intrinsics)
+## 11. Widget configuration standard (widget.v1 protobuf)
 
 The widget design is open for third-party manufacturing/customization, so
-per-widget properties are configuration with a versioned schema, not code.
-Both configs are JSON as source of truth with two firmware consumption
-paths: a generated C header (bake in at build time) and a CRC-protected
-little-endian binary blob for dynamic load from flash/NVS, parsed on-device
-by `swarm/core/src/{extrinsics,intrinsics}.rs`. A genrule encodes each
-example config with the Python tool and the Rust unit tests parse those
-exact bytes — the cross-language contract is enforced in CI.
+per-widget properties are configuration with a standard schema, not code.
+**All firmware configuration and data transport/storage uses protocol
+buffers** — one schema, `swarm/proto/widget_config.proto` (`widget.v1`),
+consumed in three forms:
 
-**Extrinsics** (`widget-extrinsics` v1, blob magic `WEXT`) — *where every
-sensor sits*: per sensor an axis mapping + fine Euler trim + offset
-(human-authorable) and a derived canonical sensor→widget quaternion
-(`v_widget = R·v_sensor + offset`). Standard sensors imu/mag/uwb/gps/alt
-(ids 1–5); custom sensors use explicit ids ≥128. Authored graphically with
-`//swarm/tools:extrinsics_configurator` (port 8082): live 3D preview of the
-sensor triads on the widget body, validation, and one-click header/blob
-export.
+- **textproto** (`.txtpb`) on disk — the human-authored source of truth,
+- **canonical proto JSON** — the configurator's HTTP API,
+- **binary proto** — firmware storage and transport, decoded on-device by
+  no_std Rust bindings generated with **micropb** (heapless containers, no
+  allocation), plus a generated C byte-array header wrapping the same bytes
+  for build-time baking.
 
-**Intrinsics** (`widget-intrinsics` v1, blob magic `WINT`) — *how good every
-sensor is*: exactly what `//swarm/tools:characterize` measures, optionally
-shipped per widget model or per serial to replace the firmware's
-conservative defaults. Sections (all optional; absent section or NaN field
-= "use default"; unknown sections are skipped for forward compatibility):
-IMU noise densities/bias instabilities/initial gyro bias, UWB range error
-model (bias0/scale/σ/outlier fraction), UWB AoA convention + precision
-(plane normal in the *sensor* frame — compose with the UWB extrinsic for
-the widget frame), mag hard/soft-iron calibration, GPS/altimeter sigmas.
-`characterize <kind> --intrinsics file.json` merges measurement results
-straight into a config, and `run_sim --intrinsics` maps it onto the
-estimator noise model — the same mapping firmware applies to its `Params`.
+The codegen base (hermetic prebuilt protoc, the micropb runtime + host-side
+generator, and the Bazel macros) lives in the shared `firmware` module
+(`@firmware//proto`, embedded repo branch `micropb-support`, ported from
+led_mapper's bring-up) so every project in that ecosystem shares one
+implementation. A genrule encodes the example config with canonical Python
+protobuf and the Rust conformance test decodes it through micropb and
+**re-encodes to the identical bytes** — byte parity pins presence rules and
+packed encoding on both sides, in CI.
+
+Schema contents:
+
+- `Extrinsics` — *where every sensor sits*: per sensor an axis mapping +
+  fine Euler trim + offset (human-authorable) and a derived canonical
+  sensor→widget quaternion (`v_widget = R·v_sensor + offset`). Standard
+  sensors imu/mag/uwb/gps/alt (ids 1–5); custom sensors use ids ≥128.
+  Authored graphically with `//swarm/tools:extrinsics_configurator`
+  (port 8082): live 3D preview, validation, one-click header/binpb export.
+- `Intrinsics` — *how good every sensor is*: exactly what
+  `//swarm/tools:characterize` measures, optionally shipped per widget
+  model or serial. proto3 explicit presence replaces "NaN = use default":
+  absent message/field means the firmware default.
+  `characterize <kind> --intrinsics file.txtpb` merges measurement results
+  straight into a config; `run_sim --intrinsics` maps it onto the estimator
+  noise model (the same mapping firmware applies to its `Params`).
+- `PoseAdvertisement` — the over-the-air broadcast of §5.2 as a proto
+  message (~40 B encoded), so the wire format is pinned by the same
+  conformance machinery before firmware exists.
+
+Superseded (removed): the hand-rolled WEXT/WINT CRC'd binary containers and
+JSON authoring format from the first iteration of this standard.

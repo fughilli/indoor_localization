@@ -1,0 +1,30 @@
+# widget.v1 config schema: one .proto, three consumers — Python tools
+# (protoc --python_out + pip protobuf runtime), no_std Rust for firmware
+# (micropb), and textproto/JSON forms handled by the Python tools. The
+# codegen base (hermetic protoc, micropb runtime + generator) comes from the
+# embedded module: @firmware//proto.
+load("@rules_python//python:defs.bzl", "py_library")
+load("@firmware//proto:micropb.bzl", "micropb_rust_library", "proto_py_gen")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(["widget_config.proto"])
+
+proto_py_gen(
+    name = "widget_config_py_gen",
+    proto = "widget_config.proto",
+)
+
+py_library(
+    name = "widget_config_py_proto",
+    srcs = [":widget_config_py_gen"],
+    imports = ["."],
+    deps = ["@pypi//protobuf"],
+)
+
+micropb_rust_library(
+    name = "widget_pb",
+    gen_main = "gen_main.rs",
+    profile = "host",
+    proto = "widget_config.proto",
+)

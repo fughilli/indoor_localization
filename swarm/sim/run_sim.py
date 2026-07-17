@@ -13,34 +13,34 @@ import math
 import numpy as np
 
 from swarm.sim import world
-from swarm.tools import intrinsics as intrinsics_schema
+from swarm.tools import widget_config
 
 
 def apply_intrinsics(sensors, config):
-    """Map a widget-intrinsics config onto the sim's SensorConfig — the same
-    mapping firmware applies to its estimator Params and measurement noise
-    (characterized values replace the conservative defaults)."""
+    """Map a WidgetConfig's intrinsics onto the sim's SensorConfig — the
+    same mapping firmware applies to its estimator Params and measurement
+    noise (characterized values replace the conservative defaults)."""
     sqrt_rate = math.sqrt(sensors.imu_rate)
-    imu = config.get("imu", {})
-    if "accel_noise_density" in imu:
-        sensors.accel_sigma = imu["accel_noise_density"] * sqrt_rate
-    if "gyro_noise_density" in imu:
-        sensors.gyro_sigma = imu["gyro_noise_density"] * sqrt_rate
-    rng = config.get("uwb_range", {})
-    if "sigma_m" in rng:
-        sensors.uwb_range_sigma = rng["sigma_m"]
-    if "outlier_frac" in rng:
-        sensors.uwb_multipath_prob = rng["outlier_frac"]
-    aoa = config.get("uwb_aoa", {})
-    if "sigma_rad" in aoa:
-        sensors.uwb_aoa_sigma = aoa["sigma_rad"]
-    gps = config.get("gps", {})
-    if "sigma_h_m" in gps:
-        sensors.gps_sigma_h = gps["sigma_h_m"]
-    if "sigma_v_m" in gps:
-        sensors.gps_sigma_v = gps["sigma_v_m"]
-    if "sigma_m" in config.get("alt", {}):
-        sensors.alt_sigma = config["alt"]["sigma_m"]
+    intr = config.intrinsics
+    imu = intr.imu
+    if imu.HasField("accel_noise_density"):
+        sensors.accel_sigma = imu.accel_noise_density * sqrt_rate
+    if imu.HasField("gyro_noise_density"):
+        sensors.gyro_sigma = imu.gyro_noise_density * sqrt_rate
+    rng = intr.uwb_range
+    if rng.HasField("sigma_m"):
+        sensors.uwb_range_sigma = rng.sigma_m
+    if rng.HasField("outlier_frac"):
+        sensors.uwb_multipath_prob = rng.outlier_frac
+    if intr.uwb_aoa.HasField("sigma_rad"):
+        sensors.uwb_aoa_sigma = intr.uwb_aoa.sigma_rad
+    gps = intr.gps
+    if gps.HasField("sigma_h_m"):
+        sensors.gps_sigma_h = gps.sigma_h_m
+    if gps.HasField("sigma_v_m"):
+        sensors.gps_sigma_v = gps.sigma_v_m
+    if intr.alt.HasField("sigma_m"):
+        sensors.alt_sigma = intr.alt.sigma_m
     return sensors
 
 
@@ -55,7 +55,7 @@ def run(n_widgets, n_gps, seconds, seed=1234, converged_m=1.0, aoa=True,
     sensors = world.SensorConfig(downhill_ratio=downhill_ratio,
                                  **(sensor_overrides or {}))
     if intrinsics_path:
-        apply_intrinsics(sensors, intrinsics_schema.load(intrinsics_path))
+        apply_intrinsics(sensors, widget_config.load(intrinsics_path))
     w = world.World(specs, sensors=sensors, seed=seed)
     n_widgets = len(specs)
     history = []  # (t, [abs_err_i...], [rel_err_i...])
@@ -142,7 +142,7 @@ def main():
     ap.add_argument("--broadcast-rate", type=float, default=None,
                     help="override pose advertisements/s")
     ap.add_argument("--intrinsics", default=None,
-                    help="widget-intrinsics JSON: use characterized sensor "
+                    help="WidgetConfig textproto: use characterized sensor "
                          "quality instead of the built-in defaults")
     ap.add_argument("--no-multipath", action="store_true",
                     help="disable UWB multipath outliers")

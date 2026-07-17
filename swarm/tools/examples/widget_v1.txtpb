@@ -1,0 +1,75 @@
+# widget.v1.WidgetConfig — the widget-v1 reference configuration.
+# Source of truth (textproto); derived rotations are recomputed on save.
+extrinsics {
+  widget_model: "widget-v1"
+  sensors {
+    id: 1
+    name: "imu"
+    mapping { x: "+x" z: "+z" }
+    euler_deg {}
+    offset_m { x: 0.012 y: -0.003 z: 0.001 }
+    rotation { w: 1 }
+  }
+  sensors {
+    id: 2
+    name: "mag"
+    mapping { x: "+y" z: "+z" }
+    euler_deg {}
+    offset_m { x: 0.012 y: -0.003 z: 0.001 }
+    rotation { w: 0.707107 z: 0.707107 }
+  }
+  sensors {
+    id: 3
+    name: "uwb"
+    mapping { x: "-y" z: "+z" }
+    euler_deg {}
+    offset_m { y: 0.021 z: 0.008 }
+    rotation { w: 0.707107 z: -0.707107 }
+  }
+  sensors {
+    id: 4
+    name: "gps"
+    mapping { x: "+x" z: "+z" }
+    euler_deg {}
+    offset_m { z: 0.03 }
+    rotation { w: 1 }
+  }
+  sensors {
+    id: 5
+    name: "alt"
+    mapping { x: "+x" z: "+z" }
+    euler_deg {}
+    offset_m {}
+    rotation { w: 1 }
+  }
+}
+intrinsics {
+  widget_model: "widget-v1"
+  widget_serial: "0042"
+  imu {
+    accel_noise_density: 0.005
+    gyro_noise_density: 0.0002
+    accel_bias_instability: 0.0005
+    gyro_bias_instability: 6e-05
+    gyro_bias { x: 0.01 y: -0.02 z: 0.005 }
+  }
+  uwb_range {
+    bias0_m: 0.05
+    scale_ppm: 200.0
+    sigma_m: 0.1
+    outlier_frac: 0.05
+  }
+  uwb_aoa {
+    plane_normal { z: 1.0 }
+    sign: 1.0
+    offset_rad: 0.3
+    sigma_rad: 0.12
+  }
+  mag {
+    hard_iron { x: 12.0 y: -5.0 z: 3.0 }
+    soft_iron: [1.069, 0.0, 0.0, 0.0, 0.875, 0.0, 0.0, 0.0, 0.992]
+    sigma: 0.009
+  }
+  gps { sigma_h_m: 1.5 sigma_v_m: 3.0 }
+  alt { sigma_m: 0.3 }
+}
