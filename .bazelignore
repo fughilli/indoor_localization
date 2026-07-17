@@ -1,0 +1,3 @@
+# The firmware module is consumed via local_path_override; keep //... out of
+# its tree (it is its own Bazel module, not packages of this repo).
+third_party/embedded

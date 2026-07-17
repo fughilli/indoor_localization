@@ -1,0 +1,39 @@
+# UWB tag: ranges against the three anchors round-robin and streams JSON to
+# the host over WiFi/TCP. WiFi credentials + host IP come from config_local.h
+# (gitignored; see config.h for the knobs).
+# Flash with: bazel run //apps/tag:flash_tag -- --port /dev/ttyUSB0
+load("@firmware//rules:firmware.bzl", "firmware_binary")
+load("@firmware//rules:flash.bzl", "esptool_flash")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_binary(
+    name = "tag",
+    srcs = ["tag.cpp", "config.h"] + glob(
+        ["config_local.h"],
+        allow_empty = True,
+    ),
+    # Only built via firmware_binary's transition; skipped otherwise.
+    target_compatible_with = select({
+        "@firmware//platforms:is_esp32": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+    deps = [
+        "//libs/dw3000",
+        "@firmware//libs/vendor:wifi_esp32",
+    ],
+)
+
+firmware_binary(
+    name = "tag_esp32",
+    binary = ":tag",
+    board = "esp32",
+)
+
+esptool_flash(
+    name = "flash_tag",
+    app = ":tag_esp32",
+    bootloader = "@firmware//libs/board:esp32_bootloader_bin",
+    bootloader_offset = "0x1000",  # classic ESP32 ROM loads from 0x1000
+    chip = "esp32",
+)
