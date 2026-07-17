@@ -13,7 +13,7 @@ fn vec3(ptr: *const f32) -> Vec3 {
 }
 
 /// Create an estimator. Noise densities as in [`Params`]; pass 0 for any
-/// field to take the built-in default.
+/// field to take the built-in default. `gate < 0` disables gating.
 #[no_mangle]
 pub extern "C" fn swarm_estimator_new(
     accel_noise: f32,

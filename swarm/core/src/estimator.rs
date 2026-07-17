@@ -173,6 +173,13 @@ impl Estimator {
 
     /// One scalar Kalman update; injects the error into the nominal state.
     /// Returns false if the innovation gate rejected the measurement.
+    ///
+    /// Note on cooperative consistency: relative measurements fold the
+    /// neighbor's advertised variance into `r`, and the *network layer* only
+    /// accepts relative updates "downhill" (from better-localized peers).
+    /// Whole-state scalar covariance intersection was tried here and removed:
+    /// the 1/w prior inflation hits never-measured directions (biases,
+    /// velocity) every update and grows their variance exponentially.
     fn scalar_update(&mut self, h: &[f32; STATE_DIM], y: f32, r: f32) -> bool {
         let mut ph = [0.0f32; STATE_DIM];
         for i in 0..STATE_DIM {
@@ -182,17 +189,18 @@ impl Estimator {
             }
             ph[i] = s;
         }
-        let mut s = r;
+        let mut a = 0.0;
         for i in 0..STATE_DIM {
-            s += h[i] * ph[i];
+            a += h[i] * ph[i];
         }
-        if s <= 0.0 {
+        if a + r <= 0.0 {
             return false;
         }
         let gate = self.params.gate;
-        if gate > 0.0 && y * y > gate * gate * s {
+        if gate > 0.0 && y * y > gate * gate * (a + r) {
             return false;
         }
+        let s = a + r;
         let inv_s = 1.0 / s;
         let mut k = [0.0f32; STATE_DIM];
         for i in 0..STATE_DIM {

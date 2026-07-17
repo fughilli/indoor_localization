@@ -15,3 +15,35 @@ py_test(
     srcs = ["estimator_test.py"],
     deps = [":estimator_lib"],
 )
+
+py_library(
+    name = "world_lib",
+    srcs = ["world.py"],
+    deps = [
+        ":estimator_lib",
+        "@pypi//numpy",
+    ],
+)
+
+py_library(
+    name = "run_sim_lib",
+    srcs = ["run_sim.py"],
+    deps = [
+        ":world_lib",
+        "@pypi//numpy",
+    ],
+)
+
+py_binary(
+    name = "run_sim",
+    srcs = ["run_sim.py"],
+    main = "run_sim.py",
+    deps = [":run_sim_lib"],
+)
+
+py_test(
+    name = "sim_test",
+    size = "large",
+    srcs = ["sim_test.py"],
+    deps = [":run_sim_lib"],
+)
