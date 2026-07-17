@@ -1,0 +1,37 @@
+{
+  "schema": "widget-extrinsics",
+  "version": 1,
+  "widget_model": "widget-v1",
+  "sensors": {
+    "imu": {
+      "mapping": {"x": "+x", "z": "+z"},
+      "euler_deg": [0.0, 0.0, 0.0],
+      "offset_m": [0.012, -0.003, 0.001],
+      "rotation_wxyz": [1.0, 0.0, 0.0, 0.0]
+    },
+    "mag": {
+      "mapping": {"x": "+y", "z": "+z"},
+      "euler_deg": [0.0, 0.0, 0.0],
+      "offset_m": [0.012, -0.003, 0.001],
+      "rotation_wxyz": [0.707107, 0.0, 0.0, 0.707107]
+    },
+    "uwb": {
+      "mapping": {"x": "-y", "z": "+z"},
+      "euler_deg": [0.0, 0.0, 0.0],
+      "offset_m": [0.0, 0.021, 0.008],
+      "rotation_wxyz": [0.707107, 0.0, 0.0, -0.707107]
+    },
+    "gps": {
+      "mapping": {"x": "+x", "z": "+z"},
+      "euler_deg": [0.0, 0.0, 0.0],
+      "offset_m": [0.0, 0.0, 0.03],
+      "rotation_wxyz": [1.0, 0.0, 0.0, 0.0]
+    },
+    "alt": {
+      "mapping": {"x": "+x", "z": "+z"},
+      "euler_deg": [0.0, 0.0, 0.0],
+      "offset_m": [0.0, 0.0, 0.0],
+      "rotation_wxyz": [1.0, 0.0, 0.0, 0.0]
+    }
+  }
+}

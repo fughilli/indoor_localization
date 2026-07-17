@@ -10,6 +10,7 @@
 //! math — the same code must run on the embedded target.
 
 pub mod estimator;
+pub mod extrinsics;
 pub mod ffi;
 pub mod math;
 
