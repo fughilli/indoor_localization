@@ -53,3 +53,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && echo 'ALL ALL=(ALL:ALL) NOPASSWD:ALL' > /etc/sudoers.d/anyuser-nopasswd \
     && chmod 0440 /etc/sudoers.d/anyuser-nopasswd
+
+# 2026-07-17: apt-install helper — `apt-install <pkg>...` installs via sudo
+# apt-get AND appends a dated RUN block to this Dockerfile, so runtime
+# installs survive the next image rebuild. The script lives in the overlay
+# dir (the build context); appended blocks land below this line, keeping the
+# layers above cached.
+COPY apt-install /usr/local/bin/apt-install
+RUN chmod 0755 /usr/local/bin/apt-install
