@@ -1,0 +1,24 @@
+# Station-free cooperative localization core: pure Rust, no crate deps,
+# no_std-friendly design so the same code ports to the embedded target.
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_shared_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+rust_library(
+    name = "swarm_core",
+    srcs = glob(["src/**/*.rs"]),
+    crate_root = "src/lib.rs",
+)
+
+# C-ABI cdylib for the Python simulation (ctypes). The embedded port links the
+# rust_library directly instead.
+rust_shared_library(
+    name = "swarm_core_cdylib",
+    srcs = glob(["src/**/*.rs"]),
+    crate_root = "src/lib.rs",
+)
+
+rust_test(
+    name = "swarm_core_test",
+    crate = ":swarm_core",
+)

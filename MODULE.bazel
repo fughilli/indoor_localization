@@ -32,6 +32,20 @@ python.toolchain(
     python_version = PYTHON_VERSION,
 )
 
+# Hermetic Rust for //swarm (station-free cooperative localization core).
+# The estimator is pure Rust with no crate deps and a C ABI so the same code
+# ports to the embedded target; the Python sim binds it via ctypes.
+bazel_dep(name = "rules_rust", version = "0.71.3")
+
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rust.toolchain(
+    edition = "2021",
+    versions = ["1.84.0"],
+)
+use_repo(rust, "rust_toolchains")
+
+register_toolchains("@rust_toolchains//:all")
+
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(
     hub_name = "pypi",

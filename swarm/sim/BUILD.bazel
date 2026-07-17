@@ -1,0 +1,17 @@
+# Station-free swarm simulation: Python harness around the Rust estimator
+# (one instance per widget) with sensor/network models and a web viewer.
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+
+package(default_visibility = ["//visibility:public"])
+
+py_library(
+    name = "estimator_lib",
+    srcs = ["estimator.py"],
+    data = ["//swarm/core:swarm_core_cdylib"],
+)
+
+py_test(
+    name = "estimator_test",
+    srcs = ["estimator_test.py"],
+    deps = [":estimator_lib"],
+)
