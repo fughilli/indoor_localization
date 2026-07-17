@@ -15,11 +15,13 @@ from swarm.sim import world
 
 
 def run(n_widgets, n_gps, seconds, seed=1234, converged_m=1.0, aoa=True,
-        frame_cb=None, trace=False, n_surveyed=0, downhill_ratio=0.5):
+        frame_cb=None, trace=False, n_surveyed=0, downhill_ratio=0.5,
+        sensor_overrides=None):
     specs = world.default_swarm(n=n_widgets, n_gps=n_gps, n_surveyed=n_surveyed)
     for s in specs:
         s.has_aoa = aoa
-    sensors = world.SensorConfig(downhill_ratio=downhill_ratio)
+    sensors = world.SensorConfig(downhill_ratio=downhill_ratio,
+                                 **(sensor_overrides or {}))
     w = world.World(specs, sensors=sensors, seed=seed)
     n_widgets = len(specs)
     history = []  # (t, [err_i...])
@@ -69,13 +71,24 @@ def main():
     ap.add_argument("--downhill", type=float, default=0.5,
                     help="peer-var/my-var acceptance ratio, 0=off")
     ap.add_argument("--converged-m", type=float, default=1.0)
+    ap.add_argument("--slot-rate", type=float, default=None,
+                    help="override UWB ranging slots/s")
+    ap.add_argument("--range-sigma", type=float, default=None,
+                    help="override UWB range noise, m")
+    ap.add_argument("--broadcast-rate", type=float, default=None,
+                    help="override pose advertisements/s")
     ap.add_argument("--json", action="store_true", help="emit the report as JSON")
     ap.add_argument("--trace", action="store_true",
                     help="print per-second err/sigma per widget")
     args = ap.parse_args()
     report, _ = run(args.widgets, args.gps, args.seconds, args.seed,
                     args.converged_m, aoa=not args.no_aoa, trace=args.trace,
-                    n_surveyed=args.surveyed, downhill_ratio=args.downhill)
+                    n_surveyed=args.surveyed, downhill_ratio=args.downhill,
+                    sensor_overrides={k: v for k, v in {
+                        "uwb_slot_rate": args.slot_rate,
+                        "uwb_range_sigma": args.range_sigma,
+                        "broadcast_rate": args.broadcast_rate,
+                    }.items() if v is not None})
     if args.json:
         print(json.dumps(report, indent=2))
         return

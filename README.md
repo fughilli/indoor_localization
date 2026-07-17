@@ -28,6 +28,8 @@ arduino-esp32 core, and esptool; Bazel compiles/links and packages flashable
 | `apps/anchor/` | anchor firmware — `anchor_{1,2,3}_esp32.bin` (ID via define) |
 | `apps/tag/` | tag firmware — DS-TWR cycle + WiFi/TCP JSON streaming |
 | `host/` | Python: TCP ingest, trilateration solver, web floor view, simulator |
+| `swarm/` | station-free cooperative localization: Rust ESKF core + swarm sim + web viewer (see `docs/station-free-design.md`) |
+| `docs/` | design documents |
 
 ## Building
 
@@ -37,6 +39,23 @@ expect several GB and many minutes; later builds hit `.bazel-*-cache/`):
 ```sh
 bazelisk build //...          # all firmware images
 bazelisk test //host/...      # solver + full-stack integration tests
+bazelisk test //swarm/...     # Rust estimator + swarm sim convergence tests
+```
+
+### Station-free swarm (simulation)
+
+The next-generation, anchor-free mode ([brief](station-free.md),
+[design](docs/station-free-design.md)) lives under `swarm/`: each widget
+fuses IMU + UWB ranging/AoA + optional GPS/altimeter in an on-device Rust
+ESKF, and swarms localize cooperatively off any member that knows its
+absolute position. Try it:
+
+```sh
+# Headless metrics: 3 surveyed anchors + 5 IMU+UWB widgets -> ~10 cm RMSE
+bazelisk run //swarm/sim:run_sim -- --widgets 5 --gps 0 --surveyed 3
+
+# Live browser view on http://localhost:8081/
+bazelisk run //swarm/sim:viewer -- --widgets 5 --gps 0 --surveyed 3
 ```
 
 Flashable images land in `bazel-bin/apps/anchor/anchor_{1,2,3}_esp32.bin` and

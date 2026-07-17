@@ -1,58 +1,75 @@
 # WORKLOG
 
-_Last updated: 2026-07-17 (session 2, build-out). Read together with `git log`._
+_Last updated: 2026-07-17 (session 3, station-free build-out). Read together
+with `git log`._
 
 ## Goal
 
-Build the CircuitDigest ESP32 + DWM3000 UWB indoor positioning system (3
-anchors + 1 tag + host trilateration/web floor view) on the Bazel+Nix
-`firmware` module at `third_party/embedded`. Build-only scope until hardware
-is attached.
+Two stacked scopes:
+1. **Done** — CircuitDigest ESP32+DWM3000 RTLS (3 anchors + 1 tag + host
+   trilateration/web view); build-only until hardware arrives (sessions 1–2).
+2. **Active** — `station-free.md`: station-free cooperative swarm
+   localization. Rust ESKF per widget (IMU + UWB range/AoA + GPS/alt/mag),
+   simulation-driven development, browser viewer, design doc. All Bazel+Nix.
 
 ## State of play
 
-**The build-only scope is complete.** All software deliverables build green
-and are test-verified; nothing has touched hardware yet.
+**Station-free v1 is complete in simulation** (this session):
 
-- Firmware: `libs/dw3000` shared driver + `apps/anchor` (×3 IDs) + `apps/tag`
-  (see `92cfd2f`); all four `.bin`s verified with esptool image-info (chip
-  ESP32, valid hashes). Embedded-repo branch `uwb-esp32-wifi` (pushed) adds
-  the classic-ESP32 WiFi/Network targets; submodule pinned at `394af90`.
-- Host: solver/server/simulator + 2 passing tests (see `c8288ee`); hermetic
-  Python via rules_python+rules_uv (numpy/scipy in `requirements.lock`).
-- README now carries the full build/flash/bring-up/calibration guide.
-- Per-container bootstrap ritual lives in memory `submodule-ssh-key.md`
-  (ssh config needs BOTH the `github-fughilli` alias and a plain `github.com`
-  block — the latter for the submodule's origin; push access confirmed).
+- `swarm/core` — Rust (rules_rust 0.71.3, Rust 1.84.0, zero crate deps,
+  no-alloc, scalar-updates-only) 15-state ESKF + C ABI cdylib. Unit tests.
+- `swarm/sim` — Python sim (sensor noise/bias/multipath models, TDMA
+  ranging, 10 Hz pose-quality broadcasts, TRIAD init) driving one Rust
+  estimator per widget via ctypes; `run_sim` metrics CLI with sweep flags;
+  `viewer` = SSE+canvas browser view on :8081 (port in overlay.json).
+- **Headline result** (locked in `sim_test`): 3 surveyed anchors + 5–10
+  IMU+UWB-only mobiles → **7–14 cm tail RMSE, converge ≤10 s**. 2-GPS
+  scenario bounded at 0.7–2.7 m (GPS-noise physics). Full result tables in
+  `docs/station-free-design.md` §7.
+- `docs/station-free-design.md` — architecture, protocol (33 B advert @
+  10 Hz, DS-TWR piggyback, TDMA), requirements grounded in sweeps, porting
+  plan, negative results.
+- The two load-bearing cooperative-fusion rules live in the sim's network
+  layer (`world.py::_run_slot`): **downhill rule** (accept relative updates
+  only from peers with var < 0.5× mine) and **cold-start damping** (floor
+  effective peer var at 0.5× my var). Both are required; see design doc §4.2.
 
 ## Next up
 
-1. **Hardware bring-up when boards are available**: flash per README §Bring-up
-   (`bazelisk run //apps/anchor:flash_anchor_N -- --port /dev/ttyUSBx`),
-   create `apps/tag/config_local.h` with real WiFi credentials, run
-   `//host:server`, verify live ranging end-to-end, then antenna-delay
-   calibration (README §4).
-2. Optional (no hardware needed): merge `uwb-esp32-wifi` into embedded
-   `master` once it's proven on hardware; consider a root `BUILD.bazel` alias
-   set (`//:anchor_1` …) mirroring the embedded repo's style.
+1. **Embedded port** of `swarm_core` per design doc §8: `#![no_std]` + libm,
+   link into firmware; extend `libs/dw3000` with DS-TWR payload piggyback.
+2. Algorithm hill-climbs (design doc §9): split-CI for mutual refinement,
+   relative-frame formulation, NLOS classification, distributed TDMA.
+3. Sim realism: full 6-DOF truth attitude (now yaw-only), IMU↔antenna
+   extrinsics, bias random-walk in truth (now constant per run).
+4. (Carried over) RTLS hardware bring-up per README §Bring-up when boards
+   arrive; merge embedded-repo branch `uwb-esp32-wifi` after hardware proof.
+5. (Carried over) Root-repo force-push to origin still **pending user
+   confirmation** (history rewrite from 2026-07-17); now ~9 unpushed commits.
 
 ## Open questions / blockers
 
-- **Hardware not attached** — everything past build+simulation is blocked on
-  boards.
-- Root repo `origin` (`git@github-fughilli:fughilli/indoor_localization.git`)
-  still holds the pre-rewrite `master`; a **force-push is pending user
-  confirmation** (history was rewritten 2026-07-17 for the author-identity
-  fix). Local master has 4 unpushed commits on top of that rewrite.
+- Hardware still not attached (blocks RTLS bring-up and swarm port testing).
+- Force-push confirmation (above).
+- cm-level *absolute* accuracy requires ≥3 surveyed/RTK-grade anchored
+  widgets; plain GPS anchors give ~1–3 m absolute. Relative-frame split
+  (design doc §9) is the route to cm-relative under GPS-only anchoring —
+  user input welcome on which matters more.
 
 ## Don't retry (dead ends)
 
-- `apt-get install` at runtime — no root/sudo; bake packages into
-  `.claude-container-overlay/Dockerfile`.
-- Cloning `github.com/fughilli/embedded` over HTTPS — private; use SSH with
-  the repo-local key.
-- Don't fetch ESP-IDF via nixpkgs-esp-dev flake or run IDF CMake — the
-  embedded repo intentionally links prebuilt SDK `.a`s (see its WORKLOG).
-- `bazel build //...` without `.bazelignore`ing `third_party/embedded` —
-  Bazel walks the submodule as root-repo packages and errors on its .bzl
-  files (fixed in `92cfd2f`; don't remove the ignore).
+- Session 1–2 items: runtime `apt-get` without overlay; HTTPS clone of
+  private embedded repo; nixpkgs-esp-dev/IDF CMake; removing
+  `third_party/embedded` from `.bazelignore`.
+- **Naive mutual KF range updates between widgets** — covariance collapses
+  <1 s, gate then rejects truth, swarm consensus-drifts unboundedly.
+- **Whole-state scalar covariance intersection** in the ESKF — 1/w prior
+  inflation compounds exponentially in unobserved directions (biases/vel)
+  → f32 overflow. If revisited, it must be split-CI on the position block.
+- **Undamped tight-anchor updates on a cold (σ=100 m) filter** — unity-gain
+  snap at garbage linearization → km-scale divergence.
+- **Multilateration-only cold start requiring ≥4 tight peers** — deadlocks
+  when fewer anchored peers exist (2-GPS scenario). The var-floor damping
+  subsumes it with no state machine.
+- `Estimator.__init__` in `swarm/sim/estimator.py` treats 0.0 as "use Rust
+  default" — pass `gate=-1`, not 0, to disable gating.
