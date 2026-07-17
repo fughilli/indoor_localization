@@ -38,6 +38,18 @@ Two stacked scopes:
 - `docs/station-free-design.md` — architecture, protocol (33 B advert @
   10 Hz, DS-TWR piggyback, TDMA), requirements grounded in sweeps, porting
   plan, negative results, characterization methodology (§10).
+- `swarm/tools` — widget configuration standard (user request):
+  **extrinsics** (`widget-extrinsics` v1) — sensor poses w.r.t. the widget
+  frame, authored via the graphical configurator
+  (`//swarm/tools:extrinsics_configurator`, :8082, live 3D triads) —
+  and **intrinsics** (`widget-intrinsics` v1) — per-unit sensor quality
+  from characterization, optional, improves estimator over defaults
+  (`characterize <kind> --intrinsics f.json` merges; `run_sim
+  --intrinsics` consumes). Both: JSON source of truth -> C header
+  (build-time) + CRC'd blob (WEXT/WINT, dynamic load) parsed on-device by
+  `swarm/core/src/{extrinsics,intrinsics}.rs`; genrule-encoded example
+  blobs are parsed by the Rust tests (cross-language contract in CI).
+  Design doc §11.
 - `swarm/tools` — sensor characterization (user request): capture JSONL
   schema (`records.py`, what the firmware capture mode must emit) +
   manifest ground truth; analyses = AoA plane/sign/offset/σ fit (answers
@@ -55,7 +67,11 @@ Two stacked scopes:
 1. **Embedded port** of `swarm_core` per design doc §8: `#![no_std]` + libm,
    link into firmware; extend `libs/dw3000` with DS-TWR payload piggyback.
    Also add a firmware *capture mode* emitting the `swarm/tools/records.py`
-   JSONL schema over TCP so `characterize` runs against real sensors.
+   JSONL schema over TCP so `characterize` runs against real sensors, and
+   wire WEXT/WINT loading (or the generated headers) into the firmware
+   boot path + apply extrinsics/intrinsics in the measurement ingest
+   (sim currently applies intrinsics only; extrinsics application in the
+   sim measurement path is future work — sensors are modeled co-located).
 2. Algorithm hill-climbs (design doc §9): split-CI for mutual refinement,
    relative-frame formulation, NLOS classification, distributed TDMA.
 3. Sim realism: full 6-DOF truth attitude (now yaw-only), IMU↔antenna

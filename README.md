@@ -30,6 +30,7 @@ arduino-esp32 core, and esptool; Bazel compiles/links and packages flashable
 | `host/` | Python: TCP ingest, trilateration solver, web floor view, simulator |
 | `swarm/` | station-free cooperative localization: Rust ESKF core + swarm sim + web viewer (see `docs/station-free-design.md`) |
 | `swarm/tools/` | sensor characterization: AoA plane/precision, range bias/σ, IMU Allan deviation, mag calibration (`bazelisk run //swarm/tools:characterize -- aoa --demo`) |
+| `swarm/tools/extrinsics*` | widget configuration standard: extrinsics configurator web UI (`:extrinsics_configurator`, port 8082) + intrinsics schema fed by characterization; JSON → C header / binary blob for firmware (design doc §11) |
 | `docs/` | design documents |
 
 ## Building

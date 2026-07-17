@@ -8,7 +8,24 @@ GPS noise at 0.7-2.7 m.
 
 import unittest
 
-from swarm.sim import run_sim
+from swarm.sim import run_sim, world
+from swarm.tools import intrinsics
+
+
+class IntrinsicsMappingTest(unittest.TestCase):
+    def test_apply_intrinsics_overrides_defaults(self):
+        cfg = intrinsics.empty("t")
+        cfg["imu"] = {"accel_noise_density": 0.008}
+        cfg["uwb_range"] = {"sigma_m": 0.25, "outlier_frac": 0.11}
+        cfg["alt"] = {"sigma_m": 0.7}
+        sensors = run_sim.apply_intrinsics(world.SensorConfig(), cfg)
+        self.assertAlmostEqual(sensors.accel_sigma, 0.008 * 10.0, places=6)
+        self.assertAlmostEqual(sensors.uwb_range_sigma, 0.25)
+        self.assertAlmostEqual(sensors.uwb_multipath_prob, 0.11)
+        self.assertAlmostEqual(sensors.alt_sigma, 0.7)
+        # Untouched fields keep their defaults.
+        self.assertAlmostEqual(sensors.gps_sigma_h,
+                               world.SensorConfig().gps_sigma_h)
 
 
 class SwarmConvergenceTest(unittest.TestCase):

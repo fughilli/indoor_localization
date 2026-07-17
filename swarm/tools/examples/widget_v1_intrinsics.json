@@ -1,0 +1,32 @@
+{
+  "schema": "widget-intrinsics",
+  "version": 1,
+  "widget_model": "widget-v1",
+  "widget_serial": "0042",
+  "imu": {
+    "accel_noise_density": 0.005,
+    "gyro_noise_density": 0.0002,
+    "accel_bias_instability": 0.0005,
+    "gyro_bias_instability": 6e-05,
+    "gyro_bias": [0.01, -0.02, 0.005]
+  },
+  "uwb_range": {
+    "bias0_m": 0.05,
+    "scale_ppm": 200.0,
+    "sigma_m": 0.1,
+    "outlier_frac": 0.05
+  },
+  "uwb_aoa": {
+    "plane_normal": [0.0, 0.0, 1.0],
+    "sign": 1.0,
+    "offset_rad": 0.3,
+    "sigma_rad": 0.12
+  },
+  "mag": {
+    "hard_iron": [12.0, -5.0, 3.0],
+    "soft_iron": [[1.069, 0.0, 0.0], [0.0, 0.875, 0.0], [0.0, 0.0, 0.992]],
+    "sigma": 0.009
+  },
+  "gps": {"sigma_h_m": 1.5, "sigma_v_m": 3.0},
+  "alt": {"sigma_m": 0.3}
+}

@@ -11,6 +11,11 @@ truth) into --capture/--manifest first and then analyze it — a dry run of
 the full pipeline, and the reference for what a hardware capture must look
 like (see swarm/tools/records.py for the record schema).
 
+--intrinsics FILE additionally merges the analysis result into a
+widget-intrinsics config (created if missing) — the standard schema a
+manufacturer ships with a widget so the firmware can use measured sensor
+quality instead of conservative defaults (swarm/tools/intrinsics.py).
+
 AoA specifically answers: in which body-frame plane does the radio measure
 its angle (fitted plane normal), with what sign convention, mounting offset,
 and precision — and how fast precision degrades out of plane.
@@ -18,10 +23,11 @@ and precision — and how fast precision degrades out of plane.
 
 import argparse
 import json
+import os
 
 import numpy as np
 
-from swarm.tools import analysis, records, synth
+from swarm.tools import analysis, intrinsics, records, synth
 
 
 def cmd_range(args):
@@ -92,6 +98,9 @@ def main():
                     help="IMU sample rate override, Hz")
     ap.add_argument("--demo", action="store_true",
                     help="generate a synthetic capture first, then analyze")
+    ap.add_argument("--intrinsics", metavar="FILE",
+                    help="merge the result into this widget-intrinsics "
+                         "config (created if missing)")
     args = ap.parse_args()
     if args.demo:
         DEMOS[args.kind](args.capture, args.manifest)
@@ -99,6 +108,12 @@ def main():
     report = {"range": cmd_range, "aoa": cmd_aoa,
               "imu": cmd_imu, "mag": cmd_mag}[args.kind](args)
     print(json.dumps(report, indent=2))
+    if args.intrinsics:
+        cfg = (intrinsics.load(args.intrinsics)
+               if os.path.exists(args.intrinsics) else intrinsics.empty())
+        intrinsics.save(intrinsics.merge_report(cfg, args.kind, report),
+                        args.intrinsics)
+        print("# merged %s intrinsics -> %s" % (args.kind, args.intrinsics))
 
 
 if __name__ == "__main__":

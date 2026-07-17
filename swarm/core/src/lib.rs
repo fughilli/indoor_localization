@@ -12,6 +12,7 @@
 pub mod estimator;
 pub mod extrinsics;
 pub mod ffi;
+pub mod intrinsics;
 pub mod math;
 
 pub use estimator::Estimator;

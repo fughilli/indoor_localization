@@ -8,15 +8,45 @@ time-to-converge (first time the error stays below --converged-m).
 
 import argparse
 import json
+import math
 
 import numpy as np
 
 from swarm.sim import world
+from swarm.tools import intrinsics as intrinsics_schema
+
+
+def apply_intrinsics(sensors, config):
+    """Map a widget-intrinsics config onto the sim's SensorConfig — the same
+    mapping firmware applies to its estimator Params and measurement noise
+    (characterized values replace the conservative defaults)."""
+    sqrt_rate = math.sqrt(sensors.imu_rate)
+    imu = config.get("imu", {})
+    if "accel_noise_density" in imu:
+        sensors.accel_sigma = imu["accel_noise_density"] * sqrt_rate
+    if "gyro_noise_density" in imu:
+        sensors.gyro_sigma = imu["gyro_noise_density"] * sqrt_rate
+    rng = config.get("uwb_range", {})
+    if "sigma_m" in rng:
+        sensors.uwb_range_sigma = rng["sigma_m"]
+    if "outlier_frac" in rng:
+        sensors.uwb_multipath_prob = rng["outlier_frac"]
+    aoa = config.get("uwb_aoa", {})
+    if "sigma_rad" in aoa:
+        sensors.uwb_aoa_sigma = aoa["sigma_rad"]
+    gps = config.get("gps", {})
+    if "sigma_h_m" in gps:
+        sensors.gps_sigma_h = gps["sigma_h_m"]
+    if "sigma_v_m" in gps:
+        sensors.gps_sigma_v = gps["sigma_v_m"]
+    if "sigma_m" in config.get("alt", {}):
+        sensors.alt_sigma = config["alt"]["sigma_m"]
+    return sensors
 
 
 def run(n_widgets, n_gps, seconds, seed=1234, converged_m=1.0, aoa=True,
         frame_cb=None, trace=False, n_surveyed=0, downhill_ratio=0.5,
-        sensor_overrides=None, static=False):
+        sensor_overrides=None, static=False, intrinsics_path=None):
     specs = world.default_swarm(n=n_widgets, n_gps=n_gps, n_surveyed=n_surveyed)
     for s in specs:
         s.has_aoa = aoa
@@ -24,6 +54,8 @@ def run(n_widgets, n_gps, seconds, seed=1234, converged_m=1.0, aoa=True,
             s.kind = "static"
     sensors = world.SensorConfig(downhill_ratio=downhill_ratio,
                                  **(sensor_overrides or {}))
+    if intrinsics_path:
+        apply_intrinsics(sensors, intrinsics_schema.load(intrinsics_path))
     w = world.World(specs, sensors=sensors, seed=seed)
     n_widgets = len(specs)
     history = []  # (t, [abs_err_i...], [rel_err_i...])
@@ -109,6 +141,9 @@ def main():
                     help="override UWB range noise, m")
     ap.add_argument("--broadcast-rate", type=float, default=None,
                     help="override pose advertisements/s")
+    ap.add_argument("--intrinsics", default=None,
+                    help="widget-intrinsics JSON: use characterized sensor "
+                         "quality instead of the built-in defaults")
     ap.add_argument("--no-multipath", action="store_true",
                     help="disable UWB multipath outliers")
     ap.add_argument("--aoa-damping", type=float, default=None,
@@ -124,7 +159,7 @@ def main():
     report, _ = run(args.widgets, args.gps, args.seconds, args.seed,
                     args.converged_m, aoa=not args.no_aoa, trace=args.trace,
                     n_surveyed=args.surveyed, downhill_ratio=args.downhill,
-                    static=args.static,
+                    static=args.static, intrinsics_path=args.intrinsics,
                     sensor_overrides={k: v for k, v in {
                         "uwb_slot_rate": args.slot_rate,
                         "uwb_range_sigma": args.range_sigma,

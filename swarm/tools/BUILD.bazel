@@ -33,6 +33,7 @@ py_library(
     srcs = ["characterize.py"],
     deps = [
         ":analysis_lib",
+        ":intrinsics_lib",
         ":records_lib",
         ":synth_lib",
     ],
@@ -76,6 +77,40 @@ py_test(
     srcs = ["extrinsics_test.py"],
     data = ["examples/widget_v1.json"],
     deps = [":extrinsics_lib"],
+)
+
+py_library(
+    name = "intrinsics_lib",
+    srcs = ["intrinsics.py"],
+)
+
+py_binary(
+    name = "intrinsics",
+    srcs = ["intrinsics.py"],
+    main = "intrinsics.py",
+    deps = [":intrinsics_lib"],
+)
+
+genrule(
+    name = "example_intrinsics_blob",
+    srcs = ["examples/widget_v1_intrinsics.json"],
+    outs = ["examples/widget_v1_intrinsics.wint"],
+    cmd = "$(location :intrinsics) export-blob " +
+          "--config $(location examples/widget_v1_intrinsics.json) --out $@",
+    tools = [":intrinsics"],
+    visibility = ["//visibility:public"],
+)
+
+py_test(
+    name = "intrinsics_test",
+    srcs = ["intrinsics_test.py"],
+    data = ["examples/widget_v1_intrinsics.json"],
+    deps = [
+        ":analysis_lib",
+        ":intrinsics_lib",
+        ":records_lib",
+        ":synth_lib",
+    ],
 )
 
 py_library(

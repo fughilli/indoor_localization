@@ -322,3 +322,36 @@ best matches `sign · azimuth(direction projected into plane) + offset`,
 weighting out near-normal directions where azimuth is unobservable. On the
 synthetic reference it recovers a plane normal to <1°, the offset to
 <0.01 rad, and the σ within noise.
+
+## 11. Widget configuration standard (extrinsics + intrinsics)
+
+The widget design is open for third-party manufacturing/customization, so
+per-widget properties are configuration with a versioned schema, not code.
+Both configs are JSON as source of truth with two firmware consumption
+paths: a generated C header (bake in at build time) and a CRC-protected
+little-endian binary blob for dynamic load from flash/NVS, parsed on-device
+by `swarm/core/src/{extrinsics,intrinsics}.rs`. A genrule encodes each
+example config with the Python tool and the Rust unit tests parse those
+exact bytes — the cross-language contract is enforced in CI.
+
+**Extrinsics** (`widget-extrinsics` v1, blob magic `WEXT`) — *where every
+sensor sits*: per sensor an axis mapping + fine Euler trim + offset
+(human-authorable) and a derived canonical sensor→widget quaternion
+(`v_widget = R·v_sensor + offset`). Standard sensors imu/mag/uwb/gps/alt
+(ids 1–5); custom sensors use explicit ids ≥128. Authored graphically with
+`//swarm/tools:extrinsics_configurator` (port 8082): live 3D preview of the
+sensor triads on the widget body, validation, and one-click header/blob
+export.
+
+**Intrinsics** (`widget-intrinsics` v1, blob magic `WINT`) — *how good every
+sensor is*: exactly what `//swarm/tools:characterize` measures, optionally
+shipped per widget model or per serial to replace the firmware's
+conservative defaults. Sections (all optional; absent section or NaN field
+= "use default"; unknown sections are skipped for forward compatibility):
+IMU noise densities/bias instabilities/initial gyro bias, UWB range error
+model (bias0/scale/σ/outlier fraction), UWB AoA convention + precision
+(plane normal in the *sensor* frame — compose with the UWB extrinsic for
+the widget frame), mag hard/soft-iron calibration, GPS/altimeter sigmas.
+`characterize <kind> --intrinsics file.json` merges measurement results
+straight into a config, and `run_sim --intrinsics` maps it onto the
+estimator noise model — the same mapping firmware applies to its `Params`.
