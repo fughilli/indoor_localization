@@ -174,13 +174,28 @@ impl Estimator {
     /// One scalar Kalman update; injects the error into the nominal state.
     /// Returns false if the innovation gate rejected the measurement.
     ///
+    /// With `update_cov == false` this is a *mean-only* update: the state
+    /// moves by K*y but the covariance is left untouched. Used for relative
+    /// measurements between peers of comparable quality (no "downhill"
+    /// direction): the estimates get pulled onto a mutually consistent mesh
+    /// without ever claiming an information gain that would double-count
+    /// shared history — covariance honesty is what keeps the swarm out of
+    /// the overconfidence death spiral.
+    ///
     /// Note on cooperative consistency: relative measurements fold the
     /// neighbor's advertised variance into `r`, and the *network layer* only
-    /// accepts relative updates "downhill" (from better-localized peers).
-    /// Whole-state scalar covariance intersection was tried here and removed:
-    /// the 1/w prior inflation hits never-measured directions (biases,
-    /// velocity) every update and grows their variance exponentially.
-    fn scalar_update(&mut self, h: &[f32; STATE_DIM], y: f32, r: f32) -> bool {
+    /// takes covariance-reducing relative updates "downhill" (from
+    /// better-localized peers). Whole-state scalar covariance intersection
+    /// was tried here and removed: the 1/w prior inflation hits
+    /// never-measured directions (biases, velocity) every update and grows
+    /// their variance exponentially.
+    fn scalar_update(
+        &mut self,
+        h: &[f32; STATE_DIM],
+        y: f32,
+        r: f32,
+        update_cov: bool,
+    ) -> bool {
         let mut ph = [0.0f32; STATE_DIM];
         for i in 0..STATE_DIM {
             let mut s = 0.0;
@@ -213,19 +228,29 @@ impl Estimator {
         self.q = self.q.mul(Quat::from_rotvec(dx(DTH))).normalized();
         self.ba = self.ba.add(dx(DBA));
         self.bg = self.bg.add(dx(DBG));
-        // P <- P - K (P H^T)^T
-        for i in 0..STATE_DIM {
-            for j in 0..STATE_DIM {
-                self.cov[i][j] -= k[i] * ph[j];
+        if update_cov {
+            // P <- P - K (P H^T)^T
+            for i in 0..STATE_DIM {
+                for j in 0..STATE_DIM {
+                    self.cov[i][j] -= k[i] * ph[j];
+                }
             }
+            cov_symmetrize(&mut self.cov);
         }
-        cov_symmetrize(&mut self.cov);
         true
     }
 
     /// UWB two-way range (meters) to a neighbor whose advertised position is
-    /// `np` with mean position variance `nvar` (m^2). Returns acceptance.
-    pub fn update_range(&mut self, np: Vec3, nvar: f32, measured: f32, sigma: f32) -> bool {
+    /// `np` with mean position variance `nvar` (m^2). `mean_only` for the
+    /// symmetric (no-downhill) regime. Returns acceptance.
+    pub fn update_range(
+        &mut self,
+        np: Vec3,
+        nvar: f32,
+        measured: f32,
+        sigma: f32,
+        mean_only: bool,
+    ) -> bool {
         let d = self.p.sub(np);
         let r_pred = d.norm();
         if r_pred < 0.05 {
@@ -236,13 +261,27 @@ impl Estimator {
         h[DP] = u.x;
         h[DP + 1] = u.y;
         h[DP + 2] = u.z;
-        self.scalar_update(&h, measured - r_pred, sigma * sigma + nvar)
+        // Multipath outliers in the symmetric (mean-only) regime are absorbed,
+        // not gated: the S-based gate is blind there (S is dominated by the
+        // honestly-huge absolute variance) and a per-widget adaptive
+        // innovation gate was tried and removed — endpoints gate the shared
+        // range asymmetrically, and thousands of one-sided half-updates pump
+        // net drift into the mesh (~10x worse relative error). Real NLOS
+        // rejection belongs at the radio layer (CIR classification).
+        self.scalar_update(&h, measured - r_pred, sigma * sigma + nvar, !mean_only)
     }
 
     /// UWB AoA: measured unit bearing to the neighbor in the *body* frame.
     /// Processed as three scalar updates on the bearing components. Returns
     /// how many components passed the gate.
-    pub fn update_aoa(&mut self, np: Vec3, nvar: f32, bearing_body: Vec3, sigma: f32) -> u32 {
+    pub fn update_aoa(
+        &mut self,
+        np: Vec3,
+        nvar: f32,
+        bearing_body: Vec3,
+        sigma: f32,
+        mean_only: bool,
+    ) -> u32 {
         let mut accepted = 0;
         for axis in 0..3 {
             let d_w = np.sub(self.p);
@@ -273,7 +312,7 @@ impl Estimator {
             ][axis];
             // Neighbor position error projects onto the bearing as ~1/range.
             let r_eff = sigma * sigma + nvar / (range * range);
-            if self.scalar_update(&h, y, r_eff) {
+            if self.scalar_update(&h, y, r_eff, !mean_only) {
                 accepted += 1;
             }
         }
@@ -289,7 +328,7 @@ impl Estimator {
             let mut h = [0.0f32; STATE_DIM];
             h[DP + axis] = 1.0;
             let y = meas[axis] - self.p.to_array()[axis];
-            if self.scalar_update(&h, y, sigmas[axis] * sigmas[axis]) {
+            if self.scalar_update(&h, y, sigmas[axis] * sigmas[axis], true) {
                 accepted += 1;
             }
         }
@@ -300,7 +339,27 @@ impl Estimator {
     pub fn update_alt(&mut self, z: f32, sigma: f32) -> bool {
         let mut h = [0.0f32; STATE_DIM];
         h[DP + 2] = 1.0;
-        self.scalar_update(&h, z - self.p.z, sigma * sigma)
+        self.scalar_update(&h, z - self.p.z, sigma * sigma, true)
+    }
+
+    /// Weak zero-velocity gauge prior: with no absolute-position widget in
+    /// the swarm, the common-mode translation (and its velocity) is
+    /// unobservable and would random-walk on IMU noise. Bleeding every
+    /// widget's velocity toward zero with a large sigma pins the swarm
+    /// frame to quasi-static — valid while the shared reference frame is
+    /// not accelerating appreciably — at a negligible cost to genuinely
+    /// moving widgets (sigma is chosen well above their real speeds).
+    pub fn update_zero_vel(&mut self, sigma: f32) -> u32 {
+        let mut accepted = 0;
+        let v = self.v.to_array();
+        for axis in 0..3 {
+            let mut h = [0.0f32; STATE_DIM];
+            h[DV + axis] = 1.0;
+            if self.scalar_update(&h, -v[axis], sigma * sigma, true) {
+                accepted += 1;
+            }
+        }
+        accepted
     }
 
     /// Magnetometer: measured field direction (unit, body frame) vs the known
@@ -327,7 +386,7 @@ impl Estimator {
             let mut h = [0.0f32; STATE_DIM];
             h[DTH..DTH + 3].copy_from_slice(&su[axis]);
             let y = measured_body.to_array()[axis] - pred_b.to_array()[axis];
-            if self.scalar_update(&h, y, sigma * sigma) {
+            if self.scalar_update(&h, y, sigma * sigma, true) {
                 accepted += 1;
             }
         }
@@ -376,7 +435,7 @@ mod tests {
             e.predict(Vec3::new(0.0, 0.0, GRAVITY), Vec3::ZERO, 0.01);
             for a in &anchors {
                 let true_range = truth.sub(*a).norm();
-                e.update_range(*a, 0.0, true_range, 0.1);
+                e.update_range(*a, 0.0, true_range, 0.1, false);
             }
         }
         let err = e.p.sub(truth).norm();
@@ -420,6 +479,36 @@ mod tests {
         assert!(e.q.yaw().abs() < 0.02, "residual yaw {}", e.q.yaw());
     }
 
+    /// A mean-only update must move the state but leave covariance alone.
+    #[test]
+    fn mean_only_update_preserves_covariance() {
+        let mut e = Estimator::new(quiet_params());
+        e.set_pose(Vec3::new(1.0, 0.0, 0.0), Vec3::ZERO, Quat::IDENTITY, 2.0, 0.1, 0.1);
+        let cov_before = e.cov;
+        let p_before = e.p;
+        // Range says the neighbor at origin is 3 m away (we think 1 m).
+        assert!(e.update_range(Vec3::ZERO, 4.0, 3.0, 0.1, true));
+        assert!(e.p.sub(p_before).norm() > 0.1, "state did not move");
+        assert_eq!(e.cov, cov_before, "covariance changed on mean-only update");
+    }
+
+    /// The zero-velocity gauge prior must bleed velocity toward zero and
+    /// barely disturb it within one update (weak prior).
+    #[test]
+    fn zero_vel_prior_bleeds_velocity() {
+        let mut e = Estimator::new(quiet_params());
+        e.set_pose(Vec3::ZERO, Vec3::new(1.0, 0.0, 0.0), Quat::IDENTITY, 1.0, 0.5, 0.1);
+        assert_eq!(e.update_zero_vel(3.0), 3);
+        assert!(e.v.x < 1.0);
+        assert!(e.v.x > 0.9, "weak prior pulled too hard: {}", e.v.x);
+        for _ in 0..200 {
+            e.predict(Vec3::new(0.0, 0.0, GRAVITY), Vec3::ZERO, 0.01);
+            e.update_zero_vel(3.0);
+        }
+        // Velocity variance is bounded by the prior, not growing without limit.
+        assert!(e.cov[DV][DV] < 9.5, "vel var {}", e.cov[DV][DV]);
+    }
+
     /// The innovation gate must reject a wild multipath-style outlier.
     #[test]
     fn gate_rejects_outlier() {
@@ -427,8 +516,8 @@ mod tests {
         e.set_pose(Vec3::ZERO, Vec3::ZERO, Quat::IDENTITY, 0.5, 0.1, 0.1);
         let anchor = Vec3::new(5.0, 0.0, 0.0);
         // True range 5 m, measured 50 m: gross outlier.
-        assert!(!e.update_range(anchor, 0.0, 50.0, 0.1));
+        assert!(!e.update_range(anchor, 0.0, 50.0, 0.1, false));
         // Sane measurement passes.
-        assert!(e.update_range(anchor, 0.0, 5.1, 0.1));
+        assert!(e.update_range(anchor, 0.0, 5.1, 0.1, false));
     }
 }

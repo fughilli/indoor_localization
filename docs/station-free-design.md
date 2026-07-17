@@ -8,9 +8,14 @@ code: `swarm/core` (Rust estimator), `swarm/sim` (simulation + viewer)._
 Swarms of widgets localize off one another with no fixed infrastructure.
 Any widget that knows its absolute position (GPS lock, surveyed placement)
 anchors the network; every other widget converges to a fast-updating absolute
-pose estimate. Demonstrated in simulation: **5–10 IMU+UWB-only mobile widgets
-reach 7–14 cm position RMSE within seconds** of three position-aware peers
-being present (§7).
+pose estimate. **With no anchored widget at all, the swarm still converges to
+a consistent relative solution**: per-widget absolute attitude comes from
+gravity+magnetometer, the mesh's global orientation is grounded through AoA,
+and the unobservable common translation is pinned by bleeding the swarm
+velocity to zero (valid while the shared reference frame is not accelerating
+appreciably). Demonstrated in simulation (§7): 5–10 IMU+UWB-only mobile
+widgets reach **7–14 cm absolute RMSE** with three surveyed peers, and
+**~0.5 m relative RMSE with zero anchors**.
 
 ## 2. Widget hardware model
 
@@ -72,30 +77,56 @@ body-side (`R_true = R_est·exp([δθ]×)`).
 
 ### 4.2 Cooperative fusion rules (the part that makes swarms work)
 
-Every widget advertises `(p, v, quality)` where quality = mean position
-variance (trace(P_pos)/3). Peers fold that variance into the range/AoA
-measurement noise. That alone is **not** enough; two additional rules are
-load-bearing, both discovered by simulation (§7.4):
+Every widget advertises `(p, v, quality, flags)` where quality = mean
+position variance (trace(P_pos)/3); consumers dead-reckon a stale
+advertisement forward with its `v`. On receiving a range/AoA measurement, a
+widget classifies the peer by relative quality and applies one of three
+treatments (all discovered/validated by simulation, §7.4):
 
-1. **Downhill rule** (network layer): accept a relative update only when
-   `nvar_peer < 0.5 × my_var`. Information flows outward from anchored
-   widgets and cannot circulate back. Without it, mutual updates
-   double-count shared information: every filter collapses to σ≈0.1 m
-   inside 1 s while errors are meters, the gate then rejects all real
-   measurements, and the swarm consensus-drifts away unboundedly.
-2. **Cold-start damping** (network layer): the effective peer variance is
-   floored at `0.5 × my_var`. A cold widget (σ=100 m) hit by a tight
-   anchor range would otherwise take a near-unity-gain jump from a garbage
-   linearization point — observed to diverge to km scale. The floor turns
-   acquisition into bounded, re-linearized steps (damped Gauss-Newton
-   behavior); no separate acquisition state machine is needed.
+1. **Downhill — full Kalman update** when `nvar_peer < 0.5 × my_var` (peer
+   clearly better-localized). The peer variance folds into the measurement
+   noise, floored at `0.5 × my_var` (**cold-start damping**): a cold widget
+   (σ=100 m) hit by a tight anchor range would otherwise take a
+   near-unity-gain jump from a garbage linearization point — observed to
+   diverge to km scale. The floor turns acquisition into bounded,
+   re-linearized steps (damped Gauss-Newton); no separate acquisition state
+   machine is needed.
+2. **Comparable — mean-only update** when quality is within [0.5×, 2×] of
+   mine: the state moves by K·y but the covariance is untouched, so no
+   information gain is ever claimed from mutually-derived measurements.
+   This is what makes the anchorless swarm work: estimates relax onto a
+   mutually consistent mesh while covariance honestly tracks the
+   unobservable absolute frame. Within this regime, range updates are
+   damped against my own variance (gain ≈ 2/3), while **AoA gain is divided
+   by a further ~30×**: the mesh shape is already range-rigid, and AoA's
+   only anchorless job is steering the slowly-drifting global mesh
+   orientation — at relaxation gain its ~7° noise (≈1.8 m tangential at
+   15 m) shakes the mesh instead.
+3. **Uphill — ignore** when the peer is clearly worse; relaxing toward it
+   only drags me off. Additionally, an **anchored widget (healthy absolute
+   source; `flags`) never takes mean-only pulls**: the 33 Hz consensus
+   relaxation would overpower its 1 Hz GPS and drag the swarm gauge off
+   truth (observed: 6 m absolute error vs 1.5 m with the rule).
 
-Dead end, documented so nobody retries it: whole-state scalar **covariance
-intersection** (prior deweighted 1/w per update). Consistent in theory, but
-the 1/w inflation hits never-measured directions (biases, velocity) on every
-relative update → exponential variance blowup → f32 overflow. A future
-split-CI (inflate only the position block correlated with the swarm) is the
-principled upgrade path if sub-peer-variance accuracy is ever needed.
+Two gauge mechanisms complete the anchorless mode:
+
+- **Zero-velocity bleed**: every widget applies a weak zero-velocity
+  pseudo-measurement (σ=3 m/s at 2 Hz). The swarm's common-mode velocity —
+  unobservable without anchors — is bled to zero, pinning the swarm frame
+  to quasi-static. Valid while the shared reference frame is not
+  accelerating appreciably; the sigma sits far above real widget speeds so
+  genuine motion is negligibly biased.
+- **Orientation grounding**: gravity + magnetometer give each widget
+  absolute attitude; AoA bearings (measured in the body frame, mapped
+  through that attitude) tie the *relative position mesh* to those
+  attitudes. Without AoA the mesh shape stays good but its global
+  orientation random-walks (ranges are rotation-invariant): measured 3–20 m
+  translation-aligned error vs 0.5 m rotation-aligned.
+
+Dead ends, documented so nobody retries them (§7.4): naive mutual updates,
+whole-state scalar covariance intersection, undamped cold-start updates,
+full-gain mean-only AoA, per-widget adaptive innovation gating, and
+mean-only pulls on anchored widgets.
 
 ### 4.3 Observability notes
 
@@ -104,9 +135,12 @@ principled upgrade path if sub-peer-variance accuracy is ever needed.
 - One anchored widget fixes translation; absolute yaw comes from the shared
   magnetic field, z from altimeters. Three non-collinear anchored widgets
   make the whole swarm absolutely observable without magnetometer trust.
-- With zero anchored widgets, absolute position is unobservable by design;
-  the filters must (and do — `sim_test.py`) stay numerically sane with
-  honestly large covariance.
+- With zero anchored widgets, absolute position is unobservable by design.
+  The relative mesh, mesh orientation, and per-widget attitude remain
+  observable (ranges + AoA + gravity + mag); the 3-DOF translation gauge is
+  pinned by the zero-velocity bleed and wanders slowly. The filters stay
+  numerically sane with honestly large absolute covariance
+  (`sim_test.py`).
 
 ## 5. Protocol design
 
@@ -171,7 +205,7 @@ system still meets 2× its baseline error.
 | Quantity | Baseline (sim) | Requirement |
 |---|---|---|
 | UWB range noise (1σ) | 0.10 m | ≤ 0.30 m (error scales ~linearly) |
-| UWB multipath | 5% outliers, +Exp(1 m) | handled by 5σ gate |
+| UWB multipath | 5% outliers, +Exp(1 m) | gated (anchored regimes); absorbed (~0.15 m cost) in anchorless — see §9 NLOS |
 | Ranging rate per widget | ~25/s | ≥ ~6/s (25 slots/s ÷ 8 widgets) |
 | AoA | σ≈7° | **optional** — no measurable gain in range-rich geometry; keep for sparse geometries |
 | IMU accel / gyro noise | 0.05 m/s², 0.002 rad/s per sample @100 Hz | consumer MEMS suffices |
@@ -181,6 +215,7 @@ system still meets 2× its baseline error.
 | Advertisement rate | 10 Hz | ≥ 2 Hz measured equivalent |
 | Anchors for cm-level | 3 surveyed (or RTK-grade) | ≥ 3 non-collinear |
 | Anchors for m-level | 2 plain GPS widgets | ≥ 1 (absolute error ~ GPS σ) |
+| Anchorless (relative-only) | 0 anchors | AoA + mag REQUIRED (mesh orientation); ~0.5 m relative; frame must not accelerate (zero-vel gauge) |
 | CPU (predict @100 Hz + updates) | ~0.9 MFLOP/s (2×15³ MAC ×100 Hz + scalar updates) | ESP32 (240 MHz, FPU) ample |
 | RAM per estimator | ~1.1 kB (15×15 f32 cov + state) | |
 
@@ -195,11 +230,15 @@ All runs: seed 1234, 90 s, 30 m arena, sensors per §6 baseline,
 
 ### 7.1 Headline scenarios
 
-| Scenario | Widgets | Tail RMSE (mobile) | Convergence |
-|---|---|---|---|
-| 3 surveyed + 5 mobile (no GPS) | 8 | **0.07–0.10 m** | 0.3–1.1 s |
-| 2 GPS + 4 plain mobile | 6 | 0.7–2.7 m | tens of s |
-| 0 anchors (sanity) | 4 | unbounded abs. error, filters sane, σ honest | n/a |
+| Scenario | Widgets | Absolute tail RMSE | Relative tail RMSE | Convergence |
+|---|---|---|---|---|
+| 3 surveyed + 5 mobile (no GPS) | 8 | **0.06–0.08 m** | 0.05–0.07 m | ~1 s |
+| 2 GPS + 4 plain mobile | 6 | 1.4–2.1 m | 0.4–0.6 m (rot-aligned) | tens of s |
+| **0 anchors** (6 mobile) | 6 | ~25 m stable gauge offset (unobservable) | **0.46–0.59 m** | seconds |
+
+Relative RMSE = error after removing the best common translation; the
+rotation-aligned (Kabsch) variant separates mesh-orientation error from mesh
+deformation — in the final configuration they agree (orientation pinned).
 
 ### 7.2 Scaling
 
@@ -224,6 +263,10 @@ convergence 1–10 s.
 | whole-state scalar CI | exponential covariance blowup in unobserved directions → f32 overflow |
 | undamped updates from tight anchors on cold start | unity-gain snaps at wrong linearization → km-scale divergence |
 | multilateration-only cold start (≥4 tight peers) | bootstrap deadlock when <4 anchored peers exist |
+| anchorless: peer-var-deweighted AoA | AoA weight → 0 (everyone's var honestly huge); rotation info lost; but see next row |
+| anchorless: full-gain mean-only AoA | ~7° bearing noise × 15 m × gain 2/3 shakes the mesh to ~2 m; fix: AoA gain ÷30 (orientation steering only) |
+| anchorless: per-widget adaptive innovation gate (EWMA) | pair endpoints gate the shared range asymmetrically; thousands of one-sided half-updates pump mesh drift (~10× worse) |
+| mean-only consensus pulls on GPS-anchored widgets | 33 Hz mesh relaxation overpowers 1 Hz GPS → swarm gauge dragged ~6 m off truth |
 
 ## 8. Porting plan (embedded)
 
@@ -246,7 +289,12 @@ convergence 1–10 s.
 - Relative-state formulation (estimate swarm-frame + frame-to-world
   separately) to decouple cm relative precision from m-level absolute
   wander in GPS-only swarms.
-- NLOS/multipath classification from UWB CIR instead of pure gating.
+- NLOS/multipath classification from UWB CIR: statistical gating is blind
+  in the mean-only regime (S is dominated by the honest absolute variance)
+  and per-widget adaptive gating failed (§7.4) — costs ~0.15 m relative in
+  anchorless swarms today. A pair-level gate (both endpoints agree on the
+  same accept/reject decision from the shared measurement) is the next
+  cheap thing to try.
 - Distributed TDMA (id-hashed slot selection) + clock sync budget.
 - Full 6-DOF truth trajectories (current sim: yaw-only attitude).
 - Component extrinsics (IMU↔antenna lever arm) in the measurement models.

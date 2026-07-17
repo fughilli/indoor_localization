@@ -31,14 +31,24 @@ class SwarmConvergenceTest(unittest.TestCase):
         for w in gps:
             self.assertLess(w["tail_rmse_m"], 4.0)
 
-    def test_no_anchor_swarm_does_not_explode(self):
-        # With no absolute reference at all, absolute error is unobservable —
-        # but the filters must stay numerically sane and honestly uncertain.
-        report, world_obj = run_sim.run(n_widgets=4, n_gps=0, seconds=20.0,
-                                        seed=7)
+    def test_anchorless_swarm_converges_relatively(self):
+        # No absolute-position source anywhere: absolute position is
+        # unobservable (gauge pinned only by the zero-velocity prior), but
+        # the swarm must converge to a tight *relative* mesh whose global
+        # orientation is grounded by AoA + mag, and covariance must stay
+        # honest about the absolute frame. Typical: ~0.5 m relative RMSE.
+        report, world_obj = run_sim.run(n_widgets=6, n_gps=0, seconds=45.0,
+                                        seed=1234)
+        for w in report["widgets"]:
+            self.assertLess(w["tail_rel_rmse_m"], 1.2,
+                            "widget %d relative RMSE %.3f"
+                            % (w["id"], w["tail_rel_rmse_m"]))
+            # Translation-aligned ~ rotation-aligned: orientation is pinned.
+            self.assertLess(w["tail_rel_rmse_m"],
+                            3.0 * w["tail_rot_rel_rmse_m"] + 0.5)
         for w in world_obj.widgets:
             var = w.est.state()["pos_var"]
-            self.assertGreater(var, 1.0)   # still admits it doesn't know
+            self.assertGreater(var, 1.0)   # still admits absolute ignorance
             self.assertLess(var, 1e8)      # but hasn't blown up
 
 

@@ -1,7 +1,7 @@
 # WORKLOG
 
-_Last updated: 2026-07-17 (session 3, station-free build-out). Read together
-with `git log`._
+_Last updated: 2026-07-17 (session 3, station-free build-out + anchorless
+mode). Read together with `git log`._
 
 ## Goal
 
@@ -22,17 +22,25 @@ Two stacked scopes:
   ranging, 10 Hz pose-quality broadcasts, TRIAD init) driving one Rust
   estimator per widget via ctypes; `run_sim` metrics CLI with sweep flags;
   `viewer` = SSE+canvas browser view on :8081 (port in overlay.json).
-- **Headline result** (locked in `sim_test`): 3 surveyed anchors + 5–10
-  IMU+UWB-only mobiles → **7–14 cm tail RMSE, converge ≤10 s**. 2-GPS
-  scenario bounded at 0.7–2.7 m (GPS-noise physics). Full result tables in
+- **Headline results** (locked in `sim_test`): 3 surveyed anchors + 5–10
+  IMU+UWB-only mobiles → **6–14 cm tail RMSE, converge ≤10 s**. 2-GPS
+  scenario: 1.4–2.1 m absolute (GPS-noise physics), ~0.5 m relative. **Zero
+  anchors → 0.46–0.59 m relative RMSE** with a stable (unobservable,
+  zero-vel-pinned) gauge offset. Full tables in
   `docs/station-free-design.md` §7.
+- **Anchorless mode** (user request, this session): mean-only (covariance-
+  preserving) relative updates in the comparable-quality regime, three-band
+  peer classification (downhill full / comparable mean-only / uphill
+  ignore), anchored widgets exempt from consensus pulls, zero-velocity
+  gauge bleed (σ3 m/s @ 2 Hz), mean-only AoA gain ÷30 (orientation steering
+  only), advertisement dead-reckoning. Relative + Kabsch rotation-aligned
+  metrics in run_sim; "relative view" checkbox in the viewer.
 - `docs/station-free-design.md` — architecture, protocol (33 B advert @
   10 Hz, DS-TWR piggyback, TDMA), requirements grounded in sweeps, porting
   plan, negative results.
-- The two load-bearing cooperative-fusion rules live in the sim's network
-  layer (`world.py::_run_slot`): **downhill rule** (accept relative updates
-  only from peers with var < 0.5× mine) and **cold-start damping** (floor
-  effective peer var at 0.5× my var). Both are required; see design doc §4.2.
+- All cooperative-fusion rules live in the sim's network layer
+  (`world.py::_run_slot`) + `Estimator::update_zero_vel`; design doc §4.2
+  is the authoritative description of the regime logic.
 
 ## Next up
 
@@ -63,6 +71,17 @@ Two stacked scopes:
   `third_party/embedded` from `.bazelignore`.
 - **Naive mutual KF range updates between widgets** — covariance collapses
   <1 s, gate then rejects truth, swarm consensus-drifts unboundedly.
+- **Full-gain mean-only AoA** (anchorless) — 7° bearing noise at relaxation
+  gain shakes the mesh to ~2 m; AoA must be heavily damped (÷30), its job
+  is only steering global mesh orientation.
+- **Peer-var-deweighted AoA in mean-only regime** — weight vanishes
+  (everyone honestly uncertain), mesh orientation random-walks 3–20 m.
+- **Per-widget adaptive innovation gate (EWMA) for mean-only ranges** —
+  pair endpoints gate the shared range asymmetrically; one-sided
+  half-updates pump ~10× mesh drift. If retried, must be pair-level
+  (both endpoints share the accept/reject decision).
+- **Letting GPS-anchored widgets take mean-only consensus pulls** — 33 Hz
+  mesh relaxation overpowers 1 Hz GPS, drags the swarm gauge ~6 m off.
 - **Whole-state scalar covariance intersection** in the ESKF — 1/w prior
   inflation compounds exponentially in unobserved directions (biases/vel)
   → f32 overflow. If revisited, it must be split-CI on the position block.

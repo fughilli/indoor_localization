@@ -38,9 +38,13 @@ def _lib():
                 ([ctypes.c_void_p, f32p, f32p, f32p, f32, f32, f32], None),
             "swarm_estimator_predict": ([ctypes.c_void_p, f32p, f32p, f32], None),
             "swarm_estimator_update_range":
-                ([ctypes.c_void_p, f32p, f32, f32, f32], ctypes.c_int),
+                ([ctypes.c_void_p, f32p, f32, f32, f32, ctypes.c_int],
+                 ctypes.c_int),
             "swarm_estimator_update_aoa":
-                ([ctypes.c_void_p, f32p, f32, f32p, f32], ctypes.c_int),
+                ([ctypes.c_void_p, f32p, f32, f32p, f32, ctypes.c_int],
+                 ctypes.c_int),
+            "swarm_estimator_update_zero_vel":
+                ([ctypes.c_void_p, f32], ctypes.c_int),
             "swarm_estimator_update_gps":
                 ([ctypes.c_void_p, f32p, f32, f32], ctypes.c_int),
             "swarm_estimator_update_alt": ([ctypes.c_void_p, f32, f32], ctypes.c_int),
@@ -90,13 +94,22 @@ class Estimator:
     def predict(self, accel, gyro, dt):
         self._lib.swarm_estimator_predict(self._h, _f3(accel), _f3(gyro), dt)
 
-    def update_range(self, neighbor_p, neighbor_var, measured, sigma):
+    def update_range(self, neighbor_p, neighbor_var, measured, sigma,
+                     mean_only=False):
+        """mean_only: move the state but keep covariance (symmetric regime)."""
         return bool(self._lib.swarm_estimator_update_range(
-            self._h, _f3(neighbor_p), neighbor_var, measured, sigma))
+            self._h, _f3(neighbor_p), neighbor_var, measured, sigma,
+            1 if mean_only else 0))
 
-    def update_aoa(self, neighbor_p, neighbor_var, bearing_body, sigma):
+    def update_aoa(self, neighbor_p, neighbor_var, bearing_body, sigma,
+                   mean_only=False):
         return self._lib.swarm_estimator_update_aoa(
-            self._h, _f3(neighbor_p), neighbor_var, _f3(bearing_body), sigma)
+            self._h, _f3(neighbor_p), neighbor_var, _f3(bearing_body), sigma,
+            1 if mean_only else 0)
+
+    def update_zero_vel(self, sigma):
+        """Weak zero-velocity gauge prior (anchorless swarm frame pinning)."""
+        return self._lib.swarm_estimator_update_zero_vel(self._h, sigma)
 
     def update_gps(self, measured, sigma_h, sigma_v):
         return self._lib.swarm_estimator_update_gps(

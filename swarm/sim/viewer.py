@@ -25,6 +25,8 @@ PAGE = """<!DOCTYPE html>
   #info { margin: 8px 0; font-size: 13px; white-space: pre; }
 </style></head><body>
 <h3>Station-free swarm — truth vs on-device estimates</h3>
+<label><input type="checkbox" id="relview"> relative view (remove the
+unobservable common offset — use for anchorless swarms)</label>
 <div id="info">waiting for data&hellip;</div>
 <canvas id="view" width="720" height="720"></canvas>
 <script>
@@ -55,6 +57,15 @@ function drawEllipse(p, cov, color) {
 }
 function draw(f) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (document.getElementById('relview').checked) {
+    // Recenter the estimated mesh on the true centroid: shows the relative
+    // solution when the absolute gauge is unobservable.
+    const n = f.widgets.length;
+    const off = [0, 1, 2].map(k =>
+      f.widgets.reduce((s, w) => s + w.est_p[k] - w.true_p[k], 0) / n);
+    f = {...f, widgets: f.widgets.map(w =>
+      ({...w, est_p: w.est_p.map((x, k) => x - off[k])}))};
+  }
   const byId = {};
   f.widgets.forEach(w => byId[w.id] = w);
   ctx.strokeStyle = '#456'; ctx.lineWidth = 1;

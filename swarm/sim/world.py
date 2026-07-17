@@ -41,6 +41,17 @@ class SensorConfig:
     # consistent-but-wrong consensus. 0 disables the rule (unstable; kept
     # only for A/B experiments).
     downhill_ratio: float = 0.5
+    # In the symmetric (mean-only) regime, AoA's job is pinning the mesh's
+    # slowly-drifting global orientation — range triangulation already makes
+    # the mesh shape rigid. Its per-measurement noise (sigma_aoa * r meters
+    # tangential) would shake the mesh at relaxation gain, so its gain is
+    # divided by ~this factor (K ~ 1/(1+f)).
+    mean_only_aoa_damping: float = 30.0
+    # Weak zero-velocity gauge prior (see Estimator::update_zero_vel): pins
+    # the swarm frame when no widget has an absolute position source. Sigma
+    # is far above real widget speeds so it barely biases motion.
+    zero_vel_sigma: float = 3.0      # m/s
+    zero_vel_rate: float = 2.0       # updates per second
     imu_rate: float = 100.0
     accel_sigma: float = 0.05        # m/s^2 per sample
     gyro_sigma: float = 0.002        # rad/s per sample
@@ -191,8 +202,9 @@ class SimWidget:
         else:
             self.est.set_pose((0, 0, 0), (0, 0, 0), q0,
                               pos_sigma=100.0, vel_sigma=1.5, att_sigma=0.3)
-        # Advertised pose as the network last heard it: (position, mean var).
-        self.advertised = (np.zeros(3), 1e4)
+        # Advertised pose as the network last heard it:
+        # (position, velocity, mean var, timestamp).
+        self.advertised = (np.zeros(3), np.zeros(3), 1e4, 0.0)
         self.accepted_ranges = 0
         self.rejected_ranges = 0
 
@@ -208,10 +220,17 @@ class SimWidget:
 
     def broadcast(self, t):
         if self.spec.surveyed:
-            self.advertised = (self.truth.pos(t), 1e-4)
+            self.advertised = (self.truth.pos(t), np.zeros(3), 1e-4, t)
             return
         s = self.est.state()
-        self.advertised = (np.array(s["p"]), s["pos_var"])
+        self.advertised = (np.array(s["p"]), np.array(s["v"]),
+                           s["pos_var"], t)
+
+    def advertised_at(self, t):
+        """Peer view of me: last broadcast dead-reckoned by its velocity —
+        the advertisement payload carries v for exactly this."""
+        p, v, var, t0 = self.advertised
+        return p + v * (t - t0), var
 
     def pos_error(self, t):
         return float(np.linalg.norm(np.array(self.est.state()["p"]) - self.truth.pos(t)))
@@ -263,6 +282,8 @@ class World:
             if w.spec.surveyed and self._every(cfg.alt_rate):
                 # A surveyed widget re-pins itself to its known position.
                 w.est.update_gps(w.truth.pos(t), 0.02, 0.02)
+            if cfg.zero_vel_sigma > 0.0 and self._every(cfg.zero_vel_rate):
+                w.est.update_zero_vel(cfg.zero_vel_sigma)
 
         # UWB TDMA: run the slots that fall inside this step.
         self.last_links = []
@@ -297,27 +318,53 @@ class World:
         for me, other in ((wi, wj), (wj, wi)):
             if me.spec.surveyed:
                 continue  # already knows where it is
-            peer_p, peer_var = other.advertised
+            peer_p, peer_var = other.advertised_at(t)
             my_var = me.est.state()["pos_var"]
-            if (cfg.downhill_ratio > 0.0
-                    and peer_var > cfg.downhill_ratio * my_var):
+            # Three regimes by relative quality:
+            #  - downhill (peer clearly better-localized): full Kalman update
+            #    with cold-start damping — the peer variance is floored at
+            #    half my own so a badly-localized widget takes bounded,
+            #    re-linearized steps (damped Gauss-Newton) instead of
+            #    unity-gain snaps from a garbage linearization point.
+            #  - comparable: mean-only update — the state is pulled onto the
+            #    mutually consistent mesh but no information gain is claimed,
+            #    which is what lets an anchorless swarm converge *relatively*
+            #    while covariance honestly tracks the unobservable absolute
+            #    frame.
+            #  - uphill (peer clearly worse): ignore — relaxing an anchored
+            #    widget toward a bad peer only drags it off.
+            if peer_var >= my_var / cfg.downhill_ratio:
                 continue
-            # Cold-start damping: floor the peer variance at half my own, so
-            # a badly-localized widget takes bounded, re-linearized steps
-            # (damped Gauss-Newton) instead of unity-gain snaps onto a tight
-            # peer from a garbage linearization point — those diverge.
-            nvar_eff = max(peer_var,
-                           0.5 * my_var - cfg.uwb_range_sigma ** 2)
-            ok = me.est.update_range(peer_p, nvar_eff, rng_meas, cfg.uwb_range_sigma)
+            downhill = peer_var < cfg.downhill_ratio * my_var
+            mean_only = not downhill
+            # An absolutely-anchored widget (healthy GPS) never takes
+            # consensus (mean-only) pulls: the 33 Hz mesh relaxation would
+            # overpower its 1 Hz absolute fixes and drag the whole swarm's
+            # gauge off truth. It still accepts clearly-downhill updates.
+            if mean_only and me.spec.has_gps:
+                continue
+            # Downhill: damp with the peer's variance (floored for cold
+            # start). Mean-only: no covariance is updated so there is no
+            # double-count risk — do NOT deweight by the peer's (honestly
+            # huge, mostly common-mode) absolute variance or AoA vanishes
+            # and the mesh orientation floats; damp against my own variance
+            # only, which bounds the relaxation gain at ~2/3.
+            nvar_eff = (max(peer_var, 0.5 * my_var - cfg.uwb_range_sigma ** 2)
+                        if downhill else 0.5 * my_var)
+            ok = me.est.update_range(peer_p, nvar_eff, rng_meas,
+                                     cfg.uwb_range_sigma, mean_only=mean_only)
             me.accepted_ranges += ok
             me.rejected_ranges += not ok
-            if me.spec.has_aoa and my_var < 25.0:
+            if me.spec.has_aoa and (mean_only or my_var < 25.0):
                 # True bearing to the peer in my body frame, plus noise.
                 d_w = other.truth.pos(t) - me.truth.pos(t)
                 u_b = _rot_z(me.truth.yaw(t)).T @ (d_w / np.linalg.norm(d_w))
                 meas = u_b + self.rng.normal(0, cfg.uwb_aoa_sigma, 3)
                 meas /= np.linalg.norm(meas)
-                me.est.update_aoa(peer_p, peer_var, meas, cfg.uwb_aoa_sigma)
+                aoa_nvar = (cfg.mean_only_aoa_damping * my_var
+                            if mean_only else nvar_eff)
+                me.est.update_aoa(peer_p, aoa_nvar, meas, cfg.uwb_aoa_sigma,
+                                  mean_only=mean_only)
         self.last_links.append((i, j))
 
     def run(self, seconds, frame_cb=None, frame_rate=10.0):
@@ -343,6 +390,8 @@ class World:
                 "true_p": [round(float(x), 3) for x in w.truth.pos(self.t)],
                 "true_yaw": round(w.truth.yaw(self.t) % (2 * math.pi), 3),
                 "est_p": [round(float(x), 3) for x in s["p"]],
+                "est_v": [round(float(x), 3) for x in s["v"]],
+                "true_v": [round(float(x), 3) for x in w.truth.vel(self.t)],
                 "est_yaw": round(_quat_yaw(s["q"]), 3),
                 "pos_var": round(float(s["pos_var"]), 4),
                 "cov_xy": [[round(cov[r][c], 4) for c in range(2)] for r in range(2)],

@@ -83,9 +83,12 @@ pub extern "C" fn swarm_estimator_update_range(
     neighbor_var: f32,
     measured: f32,
     sigma: f32,
+    mean_only: i32,
 ) -> i32 {
     match unsafe { e.as_mut() } {
-        Some(e) => e.update_range(vec3(neighbor_p), neighbor_var, measured, sigma) as i32,
+        Some(e) => {
+            e.update_range(vec3(neighbor_p), neighbor_var, measured, sigma, mean_only != 0) as i32
+        }
         None => 0,
     }
 }
@@ -97,9 +100,16 @@ pub extern "C" fn swarm_estimator_update_aoa(
     neighbor_var: f32,
     bearing_body: *const f32,
     sigma: f32,
+    mean_only: i32,
 ) -> i32 {
     match unsafe { e.as_mut() } {
-        Some(e) => e.update_aoa(vec3(neighbor_p), neighbor_var, vec3(bearing_body), sigma) as i32,
+        Some(e) => e.update_aoa(
+            vec3(neighbor_p),
+            neighbor_var,
+            vec3(bearing_body),
+            sigma,
+            mean_only != 0,
+        ) as i32,
         None => 0,
     }
 }
@@ -121,6 +131,14 @@ pub extern "C" fn swarm_estimator_update_gps(
 pub extern "C" fn swarm_estimator_update_alt(e: *mut Estimator, z: f32, sigma: f32) -> i32 {
     match unsafe { e.as_mut() } {
         Some(e) => e.update_alt(z, sigma) as i32,
+        None => 0,
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn swarm_estimator_update_zero_vel(e: *mut Estimator, sigma: f32) -> i32 {
+    match unsafe { e.as_mut() } {
+        Some(e) => e.update_zero_vel(sigma) as i32,
         None => 0,
     }
 }
