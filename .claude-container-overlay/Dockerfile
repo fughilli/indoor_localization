@@ -61,3 +61,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # layers above cached.
 COPY apt-install /usr/local/bin/apt-install
 RUN chmod 0755 /usr/local/bin/apt-install
+
+# 2026-07-17: vim (recorded by apt-install)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        vim \
+    && rm -rf /var/lib/apt/lists/*
