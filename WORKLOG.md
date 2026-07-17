@@ -68,8 +68,11 @@ in-container only; the plan's substance is mirrored below).
 - **BLOCKER: container relaunch** needed before any build (no Nix here).
 - Push access to fughilli/embedded with the repo-local deploy key is untested
   (read worked). If push is refused, keep the branch local and flag here.
-- Workspace repo has no git remote — history is local-only until the user
-  provides one.
+- Remote `origin` = `git@github-fughilli:fughilli/indoor_localization.git`
+  (host alias needs `~/.ssh/config`, see memory). History was rewritten
+  locally on 2026-07-17 (author identity fix, user-requested), so the remote's
+  old `master` (pre-rewrite initial commit) requires a **force-push** — user
+  confirmation pending.
 
 ## Don't retry (dead ends)
 
