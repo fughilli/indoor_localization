@@ -61,6 +61,14 @@ bazelisk run //swarm/sim:run_sim -- --widgets 5 --gps 0 --surveyed 3
 bazelisk run //swarm/sim:viewer -- --widgets 5 --gps 0 --surveyed 3
 ```
 
+Under claude-container the viewer starts automatically at container launch
+(`.claude-container-overlay/startup.sh`; log in `/tmp/swarm-sim.log`) and is
+exposed as the named service `sim`:
+`http://sim.<instance>.claude.localhost/` (`claude-container --services` lists
+the exact URL). The floor view (`floor`, :8180) and extrinsics configurator
+(`extrinsics`, :8182) are named services too; only the tag's TCP ingest (7007)
+keeps a fixed host port, since the tag dials in from the LAN.
+
 Flashable images land in `bazel-bin/apps/anchor/anchor_{1,2,3}_esp32.bin` and
 `bazel-bin/apps/tag/tag_esp32.bin`.
 
