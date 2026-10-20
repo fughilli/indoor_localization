@@ -1,7 +1,7 @@
 # WORKLOG
 
-_Last updated: 2026-07-17 (session 3, station-free build-out + anchorless
-mode). Read together with `git log`._
+_Last updated: 2026-07-19 (session 4, lock-annealed gain + join/leave).
+Read together with `git log`._
 
 ## Goal
 
@@ -21,7 +21,7 @@ Two stacked scopes:
 - `swarm/sim` — Python sim (sensor noise/bias/multipath models, TDMA
   ranging, 10 Hz pose-quality broadcasts, TRIAD init) driving one Rust
   estimator per widget via ctypes; `run_sim` metrics CLI with sweep flags;
-  `viewer` = SSE+canvas browser view on :8081 (port in overlay.json).
+  `viewer` = SSE+canvas browser view on :8181 (port in overlay.json).
 - **Headline results** (locked in `sim_test`): 3 surveyed anchors + 5–10
   IMU+UWB-only mobiles → **6–14 cm tail RMSE, converge ≤10 s**. 2-GPS
   scenario: 1.4–2.1 m absolute (GPS-noise physics), ~0.5 m relative. **Zero
@@ -62,6 +62,36 @@ Two stacked scopes:
   (`world.py::_run_slot`) + `Estimator::update_zero_vel`; design doc §4.2
   is the authoritative description of the regime logic.
 
+**Session 4 (2026-07-19): innovation-annealed hold + join/leave** (user
+request: post-convergence jitter in the zero-gps/zero-survey view; devices
+joining cold / leaving):
+
+- Root cause of the jitter: mean-only updates deliberately never shrink
+  covariance (absolute frame unobservable), so the relaxation gain stays at
+  cold-start ~2/3 forever and every 10 cm-noise range (+5% multipath)
+  kicks the state — ~0.5 m/frame at 10 Hz. The filter *cannot* anneal this
+  natively; `pos_var` conflates common-mode (huge, correct) with mesh
+  quality (converging, untracked).
+- Fix: `Estimator::range_innov_ratio` (Rust, FFI getter, reset by
+  `set_pose`) = capped EWMA of |range innovation|/σ — a self-measured
+  **lock** signal (~1 locked, 10 none). `world.py` interpolates mean-only
+  range damping 0.5 → 30 (K ⅔ → ~3%) as lock falls 6 → 2; innovations
+  re-inflate on real motion, so the gain self-recovers. **Static anchorless:
+  jitter 0.48–0.60 → 0.14–0.18 m/frame, rel RMSE 0.42–0.62 → 0.25–0.30 m.**
+  Damping >30 trades rel accuracy for little jitter; kept 30.
+- Lock also **replaces variance for peer ranking** (variance can't rank
+  anchorless peers — see dead ends): advert now carries lock (surveyed/GPS
+  advertise 1.0); downhill requires peer lock < 6; mean-only pulls from a
+  ≥3×-worse-locked peer are refused (protects mesh from cold joiners);
+  adverts older than 1 s are ignored (departed widgets).
+- Join/leave: `World.add_widget` (cold at current t) / `remove_widget`;
+  `last_links` carries wids not indices; viewer `--join-at/--leave-at/
+  --leave-id` + per-widget lock in the info panel; `run_sim` adds
+  `tail_jitter_m`, `lock`, `--range-damping` (0 = annealing off, for A/B).
+- New `sim_test` cases (all 8 green): annealing jitter A/B, cold join pulls
+  in ≤1.5 m rel without shaking veterans, anchor loss → honest variance
+  regrowth with mesh held, stale-advert aging. Rust: `innov_ratio_tracks_lock`.
+
 ## Next up
 
 1. **Embedded port** of `swarm_core` per design doc §8: `#![no_std]` + libm,
@@ -94,6 +124,17 @@ Two stacked scopes:
   (design doc §9) is the route to cm-relative under GPS-only anchoring —
   user input welcome on which matters more.
 
+## Housekeeping
+
+- 2026-07-19: delete session-4 scratch files at the workspace root:
+  `.bazel-robase`, `.bazel-install`, `.tmp`, `.run-viewer-ro.sh`,
+  `.probe-rw.txt`. `.bazel-robase` is a broken partial extraction —
+  hermetic python cannot extract onto the case-insensitive Mac volume,
+  don't put a bazel output base there again. Re-run
+  `bazel test //swarm/...` for a clean record, and relaunch the viewer:
+  `bazelisk run //swarm/sim:viewer -- --widgets 6 --gps 0 --surveyed 0
+  --join-at 45 --leave-at 90 --leave-id 0`.
+
 ## Don't retry (dead ends)
 
 - Session 1–2 items: runtime `apt-get` without overlay; HTTPS clone of
@@ -112,6 +153,15 @@ Two stacked scopes:
   (both endpoints share the accept/reject decision).
 - **Letting GPS-anchored widgets take mean-only consensus pulls** — 33 Hz
   mesh relaxation overpowers 1 Hz GPS, drags the swarm gauge ~6 m off.
+- **Annealing the mean-only AoA gain with the range gain** (even by sqrt of
+  the factor) — orientation pinning is AoA's only job there; the mesh
+  slowly rotates (rel RMSE 3–5×, rot-rel stays tight). Anneal ranges only.
+- **Variance-ranking anchorless peers** (the original uphill/downhill test
+  vs a joiner) — a veteran's honest variance grows with process noise while
+  a cold joiner's stays at its frozen init, so by variance the clueless
+  joiner eventually outranks the converged mesh and veterans take full-gain
+  updates toward its garbage advert. Rank mesh quality by advertised lock
+  ratio; variance only qualifies genuinely-absolute sources.
 - **micropb 0.5 + proto3 implicit packed repeated scalars** — micropb only
   honors the explicit descriptor option; annotate `[packed = true]` in the
   .proto or byte-parity with canonical protobuf breaks.

@@ -182,6 +182,15 @@ pub extern "C" fn swarm_estimator_state(e: *const Estimator, out: *mut f32) {
     out[16] = e.pos_var();
 }
 
+/// Range-innovation lock ratio (EWMA of |y|/sigma, ~1 = locked, 10 = none).
+#[no_mangle]
+pub extern "C" fn swarm_estimator_range_innov_ratio(e: *const Estimator) -> f32 {
+    match unsafe { e.as_ref() } {
+        Some(e) => e.range_innov_ratio(),
+        None => 0.0,
+    }
+}
+
 /// Copy the 3x3 position covariance block (row-major) into out[9].
 #[no_mangle]
 pub extern "C" fn swarm_estimator_pos_cov(e: *const Estimator, out: *mut f32) {

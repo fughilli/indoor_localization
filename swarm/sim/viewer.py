@@ -3,7 +3,7 @@ streams frames over SSE to a canvas top-down view.
 
   bazel run //swarm/sim:viewer -- --widgets 5 --gps 0 --surveyed 3
 
-Open http://<host>:8081/ — filled dots are estimates (with 2-sigma
+Open http://<host>:8181/ — filled dots are estimates (with 2-sigma
 covariance ellipses), hollow rings are ground truth, lines are the ranging
 links active this frame. Surveyed widgets are green, GPS carriers blue,
 IMU+UWB-only widgets orange.
@@ -100,7 +100,8 @@ function draw(f) {
     ctx.fillText('' + w.id, ep[0] + 8, ep[1] - 6);
     lines += 'w' + w.id + (w.surveyed ? ' [survey]' : (w.gps ? ' [gps]' : '  ')) +
              '  err ' + w.err.toFixed(2).padStart(6) + ' m' +
-             '  sigma ' + Math.sqrt(w.pos_var).toFixed(2).padStart(6) + ' m\\n';
+             '  sigma ' + Math.sqrt(w.pos_var).toFixed(2).padStart(6) + ' m' +
+             '  lock ' + (w.lock === undefined ? '?' : w.lock.toFixed(1).padStart(5)) + '\\n';
   });
   info.textContent = lines;
 }
@@ -182,19 +183,25 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
 
-def serve(w, http_port=8081, arena=30.0, realtime=True, frame_rate=10.0):
+def serve(w, http_port=8181, arena=30.0, realtime=True, frame_rate=10.0,
+          events=None):
     """Start the HTTP server and step the world (real time by default).
-    Returns (hub, httpd, sim_thread); the sim thread is a daemon."""
+    `events` is an optional list of (sim_time, fn(world)) fired once each as
+    the sim clock passes sim_time (joins/leaves). Returns (hub, httpd,
+    sim_thread); the sim thread is a daemon."""
     hub = Hub()
     Handler.hub = hub
     Handler.page = PAGE % {"arena": arena}
     httpd = ThreadingHTTPServer(("0.0.0.0", http_port), Handler)
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    pending = sorted(events or [], key=lambda e: e[0])
 
     def sim_loop():
         frame_period = max(1, round(w.cfg.imu_rate / frame_rate))
         start = time.time()
         while True:
+            while pending and w.t >= pending[0][0]:
+                pending.pop(0)[1](w)
             w.step()
             if w.step_count % frame_period == 0:
                 hub.publish(w.frame())
@@ -214,13 +221,44 @@ def main():
     ap.add_argument("--gps", type=int, default=0)
     ap.add_argument("--surveyed", type=int, default=3)
     ap.add_argument("--seed", type=int, default=1234)
-    ap.add_argument("--http-port", type=int, default=8081)
+    ap.add_argument("--http-port", type=int, default=8181)
     ap.add_argument("--arena", type=float, default=30.0)
+    ap.add_argument("--join-at", type=float, default=None, metavar="T",
+                    help="at sim-time T, a cold widget (knows nothing) joins")
+    ap.add_argument("--leave-at", type=float, default=None, metavar="T",
+                    help="at sim-time T, widget --leave-id leaves the network")
+    ap.add_argument("--leave-id", type=int, default=0)
+    ap.add_argument("--motion-rate", type=float, default=1.0,
+                    help="scale orbit/translation speed (1.0 = nominal)")
+    ap.add_argument("--move-period", type=float, default=0.0,
+                    help="stop-and-go cycle length, s (0 = always moving)")
+    ap.add_argument("--move-duty", type=float, default=1.0,
+                    help="fraction of each cycle spent moving (<1 = pauses)")
     args = ap.parse_args()
     specs = world.default_swarm(n=args.widgets, n_gps=args.gps,
-                                n_surveyed=args.surveyed, arena=args.arena)
+                                n_surveyed=args.surveyed, arena=args.arena,
+                                motion_rate=args.motion_rate,
+                                move_period=args.move_period,
+                                move_duty=args.move_duty)
     w = world.World(specs, seed=args.seed)
-    serve(w, args.http_port, args.arena)
+    events = []
+    if args.join_at is not None:
+        wid = max(s.wid for s in specs) + 1
+        spec = world.WidgetSpec(
+            wid=wid, kind="orbit",
+            center=(args.arena / 2, args.arena / 2, 1.5),
+            radius=0.3 * args.arena, omega=0.12, phase=1.0, z_amp=0.3,
+            yaw_rate=0.08, motion_rate=args.motion_rate,
+            move_period=args.move_period, move_duty=args.move_duty,
+            move_phase=0.5)
+        events.append((args.join_at,
+                       lambda wld, s=spec: wld.add_widget(s)))
+        print("widget %d joins cold at t=%.1f s" % (wid, args.join_at))
+    if args.leave_at is not None:
+        events.append((args.leave_at,
+                       lambda wld: wld.remove_widget(args.leave_id)))
+        print("widget %d leaves at t=%.1f s" % (args.leave_id, args.leave_at))
+    serve(w, args.http_port, args.arena, events=events)
     print("Swarm view on http://0.0.0.0:%d/" % args.http_port)
     try:
         while True:

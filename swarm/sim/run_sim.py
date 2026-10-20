@@ -46,8 +46,11 @@ def apply_intrinsics(sensors, config):
 
 def run(n_widgets, n_gps, seconds, seed=1234, converged_m=1.0, aoa=True,
         frame_cb=None, trace=False, n_surveyed=0, downhill_ratio=0.5,
-        sensor_overrides=None, static=False, intrinsics_path=None):
-    specs = world.default_swarm(n=n_widgets, n_gps=n_gps, n_surveyed=n_surveyed)
+        sensor_overrides=None, static=False, intrinsics_path=None,
+        motion_rate=1.0, move_period=0.0, move_duty=1.0):
+    specs = world.default_swarm(n=n_widgets, n_gps=n_gps, n_surveyed=n_surveyed,
+                                motion_rate=motion_rate,
+                                move_period=move_period, move_duty=move_duty)
     for s in specs:
         s.has_aoa = aoa
         if static and not s.surveyed:
@@ -77,8 +80,10 @@ def run(n_widgets, n_gps, seconds, seed=1234, converged_m=1.0, aoa=True,
         d = np.sign(np.linalg.det(u @ vt))
         rot = (u @ np.diag([1.0, 1.0, d]) @ vt).T
         rot_rel = np.linalg.norm((rot @ ec.T).T - tc, axis=1)
+        # est - true per widget: frame-to-frame changes of this deviation
+        # are the visible "jitter" (truth motion subtracted out).
         history.append((frame["t"], [wg["err"] for wg in frame["widgets"]],
-                        list(rel), list(rot_rel)))
+                        list(rel), list(rot_rel), est - true))
         if trace and abs(frame["t"] % 1.0) < 0.05:
             verr = [np.linalg.norm(np.array(wg["est_v"]) - wg["true_v"])
                     for wg in frame["widgets"]]
@@ -94,10 +99,14 @@ def run(n_widgets, n_gps, seconds, seed=1234, converged_m=1.0, aoa=True,
     errs = np.array([h[1] for h in history])
     rels = np.array([h[2] for h in history])
     rot_rels = np.array([h[3] for h in history])
+    devs = np.array([h[4] for h in history])   # frames x widgets x 3
     times = np.array([h[0] for h in history])
     tail = errs[int(len(errs) * 0.75):]
     rel_tail = rels[int(len(rels) * 0.75):]
     rot_tail = rot_rels[int(len(rot_rels) * 0.75):]
+    # Post-convergence jitter: mean per-frame step of (est - true).
+    dev_tail = devs[int(len(devs) * 0.75):]
+    jitter = np.linalg.norm(np.diff(dev_tail, axis=0), axis=2).mean(axis=0)
     report = {"widgets": [], "seconds": seconds, "seed": seed}
     for i in range(n_widgets):
         # Convergence: last time the error crosses down below the threshold.
@@ -114,6 +123,8 @@ def run(n_widgets, n_gps, seconds, seed=1234, converged_m=1.0, aoa=True,
                 round(float(np.sqrt(np.mean(rel_tail[:, i] ** 2))), 3),
             "tail_rot_rel_rmse_m":
                 round(float(np.sqrt(np.mean(rot_tail[:, i] ** 2))), 3),
+            "tail_jitter_m": round(float(jitter[i]), 4),
+            "lock": round(float(w.widgets[i].est.range_innov_ratio()), 2),
             "converge_s": conv_t,
             "accepted_ranges": w.widgets[i].accepted_ranges,
             "rejected_ranges": w.widgets[i].rejected_ranges,
@@ -132,6 +143,12 @@ def main():
     ap.add_argument("--no-aoa", action="store_true", help="disable AoA updates")
     ap.add_argument("--static", action="store_true",
                     help="hold all widgets stationary (they still spin)")
+    ap.add_argument("--motion-rate", type=float, default=1.0,
+                    help="scale orbit/translation speed (1.0 = nominal)")
+    ap.add_argument("--move-period", type=float, default=0.0,
+                    help="stop-and-go cycle length, s (0 = always moving)")
+    ap.add_argument("--move-duty", type=float, default=1.0,
+                    help="fraction of each cycle spent moving (<1 = pauses)")
     ap.add_argument("--downhill", type=float, default=0.5,
                     help="peer-var/my-var acceptance ratio, 0=off")
     ap.add_argument("--converged-m", type=float, default=1.0)
@@ -148,6 +165,9 @@ def main():
                     help="disable UWB multipath outliers")
     ap.add_argument("--aoa-damping", type=float, default=None,
                     help="override mean-only AoA gain divisor")
+    ap.add_argument("--range-damping", type=float, default=None,
+                    help="override annealed mean-only range damping "
+                         "(0 disables annealing)")
     ap.add_argument("--zero-vel-sigma", type=float, default=None,
                     help="override the zero-velocity gauge prior sigma, m/s")
     ap.add_argument("--zero-vel-rate", type=float, default=None,
@@ -160,11 +180,14 @@ def main():
                     args.converged_m, aoa=not args.no_aoa, trace=args.trace,
                     n_surveyed=args.surveyed, downhill_ratio=args.downhill,
                     static=args.static, intrinsics_path=args.intrinsics,
+                    motion_rate=args.motion_rate, move_period=args.move_period,
+                    move_duty=args.move_duty,
                     sensor_overrides={k: v for k, v in {
                         "uwb_slot_rate": args.slot_rate,
                         "uwb_range_sigma": args.range_sigma,
                         "broadcast_rate": args.broadcast_rate,
                         "mean_only_aoa_damping": args.aoa_damping,
+                        "mean_only_range_damping": args.range_damping,
                         "uwb_multipath_prob":
                             0.0 if args.no_multipath else None,
                         "zero_vel_sigma": args.zero_vel_sigma,
@@ -175,15 +198,15 @@ def main():
         return
     print("%d widgets (%d GPS), %.0f s, seed %d" %
           (args.widgets, args.gps, args.seconds, args.seed))
-    print("%3s %4s %12s %12s %12s %12s %11s %9s" %
+    print("%3s %4s %12s %12s %12s %12s %10s %6s %11s %9s" %
           ("id", "gps", "final err m", "tail RMSE m", "rel RMSE m",
-           "rot-rel m", "converge s", "rejects"))
+           "rot-rel m", "jitter m", "lock", "converge s", "rejects"))
     for wg in report["widgets"]:
-        print("%3d %4s %12.3f %12.3f %12.3f %12.3f %11s %9d" %
+        print("%3d %4s %12.3f %12.3f %12.3f %12.3f %10.4f %6.1f %11s %9d" %
               (wg["id"], "*" if wg["gps"] else ("S" if wg["surveyed"] else ""),
                wg["final_err_m"],
                wg["tail_rmse_m"], wg["tail_rel_rmse_m"],
-               wg["tail_rot_rel_rmse_m"],
+               wg["tail_rot_rel_rmse_m"], wg["tail_jitter_m"], wg["lock"],
                "never" if wg["converge_s"] is None else "%.1f" % wg["converge_s"],
                wg["rejected_ranges"]))
 

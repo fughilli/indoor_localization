@@ -39,7 +39,14 @@ pub struct Params {
     pub init_gyro_bias_sigma: f32,
     /// Innovation gate in sigmas for scalar updates; 0 disables gating.
     pub gate: f32,
+    /// EWMA coefficient for the range-innovation lock statistic.
+    pub innov_alpha: f32,
 }
+
+/// Initial / saturated value of the range-innovation ratio: "no lock".
+/// Individual samples are capped here too, so multipath outliers nudge the
+/// EWMA instead of blowing it out.
+pub const INNOV_RATIO_MAX: f32 = 10.0;
 
 impl Default for Params {
     fn default() -> Params {
@@ -52,6 +59,7 @@ impl Default for Params {
             init_accel_bias_sigma: 0.05,
             init_gyro_bias_sigma: 0.01,
             gate: 5.0,
+            innov_alpha: 0.02,
         }
     }
 }
@@ -65,6 +73,15 @@ pub struct Estimator {
     pub bg: Vec3,
     pub cov: Cov,
     pub params: Params,
+    /// EWMA of |range innovation| / sigma — a self-measured "location lock"
+    /// signal. Near 1 the position is consistent with incoming ranges at
+    /// measurement-noise level; large means unconverged (or recently
+    /// disturbed). The network layer uses it to anneal the mean-only
+    /// relaxation gain, which a Kalman filter cannot do natively in the
+    /// anchorless regime: mean-only updates deliberately never shrink the
+    /// covariance (the absolute frame is unobservable), so the gain would
+    /// otherwise stay pinned at cold-start levels forever.
+    range_innov_ratio: f32,
 }
 
 impl Estimator {
@@ -79,6 +96,7 @@ impl Estimator {
             bg: Vec3::ZERO,
             cov: cov_zero(),
             params,
+            range_innov_ratio: INNOV_RATIO_MAX,
         };
         e.reset_cov(100.0, 1.0, 1.0);
         e
@@ -98,6 +116,7 @@ impl Estimator {
         self.v = v;
         self.q = q.normalized();
         self.reset_cov(pos_sigma, vel_sigma, att_sigma);
+        self.range_innov_ratio = INNOV_RATIO_MAX;
     }
 
     fn reset_cov(&mut self, pos_sigma: f32, vel_sigma: f32, att_sigma: f32) {
@@ -116,6 +135,12 @@ impl Estimator {
     /// Mean position variance (m^2) — the "quality" a widget advertises.
     pub fn pos_var(&self) -> f32 {
         (self.cov[DP][DP] + self.cov[DP + 1][DP + 1] + self.cov[DP + 2][DP + 2]) / 3.0
+    }
+
+    /// Current range-innovation lock ratio (EWMA of |y|/sigma, capped at
+    /// [`INNOV_RATIO_MAX`]). ~1 = locked to the mesh, large = unconverged.
+    pub fn range_innov_ratio(&self) -> f32 {
+        self.range_innov_ratio
     }
 
     /// IMU strapdown propagation: one raw accel (m/s^2, body, includes
@@ -255,6 +280,14 @@ impl Estimator {
         let r_pred = d.norm();
         if r_pred < 0.05 {
             return false;
+        }
+        // Fold this innovation into the lock statistic (any regime: it
+        // measures consistency with the mesh either way). Per-sample cap so
+        // a multipath tail nudges the EWMA rather than resetting it.
+        if sigma > 0.0 {
+            let sample = ((measured - r_pred).abs() / sigma).min(INNOV_RATIO_MAX);
+            let a = self.params.innov_alpha;
+            self.range_innov_ratio += a * (sample - self.range_innov_ratio);
         }
         let u = d.scale(1.0 / r_pred);
         let mut h = [0.0f32; STATE_DIM];
@@ -507,6 +540,38 @@ mod tests {
         }
         // Velocity variance is bounded by the prior, not growing without limit.
         assert!(e.cov[DV][DV] < 9.5, "vel var {}", e.cov[DV][DV]);
+    }
+
+    /// The lock statistic must fall toward ~1 when ranges agree with the
+    /// state at measurement-noise level, stay pinned high while innovations
+    /// are large, and reset on set_pose.
+    #[test]
+    fn innov_ratio_tracks_lock() {
+        let mut e = Estimator::new(quiet_params());
+        e.set_pose(Vec3::new(1.0, 0.0, 0.0), Vec3::ZERO, Quat::IDENTITY, 2.0, 0.1, 0.1);
+        assert!((e.range_innov_ratio() - INNOV_RATIO_MAX).abs() < 1e-6);
+
+        // Consistent ranges (innovation ~0.5 sigma) anneal the ratio down.
+        let anchor = Vec3::new(6.0, 0.0, 0.0);
+        for _ in 0..300 {
+            let d = e.p.sub(anchor).norm();
+            e.update_range(anchor, 4.0, d + 0.05, 0.1, true);
+        }
+        assert!(e.range_innov_ratio() < 1.5, "ratio {}", e.range_innov_ratio());
+
+        // Persistently large innovations re-inflate it (self-recovery when
+        // the widget genuinely moves or the mesh shifts). Pin the state each
+        // step so the 2 m disagreement is not absorbed.
+        for _ in 0..300 {
+            let d = e.p.sub(anchor).norm();
+            e.update_range(anchor, 4.0, d + 2.0, 0.1, true);
+            e.p = Vec3::new(1.0, 0.0, 0.0);
+        }
+        assert!(e.range_innov_ratio() > 5.0, "ratio {}", e.range_innov_ratio());
+
+        // set_pose = cold restart: back to "no lock".
+        e.set_pose(Vec3::ZERO, Vec3::ZERO, Quat::IDENTITY, 100.0, 1.0, 1.0);
+        assert!((e.range_innov_ratio() - INNOV_RATIO_MAX).abs() < 1e-6);
     }
 
     /// The innovation gate must reject a wild multipath-style outlier.

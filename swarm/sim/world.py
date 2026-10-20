@@ -47,6 +47,28 @@ class SensorConfig:
     # tangential) would shake the mesh at relaxation gain, so its gain is
     # divided by ~this factor (K ~ 1/(1+f)).
     mean_only_aoa_damping: float = 30.0
+    # Innovation-annealed mean-only gain: mean-only updates never shrink the
+    # covariance (the absolute frame is unobservable), so the Kalman gain
+    # cannot anneal on its own and every range would keep kicking the state
+    # at relaxation gain (~2/3) forever — the post-convergence jitter. The
+    # estimator's range_innov_ratio (EWMA of |innovation|/sigma) measures
+    # *relative* convergence instead: as it falls from lock_ratio_none to
+    # lock_ratio_full, the mean-only damping factor is interpolated from 0.5
+    # (K ~ 2/3, fast pull-in) up to mean_only_range_damping (K ~ 1/(1+f),
+    # IMU-dominated hold). Innovations re-inflate on real motion or mesh
+    # shifts, so the gain recovers automatically. 0 disables annealing.
+    mean_only_range_damping: float = 30.0
+    lock_ratio_full: float = 2.0     # at/below: fully annealed (locked)
+    lock_ratio_none: float = 6.0     # at/above: cold-start gain
+    # Refuse mean-only pulls from a peer whose advertised lock ratio is this
+    # many times worse than mine: a cold joiner "knows nothing" but its
+    # absolute variance is indistinguishable from a converged anchorless
+    # veteran's (both honestly huge), so variance alone cannot protect the
+    # mesh from a joiner's garbage advertisements — lock quality can.
+    peer_lock_factor: float = 3.0
+    # Ignore advertisements older than this (departed or silent widgets keep
+    # dead-reckoning forever otherwise).
+    max_advert_age: float = 1.0
     # Weak zero-velocity gauge prior (see Estimator::update_zero_vel): pins
     # the swarm frame when no widget has an absolute position source. Sigma
     # is far above real widget speeds so it barely biases motion.
@@ -84,6 +106,16 @@ class WidgetSpec:
     phase: float = 0.0
     z_amp: float = 0.0               # vertical bobbing amplitude, m
     yaw_rate: float = 0.1            # rad/s constant spin
+    # Translational-motion controls (see _motion_time). motion_rate scales
+    # the orbit + bob speed (1.0 = nominal). Devices don't move every
+    # timestep: each cycle of move_period seconds spends move_duty of its
+    # time in motion and the rest paused (velocity smoothly ramps to zero),
+    # offset by move_phase so the swarm doesn't stop in unison. move_period
+    # <= 0 or move_duty >= 1 means continuous motion.
+    motion_rate: float = 1.0
+    move_period: float = 0.0         # s per move/pause cycle; 0 = no pauses
+    move_duty: float = 1.0           # fraction of each cycle spent moving
+    move_phase: float = 0.0          # cycle offset in [0,1) for desync
     has_gps: bool = False
     has_alt: bool = True
     has_aoa: bool = True
@@ -92,11 +124,55 @@ class WidgetSpec:
     surveyed: bool = False
 
 
+# Each move/pause transition ramps the speed linearly over this fraction of
+# the cycle (per side) so velocity is continuous and the numerical IMU
+# acceleration has no impulse at stop/start. Capped at half the moving
+# window for short duties.
+MOVE_RAMP_FRAC = 0.05
+
+
+def _cycle_area(x, m, g):
+    """Integral of the trapezoidal speed envelope over phase [0, x], for a
+    cycle that ramps up on [0,g), holds full speed on [g,m-g), ramps down on
+    [m-g,m), then pauses on [m,1). Full-cycle area is m-g."""
+    if x <= 0.0:
+        return 0.0
+    up = min(x, g)
+    area = 0.5 * up * up / g
+    if x <= g:
+        return area
+    plateau_end = m - g
+    area += min(x, plateau_end) - g
+    if x <= plateau_end:
+        return area
+    xd = min(x, m)
+    f = lambda p: (m * p - 0.5 * p * p) / g
+    area += f(xd) - f(plateau_end)
+    return area
+
+
+def _motion_time(spec, t):
+    """Effective elapsed motion time (s): motion_rate * t warped by the
+    move/pause duty cycle. Reduces to motion_rate * t under continuous
+    motion. Position/velocity/accel are all derived from this, so a pause is
+    a genuine stationary interval (velocity ramps to zero, not a jump)."""
+    rate = spec.motion_rate
+    if spec.move_period <= 0.0 or spec.move_duty >= 1.0:
+        return rate * t
+    m = min(max(spec.move_duty, 0.0), 1.0)
+    g = min(MOVE_RAMP_FRAC, m / 2.0)
+    phi = t / spec.move_period + spec.move_phase
+    cycles = math.floor(phi)
+    frac = phi - cycles
+    phase_area = cycles * (m - g) + _cycle_area(frac, m, g)
+    return rate * spec.move_period * phase_area
+
+
 def _true_pos(spec, t):
     cx, cy, cz = spec.center
     if spec.kind == "static":
         return np.array([cx, cy, cz])
-    a = spec.omega * t + spec.phase
+    a = spec.omega * _motion_time(spec, t) + spec.phase
     return np.array([
         cx + spec.radius * math.cos(a),
         cy + spec.radius * math.sin(a),
@@ -177,7 +253,7 @@ class TruthWidget:
 class SimWidget:
     """One widget: truth + sensors + its onboard estimator instance."""
 
-    def __init__(self, spec, sensors, rng):
+    def __init__(self, spec, sensors, rng, t0=0.0):
         self.truth = TruthWidget(spec)
         self.spec = spec
         self.cfg = sensors
@@ -191,20 +267,21 @@ class SimWidget:
             gyro_noise=sensors.gyro_sigma / sqrt_rate,
         )
         # Coarse attitude init from one accel+mag sample; position unknown
-        # unless surveyed.
-        accel, _ = self.imu_sample(0.0)
-        mag_body = (_rot_z(self.truth.yaw(0.0)).T @ MAG_WORLD
+        # unless surveyed. t0 > 0 = a widget joining a running network cold.
+        accel, _ = self.imu_sample(t0)
+        mag_body = (_rot_z(self.truth.yaw(t0)).T @ MAG_WORLD
                     + rng.normal(0, sensors.mag_sigma, 3))
         q0 = triad(accel, mag_body, MAG_WORLD)
         if spec.surveyed:
-            self.est.set_pose(self.truth.pos(0.0), (0, 0, 0), q0,
+            self.est.set_pose(self.truth.pos(t0), (0, 0, 0), q0,
                               pos_sigma=0.02, vel_sigma=0.05, att_sigma=0.3)
         else:
             self.est.set_pose((0, 0, 0), (0, 0, 0), q0,
                               pos_sigma=100.0, vel_sigma=1.5, att_sigma=0.3)
         # Advertised pose as the network last heard it:
-        # (position, velocity, mean var, timestamp).
-        self.advertised = (np.zeros(3), np.zeros(3), 1e4, 0.0)
+        # (position, velocity, mean var, lock ratio, timestamp).
+        self.advertised = (np.zeros(3), np.zeros(3), 1e4,
+                           self.est.range_innov_ratio(), t0)
         self.accepted_ranges = 0
         self.rejected_ranges = 0
 
@@ -220,17 +297,20 @@ class SimWidget:
 
     def broadcast(self, t):
         if self.spec.surveyed:
-            self.advertised = (self.truth.pos(t), np.zeros(3), 1e-4, t)
+            # An absolute source is locked by definition.
+            self.advertised = (self.truth.pos(t), np.zeros(3), 1e-4, 1.0, t)
             return
         s = self.est.state()
+        lock = 1.0 if self.spec.has_gps else self.est.range_innov_ratio()
         self.advertised = (np.array(s["p"]), np.array(s["v"]),
-                           s["pos_var"], t)
+                           s["pos_var"], lock, t)
 
     def advertised_at(self, t):
         """Peer view of me: last broadcast dead-reckoned by its velocity —
-        the advertisement payload carries v for exactly this."""
-        p, v, var, t0 = self.advertised
-        return p + v * (t - t0), var
+        the advertisement payload carries v for exactly this. Returns
+        (position, variance, lock ratio, age)."""
+        p, v, var, lock, t0 = self.advertised
+        return p + v * (t - t0), var, lock, t - t0
 
     def pos_error(self, t):
         return float(np.linalg.norm(np.array(self.est.state()["p"]) - self.truth.pos(t)))
@@ -246,11 +326,26 @@ class World:
         self.t = 0.0
         self.dt = 1.0 / self.cfg.imu_rate
         self.step_count = 0
-        self._pairs = [(i, j) for i in range(len(specs))
-                       for j in range(i + 1, len(specs))]
-        self._pair_idx = 0
+        self._rebuild_pairs()
         self._slot_acc = 0.0
-        self.last_links = []  # (i, j) pairs ranged in the most recent step
+        self.last_links = []  # (wid, wid) pairs ranged in the most recent step
+
+    def _rebuild_pairs(self):
+        self._pairs = [(i, j) for i in range(len(self.widgets))
+                       for j in range(i + 1, len(self.widgets))]
+        self._pair_idx = 0
+
+    def add_widget(self, spec):
+        """A widget joins the network cold at the current sim time: position
+        unknown (100 m sigma), no lock — exactly the fresh-boot state."""
+        self.widgets.append(SimWidget(spec, self.cfg, self.rng, t0=self.t))
+        self._rebuild_pairs()
+
+    def remove_widget(self, wid):
+        """A widget leaves (power-off / out of range): it stops ranging and
+        broadcasting; peers age its last advertisement out."""
+        self.widgets = [w for w in self.widgets if w.spec.wid != wid]
+        self._rebuild_pairs()
 
     def _every(self, rate):
         """True on steps that hit the given event rate."""
@@ -318,7 +413,9 @@ class World:
         for me, other in ((wi, wj), (wj, wi)):
             if me.spec.surveyed:
                 continue  # already knows where it is
-            peer_p, peer_var = other.advertised_at(t)
+            peer_p, peer_var, peer_lock, advert_age = other.advertised_at(t)
+            if advert_age > cfg.max_advert_age:
+                continue  # departed/silent peer: don't chase its ghost
             my_var = me.est.state()["pos_var"]
             # Three regimes by relative quality:
             #  - downhill (peer clearly better-localized): full Kalman update
@@ -331,11 +428,19 @@ class World:
             #    which is what lets an anchorless swarm converge *relatively*
             #    while covariance honestly tracks the unobservable absolute
             #    frame.
-            #  - uphill (peer clearly worse): ignore — relaxing an anchored
-            #    widget toward a bad peer only drags it off.
-            if peer_var >= my_var / cfg.downhill_ratio:
-                continue
-            downhill = peer_var < cfg.downhill_ratio * my_var
+            #  - unlocked peer: ignore — being relaxed toward a peer whose
+            #    own ranges don't fit its advertised position only drags the
+            #    mesh off.
+            # Variance ranks peers only when it is *meaningfully* small
+            # (absolute sources and downhill-converged widgets). Anchorless
+            # variances are honestly huge on both sides, and they diverge
+            # for the wrong reasons: a veteran's grows with process noise
+            # while a cold joiner's stays at its (frozen) init, so by
+            # variance the clueless joiner eventually looks "better" than
+            # the converged mesh. The advertised lock ratio is what actually
+            # ranks mesh quality, so it gates both regimes.
+            downhill = (peer_var < cfg.downhill_ratio * my_var
+                        and peer_lock < cfg.lock_ratio_none)
             mean_only = not downhill
             # An absolutely-anchored widget (healthy GPS) never takes
             # consensus (mean-only) pulls: the 33 Hz mesh relaxation would
@@ -343,14 +448,28 @@ class World:
             # gauge off truth. It still accepts clearly-downhill updates.
             if mean_only and me.spec.has_gps:
                 continue
+            # Mean-only annealing (see SensorConfig): damping factor from my
+            # own lock ratio, interpolated 0.5 -> mean_only_range_damping.
+            anneal = 1.0
+            if mean_only:
+                my_lock = me.est.range_innov_ratio()
+                if peer_lock > cfg.peer_lock_factor * max(my_lock,
+                                                          cfg.lock_ratio_full):
+                    continue  # cold joiner: it pulls itself in, not the mesh
+                u = min(max((cfg.lock_ratio_none - my_lock)
+                            / (cfg.lock_ratio_none - cfg.lock_ratio_full),
+                            0.0), 1.0)
+                if cfg.mean_only_range_damping > 0.5:
+                    anneal = 1.0 + u * (cfg.mean_only_range_damping - 0.5) / 0.5
             # Downhill: damp with the peer's variance (floored for cold
             # start). Mean-only: no covariance is updated so there is no
             # double-count risk — do NOT deweight by the peer's (honestly
             # huge, mostly common-mode) absolute variance or AoA vanishes
             # and the mesh orientation floats; damp against my own variance
-            # only, which bounds the relaxation gain at ~2/3.
+            # only, which bounds the relaxation gain at ~2/3 cold and
+            # ~1/(1+damping) at lock.
             nvar_eff = (max(peer_var, 0.5 * my_var - cfg.uwb_range_sigma ** 2)
-                        if downhill else 0.5 * my_var)
+                        if downhill else anneal * 0.5 * my_var)
             ok = me.est.update_range(peer_p, nvar_eff, rng_meas,
                                      cfg.uwb_range_sigma, mean_only=mean_only)
             me.accepted_ranges += ok
@@ -361,11 +480,16 @@ class World:
                 u_b = _rot_z(me.truth.yaw(t)).T @ (d_w / np.linalg.norm(d_w))
                 meas = u_b + self.rng.normal(0, cfg.uwb_aoa_sigma, 3)
                 meas /= np.linalg.norm(meas)
+                # AoA is NOT annealed: its job in the mean-only regime is
+                # pinning the mesh's global orientation, and annealing it
+                # (even by sqrt of the range factor) lets the whole mesh
+                # slowly rotate — rel RMSE blows up while rot-rel stays
+                # tight. Its fixed damping bounds its jitter contribution.
                 aoa_nvar = (cfg.mean_only_aoa_damping * my_var
                             if mean_only else nvar_eff)
                 me.est.update_aoa(peer_p, aoa_nvar, meas, cfg.uwb_aoa_sigma,
                                   mean_only=mean_only)
-        self.last_links.append((i, j))
+        self.last_links.append((wi.spec.wid, wj.spec.wid))
 
     def run(self, seconds, frame_cb=None, frame_rate=10.0):
         """Run for sim-seconds; optionally emit frames at frame_rate."""
@@ -394,6 +518,7 @@ class World:
                 "true_v": [round(float(x), 3) for x in w.truth.vel(self.t)],
                 "est_yaw": round(_quat_yaw(s["q"]), 3),
                 "pos_var": round(float(s["pos_var"]), 4),
+                "lock": round(float(w.est.range_innov_ratio()), 2),
                 "cov_xy": [[round(cov[r][c], 4) for c in range(2)] for r in range(2)],
                 "err": round(w.pos_error(self.t), 3),
             })
@@ -411,10 +536,12 @@ def _quat_yaw(q):
     return math.atan2(fy, fx) % (2 * math.pi)
 
 
-def default_swarm(n=6, n_gps=2, n_surveyed=0, arena=30.0):
+def default_swarm(n=6, n_gps=2, n_surveyed=0, arena=30.0,
+                  motion_rate=1.0, move_period=0.0, move_duty=1.0):
     """n mobile widgets orbiting around a ring (the first n_gps carrying
     GPS), plus n_surveyed static widgets at known positions on the arena
-    edge."""
+    edge. motion_rate scales orbit speed; move_period/move_duty add
+    stop-and-go pauses (see WidgetSpec), desynced per widget."""
     specs = []
     for i in range(n):
         ang = 2 * math.pi * i / n
@@ -429,6 +556,10 @@ def default_swarm(n=6, n_gps=2, n_surveyed=0, arena=30.0):
             phase=ang,
             z_amp=0.3,
             yaw_rate=0.05 + 0.02 * i,
+            motion_rate=motion_rate,
+            move_period=move_period,
+            move_duty=move_duty,
+            move_phase=(0.37 * i) % 1.0,
             has_gps=i < n_gps,
         ))
     for k in range(n_surveyed):

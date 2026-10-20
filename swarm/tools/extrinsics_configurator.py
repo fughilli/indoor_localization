@@ -6,7 +6,7 @@ baking, binary proto for dynamic load via the micropb bindings).
 
   bazel run //swarm/tools:extrinsics_configurator -- --config my_widget.txtpb
 
-Open http://<host>:8082/. Drag to orbit. RGB triads = sensor x/y/z axes in
+Open http://<host>:8182/. Drag to orbit. RGB triads = sensor x/y/z axes in
 the widget frame; the grey triad is the widget reference frame itself. The
 HTTP API speaks canonical proto JSON (snake_case field names).
 """
@@ -244,7 +244,7 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
 
-def serve(config_path, http_port=8082):
+def serve(config_path, http_port=8182):
     Handler.config_path = config_path
     httpd = ThreadingHTTPServer(("0.0.0.0", http_port), Handler)
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
@@ -256,7 +256,7 @@ def main():
     ap.add_argument("--config", default="/tmp/widget_config.txtpb",
                     help="WidgetConfig textproto to edit (seeded from the "
                          "example if missing)")
-    ap.add_argument("--http-port", type=int, default=8082)
+    ap.add_argument("--http-port", type=int, default=8182)
     args = ap.parse_args()
     if not os.path.exists(args.config):
         example = os.path.join(os.path.dirname(os.path.abspath(__file__)),

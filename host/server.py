@@ -3,11 +3,11 @@
 Two listeners:
   - TCP :7007  — the tag connects here and streams newline-delimited JSON
     (one object per ranging round, see apps/tag). Each packet is trilaterated.
-  - HTTP :8080 — "/" serves a canvas floor view fed by "/events" (SSE);
+  - HTTP :8180 — "/" serves a canvas floor view fed by "/events" (SSE);
     "/state" returns the latest solution as JSON.
 
 Stdlib-only besides numpy/scipy (no matplotlib): runs headless, view in a
-browser at http://<host>:8080/.
+browser at http://<host>:8180/.
 """
 
 import argparse
@@ -201,7 +201,7 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
 
-def serve(anchors, room, tcp_port=7007, http_port=8080):
+def serve(anchors, room, tcp_port=7007, http_port=8180):
     """Start both listeners; returns (rtls, tcp_sock, httpd) for tests."""
     rtls = RTLS(anchors, room)
     tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -219,7 +219,7 @@ def serve(anchors, room, tcp_port=7007, http_port=8080):
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--tcp-port", type=int, default=7007)
-    ap.add_argument("--http-port", type=int, default=8080)
+    ap.add_argument("--http-port", type=int, default=8180)
     ap.add_argument("--anchors", type=json.loads,
                     default=solver.DEFAULT_ANCHORS.tolist(),
                     help='anchor positions cm, e.g. "[[15,5],[290,5],[165,625]]"')

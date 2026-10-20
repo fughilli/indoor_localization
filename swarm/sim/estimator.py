@@ -52,6 +52,7 @@ def _lib():
                 ([ctypes.c_void_p, f32p, f32p, f32], ctypes.c_int),
             "swarm_estimator_update_gravity":
                 ([ctypes.c_void_p, f32p, f32], ctypes.c_int),
+            "swarm_estimator_range_innov_ratio": ([ctypes.c_void_p], f32),
             "swarm_estimator_state": ([ctypes.c_void_p, f32p], None),
             "swarm_estimator_pos_cov": ([ctypes.c_void_p, f32p], None),
         }
@@ -124,6 +125,10 @@ class Estimator:
 
     def update_gravity(self, accel, sigma):
         return self._lib.swarm_estimator_update_gravity(self._h, _f3(accel), sigma)
+
+    def range_innov_ratio(self):
+        """Lock ratio: EWMA of |range innovation|/sigma (~1 locked, 10 none)."""
+        return self._lib.swarm_estimator_range_innov_ratio(self._h)
 
     def state(self):
         """dict with p, v, q (wxyz), ba, bg, pos_var."""

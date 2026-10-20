@@ -5,7 +5,7 @@ Real-time indoor location (RTLS): three fixed **anchors** and one mobile
 Tag ↔ anchor pairs measure distance with Double-Sided Two-Way Ranging
 (DS-TWR); the tag streams per-anchor distances as newline-JSON over WiFi/TCP
 (port 7007) to a host that solves a least-squares trilateration and serves a
-live web floor view (port 8080).
+live web floor view (port 8180).
 
 Derived from CircuitDigest's
 [ESP32-DWM3000-UWB-Indoor-RTLS-Tracker](https://github.com/Circuit-Digest/ESP32-DWM3000-UWB-Indoor-RTLS-Tracker)
@@ -31,7 +31,7 @@ arduino-esp32 core, and esptool; Bazel compiles/links and packages flashable
 | `swarm/` | station-free cooperative localization: Rust ESKF core + swarm sim + web viewer (see `docs/station-free-design.md`) |
 | `swarm/tools/` | sensor characterization: AoA plane/precision, range bias/σ, IMU Allan deviation, mag calibration (`bazelisk run //swarm/tools:characterize -- aoa --demo`) |
 | `swarm/proto/`, `swarm/config/` | widget.v1 protobuf config schema (extrinsics + intrinsics + pose advertisement) and its no_std micropb bindings for firmware (design doc §11) |
-| `swarm/tools/extrinsics*` | extrinsics configurator web UI (`:extrinsics_configurator`, port 8082); textproto source of truth → binary proto / C header for firmware |
+| `swarm/tools/extrinsics*` | extrinsics configurator web UI (`:extrinsics_configurator`, port 8182); textproto source of truth → binary proto / C header for firmware |
 | `docs/` | design documents |
 
 ## Building
@@ -57,7 +57,7 @@ absolute position. Try it:
 # Headless metrics: 3 surveyed anchors + 5 IMU+UWB widgets -> ~10 cm RMSE
 bazelisk run //swarm/sim:run_sim -- --widgets 5 --gps 0 --surveyed 3
 
-# Live browser view on http://localhost:8081/
+# Live browser view on http://localhost:8181/
 bazelisk run //swarm/sim:viewer -- --widgets 5 --gps 0 --surveyed 3
 ```
 
@@ -116,7 +116,7 @@ bazelisk run //host:server -- \
     --anchors '[[15,5],[290,5],[165,625]]' --room 480 650
 ```
 
-Open `http://<host>:8080/` for the live floor view (anchors, tag dot, trail).
+Open `http://<host>:8180/` for the live floor view (anchors, tag dot, trail).
 `/state` returns the latest solve as JSON.
 
 For a headless demo without hardware, feed the server synthetic packets:

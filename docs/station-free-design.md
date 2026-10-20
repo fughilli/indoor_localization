@@ -355,7 +355,7 @@ Schema contents:
   sensor→widget quaternion (`v_widget = R·v_sensor + offset`). Standard
   sensors imu/mag/uwb/gps/alt (ids 1–5); custom sensors use ids ≥128.
   Authored graphically with `//swarm/tools:extrinsics_configurator`
-  (port 8082): live 3D preview, validation, one-click header/binpb export.
+  (port 8182): live 3D preview, validation, one-click header/binpb export.
 - `Intrinsics` — *how good every sensor is*: exactly what
   `//swarm/tools:characterize` measures, optionally shipped per widget
   model or serial. proto3 explicit presence replaces "NaN = use default":
