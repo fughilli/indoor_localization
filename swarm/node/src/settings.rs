@@ -135,6 +135,7 @@ pub static REGISTRY: &[Setting] = &[
     bools!(349, "nlos.asymmetric", node.nlos_asymmetric),
     f32s!(350, "regain_gated_frac", 0.0, 1.0, node.regain_gated_frac),
     bools!(342, "bias.learn_anchored", node.bias_learn_anchored),
+    bools!(351, "bias.learn_still", node.bias_learn_still),
     f32s!(343, "bias.learn_lock", 0.0, 100.0, node.bias_learn_lock),
     f32s!(344, "bias.learn_nvar_scale", 0.0, 1e4, node.bias_learn_nvar_scale),
     f32s!(345, "bias.reanchor_m", 0.0, 10.0, node.reanchor_bias_m),

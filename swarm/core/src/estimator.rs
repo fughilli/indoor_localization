@@ -110,6 +110,11 @@ pub struct Estimator {
     /// covariance (the absolute frame is unobservable), so the gain would
     /// otherwise stay pinned at cold-start levels forever.
     range_innov_ratio: f32,
+    /// Range updates also correct rb (when it's estimated at all). The
+    /// caller turns this off when a range can't separate rb from position
+    /// (e.g. a still widget against a fixed set of peers: one geometry, as
+    /// many unknowns as ranges).
+    pub learn_range_bias: bool,
 }
 
 impl Estimator {
@@ -126,6 +131,7 @@ impl Estimator {
             cov: cov_zero(),
             params,
             range_innov_ratio: INNOV_RATIO_MAX,
+            learn_range_bias: true,
         };
         e.reset_cov(100.0, 1.0, 1.0);
         e
@@ -367,7 +373,7 @@ impl Estimator {
         h[DP] = u.x;
         h[DP + 1] = u.y;
         h[DP + 2] = u.z;
-        h[DRB] = 1.0;
+        h[DRB] = if self.learn_range_bias { 1.0 } else { 0.0 };
         // Multipath outliers in the symmetric (mean-only) regime are absorbed,
         // not gated: the S-based gate is blind there (S is dominated by the
         // honestly-huge absolute variance) and a per-widget adaptive

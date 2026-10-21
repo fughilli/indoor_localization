@@ -318,6 +318,11 @@ What worked, and what didn't:
   - To do: a batch solve over logged ranges (still positions, biases,
     walker track) to calibrate properly, then push the result as settings.
   - To try: learn rb only from unflagged ranges.
+  - Learning rb only while moving (`bias.learn_still=false`) was worse:
+    walker 26.6 cm. The still-time rb absorbs per-node inconsistency,
+    including blocked-link excess, which helps positioning even though
+    it isn't the true delay. On hardware, board 3 learned -0.21 m within a
+    minute of v24 booting.
 
 
 

@@ -69,6 +69,13 @@ pub struct NodeConfig {
     /// The anchor point was solved with the old bias: past `reanchor_bias_m`
     /// of change it lets go (sigma auto_anchor_sigma) to re-solve and
     /// re-anchors once calm again. 0 = never.
+    /// `bias_learn_still`: a free widget also learns rb while still. Still
+    /// against still peers it has one geometry and as many unknowns (x, y,
+    /// rb) as ranges, so rb soaks up whatever the peers' solved positions
+    /// are off by (bench: -0.21 m within a minute) — it acts as a per-node
+    /// consistency term more than an antenna-delay estimate. That still
+    /// helps: sim, learning only while moving, walker 19.1 -> 26.6 cm.
+    pub bias_learn_still: bool,
     pub bias_learn_anchored: bool,
     pub bias_learn_lock: f32,
     pub bias_learn_nvar_scale: f32,
@@ -201,6 +208,7 @@ impl Default for NodeConfig {
             nlos_clip_m: 0.05,
             nlos_clip_still_only: true,
             nlos_asymmetric: true,
+            bias_learn_still: true,
             bias_learn_anchored: true,
             bias_learn_lock: 2.0,
             bias_learn_nvar_scale: 4.0,
@@ -849,6 +857,7 @@ impl Node {
         if flagged && self.cfg.nlos_gate > 0.0 {
             self.est.params.gate = self.cfg.nlos_gate;
         }
+        self.est.learn_range_bias = !me_still || self.cfg.bias_learn_still;
         let (outcome, _decision): (Outcome, Decision) = coop::range_update_weighted(
             &self.cfg.coop,
             &mut self.est,
@@ -860,6 +869,7 @@ impl Node {
             me_still,
         );
         self.est.params.gate = gate;
+        self.est.learn_range_bias = true;
         let r = match outcome {
             Outcome::Applied { accepted: true, .. } => RangeResult::Accepted,
             Outcome::Applied { accepted: false, .. } => RangeResult::Gated,
