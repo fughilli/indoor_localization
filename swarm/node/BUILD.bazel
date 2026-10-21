@@ -1,0 +1,73 @@
+# Widget node runtime (Rust, no_std): swarm_core's estimator + cooperative
+# rules plus the peer table, aiding timing, surveyed mode and the widget.v1
+# advertisement codec. The firmware (//apps/node) links :swarm_node_fw —
+# built for the classic ESP32 by the esp-rs toolchain — through the
+# cbindgen-generated swarm_node.h.
+load("@firmware//rules:cbindgen.bzl", "rust_cbindgen")
+load("@firmware//rules:rust_firmware.bzl", "firmware_rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_static_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+COMMON_DEPS = [
+    "//swarm/core:swarm_core",
+    "//swarm/proto:widget_pb",
+    "@firmware//proto:micropb",
+    "@swarm_crates//:libm",
+]
+
+# Host: swarm_net with RustCrypto. Firmware: swarm_net's MbedTLS + C ABI
+# build, so the one staticlib exports both crates' functions.
+DEPS = COMMON_DEPS + ["//swarm/net:swarm_net"]
+
+FW_DEPS = COMMON_DEPS + ["//swarm/net:swarm_net_fw"]
+
+rust_library(
+    name = "swarm_node",
+    srcs = glob(["src/**/*.rs"]),
+    crate_root = "src/lib.rs",
+    deps = DEPS,
+)
+
+rust_test(
+    name = "swarm_node_test",
+    crate = ":swarm_node",
+)
+
+# Firmware static library: the C ABI + bare-metal panic handler.
+rust_static_library(
+    name = "swarm_node_ffi",
+    srcs = glob(["src/**/*.rs"]),
+    crate_features = ["ffi"],
+    crate_name = "swarm_node",
+    crate_root = "src/lib.rs",
+    rustc_flags = ["-Cpanic=abort"],
+    # Bare-metal only (its panic handler is target_os = "none").
+    target_compatible_with = select({
+        "@firmware//platforms:is_esp32": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+    deps = FW_DEPS,
+)
+
+# What the firmware links: the staticlib without Rust's bundled
+# compiler_builtins, so memset & co. resolve to the ESP32 ROM / libgcc
+# versions ESP-IDF places in IRAM (see rust_firmware.bzl).
+firmware_rust_library(
+    name = "swarm_node_fw",
+    lib = ":swarm_node_ffi",
+)
+
+rust_cbindgen(
+    name = "swarm_node_h",
+    srcs = ["src/ffi.rs"],
+    out = "swarm_node.h",
+    config = "cbindgen.toml",
+    lang = "c",
+)
+
+cc_library(
+    name = "header",
+    hdrs = [":swarm_node_h"],
+    # Included as "swarm/node/swarm_node.h".
+)

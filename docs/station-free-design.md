@@ -162,7 +162,12 @@ mean-only pulls on anchored widgets.
 | v (m/s) | 3×f32 | 12 | prediction between broadcasts |
 | quality | f32 | 4 | mean position variance, m² |
 | flags | u8 | 1 | anchored / GPS-fix / static |
-| **total** | | **33 B** | fits one UWB MAC frame |
+| lock | f32 | 4 | range-innovation lock ratio (~1 locked, 10 none) |
+| **total** | | **37 B** | fits one UWB MAC frame |
+
+`lock` is what lets peers refuse a cold joiner's pulls (§4.2): by variance
+alone a just-booted widget is indistinguishable from a converged anchorless
+veteran.
 
 Simulation shows the loop is insensitive to advertisement rate down to 2 Hz
 (§7.3) because the estimator consumes advertised *variance*, and static /
@@ -173,23 +178,35 @@ protobuf message (§11), ~40 B encoded with micropb on-device.
 ### 5.3 Ranging exchange (per TDMA slot)
 
 Double-sided two-way ranging (DS-TWR), initiator A / responder B; both ends
-compute the same range; each end measures AoA of the incoming frame if
-equipped. The final message carries A's current advertisement; the response
-carries B's — so every ranging pair also refreshes each other's pose.
+fold the same range; each end measures AoA of the incoming frame if
+equipped. As implemented (`apps/node/protocol.h`), the POLL carries A's
+advertisement — and since every node not in its own slot is listening, every
+POLL is overheard network-wide, so each node refreshes every in-range peer's
+pose at ~the slot rate, not just its ranging partners'. The RESPONSE carries
+B's.
 
 ```
-A                                   B
-│ ── POLL (id, seq) ──────────────► │  t_rx, AoA@B
-│ ◄────── RESPONSE (B advert) ───── │  t_rx, AoA@A
-│ ── FINAL (A advert, timestamps) ► │
-│                                   │  B computes range, updates its ESKF
-│  A computes range, updates ESKF   │
+A (slot owner)                       B (round-robin peer)
+│ ── POLL (A advert, slot) ────────► │  t1 / t2   (overheard by all)
+│ ◄────── RESPONSE (B advert) ────── │  t4 / t3
+│ ── FINAL ────────────────────────► │  t5 / t6
+│ ◄── REPORT (t_round_b, t_reply_b)  │
+│  A computes the DS-TWR range       │
+│ ── RESULT (range) ───────────────► │  B folds the same range
 ```
+
+Without delayed-TX scheduling A only learns t_reply_a after FINAL leaves, so
+the fifth frame (RESULT, 12 B) is what gives B the range.
 
 ### 5.4 Medium access
 
 - TDMA, `uwb_slot_rate = 100` slots/s network-wide; one DS-TWR exchange per
   slot (~1–2 ms air time at 6.8 Mb/s — comfortable).
+- As implemented: 6 slots × 5 ms superframes. A node owns the slot equal to
+  its rank among the ids it hears (incl. itself) and initiates once per
+  superframe with the next peer round-robin; timing follows the lowest-id
+  node in range (realigned on each of its POLLs). A node that hears nobody
+  listens 1–2 superframes at random, then broadcasts a POLL as a beacon.
 - Round-robin over all pairs in radio range. N widgets → N(N−1)/2 pairs;
   13 widgets ≈ 78 pairs ≈ 1.3 Hz per pair, which still yields 9–14 cm
   (§7.2). A production schedule should be distributed (e.g. slotted-ALOHA
@@ -271,15 +288,26 @@ convergence 1–10 s.
 
 ## 8. Porting plan (embedded)
 
-1. `swarm_core` builds as a `rust_library` with no deps; embedded shell
-   links it directly (or via the existing C ABI). Replace `std` float
-   intrinsics with `libm` and add `#![no_std]` — the code already avoids
-   allocation and dynamic dispatch.
-2. Firmware layering mirrors the sim's `World`/`SimWidget` split: a thin
-   scheduler feeds the estimator from IMU/UWB ISRs; the downhill +
-   damping rules live in the same network layer that parses advertisements.
-3. DW3000 driver: extend `libs/dw3000` with DS-TWR + payload piggyback and
-   (hardware permitting) PDoA/AoA.
+Status (2026-10-20): items 1–3 done; hardware validation pending.
+
+1. **Done.** `swarm_core` is `#![no_std]` with one dependency, `libm`, used
+   on host and device alike so sim and firmware run bit-identical float math.
+   The classic ESP32 (Xtensa) builds it with the **esp-rs** rustc fork: a Nix
+   derivation in the firmware module (`nix/esp_rust.nix`) prebuilds a
+   `core` + `compiler_builtins` sysroot for `xtensa-esp32-none-elf`
+   offline from pinned sources, registered as a rules_rust toolchain
+   (`toolchains/rust/esp32`); a small rules_rust patch makes the triple
+   known so crates.io crates (libm, micropb) resolve for it.
+2. **Done.** The cooperative rules moved from the sim into Rust
+   (`swarm_core::coop`); the sim calls them through the C ABI and produces
+   byte-identical seeded results. The node runtime `swarm/node` (peer table,
+   aiding timing, surveyed mode, advert codec — no_std, unit-tested on the
+   host) is what the firmware links; `apps/node` is the thin C++ shell
+   (radio task on core 0, fusion task on core 1, USB JSON I/O).
+3. **Done**, minus AoA: `libs/dw3000` gained bulk payload transfers, frame
+   length and a fast post-PLL SPI clock. The DWM3000EVB has one antenna, so
+   no PDoA/AoA on this hardware: anchorless operation can't ground mesh
+   orientation (§4.3) — use ≥3 surveyed widgets (`{"cmd":"survey",...}`).
 4. Validation path: replay recorded hardware sensor logs through the *same*
    Rust core in the sim harness before flashing.
 
@@ -364,8 +392,8 @@ Schema contents:
   straight into a config; `run_sim --intrinsics` maps it onto the estimator
   noise model (the same mapping firmware applies to its `Params`).
 - `PoseAdvertisement` — the over-the-air broadcast of §5.2 as a proto
-  message (~40 B encoded), so the wire format is pinned by the same
-  conformance machinery before firmware exists.
+  message (~45 B encoded with `lock`), encoded/decoded on-device by the
+  same micropb bindings (`swarm/node/src/advert.rs`).
 
 Superseded (removed): the hand-rolled WEXT/WINT CRC'd binary containers and
 JSON authoring format from the first iteration of this standard.

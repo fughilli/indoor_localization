@@ -3,7 +3,13 @@
 //!
 //! All vectors are little flat f32 arrays; quaternions are scalar-first
 //! [w, x, y, z]. Every function is safe against a null handle (no-op / 0).
+//!
+//! Host-only (`ffi` feature): handles are heap-allocated, so this pulls in
+//! std; the firmware links the no_std crate without it.
+extern crate std;
+use std::boxed::Box;
 
+use crate::coop::{self, CoopConfig, Decision, Outcome, PeerView, Regime, SkipReason};
 use crate::estimator::{Estimator, Params};
 use crate::math::{Quat, Vec3};
 
@@ -201,6 +207,94 @@ pub extern "C" fn swarm_estimator_pos_cov(e: *const Estimator, out: *mut f32) {
             out[i * 3 + j] = e.cov[i][j];
         }
     }
+}
+
+/// Number of floats in a flattened [`CoopConfig`] (field order as declared).
+pub const COOP_CONFIG_LEN: usize = 9;
+
+fn coop_config(cfg: *const f32) -> CoopConfig {
+    if cfg.is_null() {
+        return CoopConfig::default();
+    }
+    let c = unsafe { core::slice::from_raw_parts(cfg, COOP_CONFIG_LEN) };
+    CoopConfig {
+        downhill_ratio: c[0],
+        mean_only_aoa_damping: c[1],
+        mean_only_range_damping: c[2],
+        lock_ratio_full: c[3],
+        lock_ratio_none: c[4],
+        peer_lock_factor: c[5],
+        max_advert_age: c[6],
+        aoa_downhill_max_var: c[7],
+        mean_only_pos_only: c[8] != 0.0,
+    }
+}
+
+fn peer_view(p: *const f32, var: f32, lock: f32, age: f32) -> PeerView {
+    PeerView { p: vec3(p), var, lock, age }
+}
+
+/// Cooperative range update ([`coop::range_update`]). `cfg` is a flattened
+/// CoopConfig (COOP_CONFIG_LEN floats) or null for the defaults. Writes the
+/// decision to `decision_out` (3 floats: regime 0=skip/1=downhill/
+/// 2=mean-only, nvar, my_var) for a following AoA update. Returns 1 accepted,
+/// 0 gated, -1 stale advert, -2 anchored, -3 cold peer.
+#[no_mangle]
+pub extern "C" fn swarm_coop_range_update(
+    e: *mut Estimator,
+    cfg: *const f32,
+    peer_p: *const f32,
+    peer_var: f32,
+    peer_lock: f32,
+    peer_age: f32,
+    measured: f32,
+    range_sigma: f32,
+    anchored: i32,
+    decision_out: *mut f32,
+) -> i32 {
+    let Some(e) = (unsafe { e.as_mut() }) else { return 0 };
+    let peer = peer_view(peer_p, peer_var, peer_lock, peer_age);
+    let (outcome, decision) =
+        coop::range_update(&coop_config(cfg), e, &peer, measured, range_sigma, anchored != 0);
+    if !decision_out.is_null() {
+        let out = unsafe { core::slice::from_raw_parts_mut(decision_out, 3) };
+        let flat: [f32; 3] = match decision {
+            Decision::Skip(_) => [0.0, 0.0, 0.0],
+            Decision::Use { regime, nvar, my_var } => {
+                [if regime == Regime::Downhill { 1.0 } else { 2.0 }, nvar, my_var]
+            }
+        };
+        out.copy_from_slice(&flat);
+    }
+    match outcome {
+        Outcome::Applied { accepted, .. } => accepted as i32,
+        Outcome::Skipped(SkipReason::StaleAdvert) => -1,
+        Outcome::Skipped(SkipReason::Anchored) => -2,
+        Outcome::Skipped(SkipReason::ColdPeer) => -3,
+    }
+}
+
+/// Cooperative AoA update ([`coop::aoa_update`]) under the 3-float decision
+/// a preceding swarm_coop_range_update wrote. Returns accepted components.
+#[no_mangle]
+pub extern "C" fn swarm_coop_aoa_update(
+    e: *mut Estimator,
+    cfg: *const f32,
+    peer_p: *const f32,
+    decision: *const f32,
+    bearing_body: *const f32,
+    aoa_sigma: f32,
+) -> i32 {
+    let Some(e) = (unsafe { e.as_mut() }) else { return 0 };
+    let d = unsafe { core::slice::from_raw_parts(decision, 3) };
+    let decision = match d[0] as i32 {
+        1 => Decision::Use { regime: Regime::Downhill, nvar: d[1], my_var: d[2] },
+        2 => Decision::Use { regime: Regime::MeanOnly, nvar: d[1], my_var: d[2] },
+        _ => return 0,
+    };
+    // AoA reads only the peer position from the view.
+    let peer = peer_view(peer_p, 0.0, 0.0, 0.0);
+    coop::aoa_update(&coop_config(cfg), e, &peer, decision, vec3(bearing_body), aoa_sigma) as i32
 }
 
 #[cfg(test)]

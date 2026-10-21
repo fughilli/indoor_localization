@@ -1,0 +1,75 @@
+# Station-free swarm node: one firmware image for every widget, no roles.
+# C++ shell (IMU drivers, fusion task, serial I/O) around the Rust node
+# runtime //swarm/node (swarm_core estimator + cooperative rules + settings
+# registry, with swarm_net linked in), on the radio + network task shared
+# with the loader (//apps/common). Runs as the "main" app under //apps/loader;
+# flash a fresh board with `swarm_ctl.py flash`, update over the air with
+# `swarm_ctl.py push` (swarm/tools, docs/swarm-network.md).
+load("@firmware//rules:firmware.bzl", "firmware_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+SRCS = [
+    "imu.cpp",
+    "imu.h",
+    "node.cpp",
+]
+
+DEPS = [
+    "//apps/common:boot",
+    "//apps/common:fw_key",
+    "//apps/common:netcmd",
+    "//apps/common:netstore",
+    "//apps/common:pins",
+    "//apps/common:radio",
+    "//apps/common:store",
+    "//apps/common:swarm_crypto",
+    "//swarm/net:header",
+    "//swarm/node:header",
+    "//swarm/node:swarm_node_fw",
+    "@firmware//libs/vendor:preferences_esp32",
+    "@firmware//libs/vendor:wire_esp32",
+]
+
+# Only built via firmware_binary's transition; skipped otherwise.
+ESP32_ONLY = select({
+    "@firmware//platforms:is_esp32": [],
+    "//conditions:default": ["@platforms//:incompatible"],
+})
+
+cc_binary(
+    name = "node",
+    srcs = SRCS,
+    target_compatible_with = ESP32_ONLY,
+    deps = DEPS,
+)
+
+firmware_binary(
+    name = "node_esp32",
+    binary = ":node",
+    board = "esp32",
+)
+
+# Rollback test images: identical but for a fault right after the IMU comes
+# up (SWARM_FAULT_TEST in node.cpp): "hang" wedges, "crash" aborts. Push one
+# as a newer version to a single board: it must roll back to the loader and
+# must not spread (canary rule). Never deploy otherwise.
+[cc_binary(
+    name = "node_" + fault,
+    srcs = SRCS,
+    copts = ["-DSWARM_FAULT_TEST=%d" % n],
+    target_compatible_with = ESP32_ONLY,
+    deps = DEPS,
+) for fault, n in [
+    ("hang", 1),
+    ("crash", 2),
+]]
+
+[firmware_binary(
+    name = "node_%s_esp32" % fault,
+    binary = ":node_" + fault,
+    board = "esp32",
+) for fault in [
+    "hang",
+    "crash",
+]]

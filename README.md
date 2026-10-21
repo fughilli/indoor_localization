@@ -29,6 +29,10 @@ arduino-esp32 core, and esptool; Bazel compiles/links and packages flashable
 | `apps/tag/` | tag firmware — DS-TWR cycle + WiFi/TCP JSON streaming |
 | `host/` | Python: TCP ingest, trilateration solver, web floor view, simulator |
 | `swarm/` | station-free cooperative localization: Rust ESKF core + swarm sim + web viewer (see `docs/station-free-design.md`) |
+| `swarm/node/` | node runtime (Rust, no_std): estimator + cooperative rules + peer table + advert codec, linked into the firmware |
+| `apps/node/` | **swarm node firmware** — one image for every widget, no roles: TDMA DS-TWR, adverts on every POLL, IMU fusion, USB JSON |
+| `apps/mule/` | ACEBOTT/DWM3000EVB bring-up + 2-board ranging test (`probe`, `diag` tools) |
+| `swarm/tools/swarm_view.py` | live swarm map through any one plugged-in node (`--port` or `--replay`) |
 | `swarm/tools/` | sensor characterization: AoA plane/precision, range bias/σ, IMU Allan deviation, mag calibration (`bazelisk run //swarm/tools:characterize -- aoa --demo`) |
 | `swarm/proto/`, `swarm/config/` | widget.v1 protobuf config schema (extrinsics + intrinsics + pose advertisement) and its no_std micropb bindings for firmware (design doc §11) |
 | `swarm/tools/extrinsics*` | extrinsics configurator web UI (`:extrinsics_configurator`, port 8182); textproto source of truth → binary proto / C header for firmware |
@@ -68,6 +72,25 @@ exposed as the named service `sim`:
 the exact URL). The floor view (`floor`, :8180) and extrinsics configurator
 (`extrinsics`, :8182) are named services too; only the tag's TCP ingest (7007)
 keeps a fixed host port, since the tag dials in from the LAN.
+
+### Station-free swarm (hardware)
+
+`//apps/node` is the on-device version: flash the same image onto every
+board (ACEBOTT ESP32-Max + DWM3000EVB, MPU6050/QMC5883L on GPIO27 (SDA) / GPIO4 (SCL) if
+fitted). Nodes find each other, take TDMA slots by id rank, range every
+pair, and pass pose advertisements around; the estimator and cooperative
+rules are the same Rust as the sim (`swarm/core`, built for the Xtensa ESP32
+with the esp-rs toolchain from the firmware module). Plug any one node in:
+
+```sh
+bazelisk build //apps/node:node_esp32
+python3 swarm/tools/swarm_view.py --port /dev/cu.usbserial-110   # http://127.0.0.1:8184/
+```
+
+The node prints newline JSON at 460800 baud: its own pose at 100 Hz
+(`self`), every node it hears at 10 Hz (`swarm`), each range, stats. The
+DWM3000EVB has no AoA, so for absolute positions survey at least three
+nodes (`{"cmd":"survey","p":[x,y,z]}`, also a button in the view).
 
 Flashable images land in `bazel-bin/apps/anchor/anchor_{1,2,3}_esp32.bin` and
 `bazel-bin/apps/tag/tag_esp32.bin`.

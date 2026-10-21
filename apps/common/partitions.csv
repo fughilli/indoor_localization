@@ -1,0 +1,10 @@
+# Swarm node flash layout (4 MB): loader + main + staging, see
+# docs/swarm-network.md "Flash layout".
+# Name,    Type, SubType,  Offset,   Size
+nvs,       data, nvs,      0x9000,   0x5000,
+otadata,   data, ota,      0xe000,   0x2000,
+loader,    app,  factory,  0x10000,  0xA0000,
+main,      app,  ota_0,    0xB0000,  0x140000,
+staging,   data, 0x80,     0x1F0000, 0x140000,
+lfs,       data, spiffs,   0x330000, 0xC0000,
+coredump,  data, coredump, 0x3F0000, 0x10000,

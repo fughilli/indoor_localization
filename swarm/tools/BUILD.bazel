@@ -120,3 +120,68 @@ py_test(
         ":synth_lib",
     ],
 )
+
+# Serial capture recorder. Runs on the host the board is plugged into
+# (`python3 swarm/tools/capture.py ...`, needs pyserial); only its parsing and
+# manifest helpers are tested here.
+py_library(
+    name = "capture_lib",
+    srcs = ["capture.py"],
+)
+
+py_test(
+    name = "capture_test",
+    srcs = ["capture_test.py"],
+    deps = [
+        ":capture_lib",
+        ":records_lib",
+    ],
+)
+
+# Live ranging web view (host-run like capture.py: `python3
+# swarm/tools/range_view.py --port ...`, needs pyserial); hub logic tested here.
+py_library(
+    name = "range_view_lib",
+    srcs = ["range_view.py"],
+    deps = [":capture_lib"],
+)
+
+py_test(
+    name = "range_view_test",
+    srcs = ["range_view_test.py"],
+    deps = [
+        ":range_view_lib",
+        ":records_lib",
+    ],
+)
+
+# Swarm web view through any one node (host-run: `python3
+# swarm/tools/swarm_view.py --port ...`, needs pyserial).
+py_library(
+    name = "swarm_view_lib",
+    srcs = ["swarm_view.py"],
+    deps = [
+        ":capture_lib",
+        ":range_view_lib",
+    ],
+)
+
+# Synthetic node capture (sim-driven) for swarm_view --replay.
+py_binary(
+    name = "swarm_view_demo",
+    srcs = ["swarm_view_demo.py"],
+    deps = ["//swarm/sim:world_lib"],
+)
+
+# Swarm network wire formats (host side of swarm/net) + the control tool.
+py_library(
+    name = "swarm_wire_lib",
+    srcs = ["swarm_wire.py"],
+    imports = ["."],
+)
+
+py_test(
+    name = "swarm_wire_test",
+    srcs = ["swarm_wire_test.py"],
+    deps = [":swarm_wire_lib"],
+)

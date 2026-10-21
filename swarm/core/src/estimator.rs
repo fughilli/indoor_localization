@@ -64,6 +64,19 @@ impl Default for Params {
     }
 }
 
+/// Which part of an update's K*y goes into the nominal state.
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Inject {
+    All,
+    /// Position only. A mean-only update never shrinks P, so its
+    /// cross-covariance gains keep their full size update after update; a
+    /// persistent innovation (an anchorless mesh that can't close) would
+    /// otherwise be integrated into velocity and the biases without bound.
+    Position,
+    /// Everything but position (see `update_zero_vel_masked`).
+    AllButPosition,
+}
+
 #[derive(Clone, Debug)]
 pub struct Estimator {
     pub p: Vec3,
@@ -221,6 +234,19 @@ impl Estimator {
         r: f32,
         update_cov: bool,
     ) -> bool {
+        self.scalar_update_masked(h, y, r, update_cov, Inject::All)
+    }
+
+    /// [`scalar_update`](Self::scalar_update) injecting only part of K*y
+    /// (see [`Inject`]).
+    fn scalar_update_masked(
+        &mut self,
+        h: &[f32; STATE_DIM],
+        y: f32,
+        r: f32,
+        update_cov: bool,
+        inject: Inject,
+    ) -> bool {
         let mut ph = [0.0f32; STATE_DIM];
         for i in 0..STATE_DIM {
             let mut s = 0.0;
@@ -248,11 +274,15 @@ impl Estimator {
         }
         // Inject dx = K*y into the nominal state.
         let dx = |base: usize| Vec3::new(k[base] * y, k[base + 1] * y, k[base + 2] * y);
-        self.p = self.p.add(dx(DP));
-        self.v = self.v.add(dx(DV));
-        self.q = self.q.mul(Quat::from_rotvec(dx(DTH))).normalized();
-        self.ba = self.ba.add(dx(DBA));
-        self.bg = self.bg.add(dx(DBG));
+        if inject != Inject::AllButPosition {
+            self.p = self.p.add(dx(DP));
+        }
+        if inject != Inject::Position {
+            self.v = self.v.add(dx(DV));
+            self.q = self.q.mul(Quat::from_rotvec(dx(DTH))).normalized();
+            self.ba = self.ba.add(dx(DBA));
+            self.bg = self.bg.add(dx(DBG));
+        }
         if update_cov {
             // P <- P - K (P H^T)^T
             for i in 0..STATE_DIM {
@@ -276,6 +306,20 @@ impl Estimator {
         sigma: f32,
         mean_only: bool,
     ) -> bool {
+        self.update_range_masked(np, nvar, measured, sigma, mean_only, false)
+    }
+
+    /// [`update_range`](Self::update_range); `pos_only` corrects position
+    /// alone (see `scalar_update_masked`).
+    pub fn update_range_masked(
+        &mut self,
+        np: Vec3,
+        nvar: f32,
+        measured: f32,
+        sigma: f32,
+        mean_only: bool,
+        pos_only: bool,
+    ) -> bool {
         let d = self.p.sub(np);
         let r_pred = d.norm();
         if r_pred < 0.05 {
@@ -285,7 +329,7 @@ impl Estimator {
         // measures consistency with the mesh either way). Per-sample cap so
         // a multipath tail nudges the EWMA rather than resetting it.
         if sigma > 0.0 {
-            let sample = ((measured - r_pred).abs() / sigma).min(INNOV_RATIO_MAX);
+            let sample = (libm::fabsf(measured - r_pred) / sigma).min(INNOV_RATIO_MAX);
             let a = self.params.innov_alpha;
             self.range_innov_ratio += a * (sample - self.range_innov_ratio);
         }
@@ -301,7 +345,15 @@ impl Estimator {
         // range asymmetrically, and thousands of one-sided half-updates pump
         // net drift into the mesh (~10x worse relative error). Real NLOS
         // rejection belongs at the radio layer (CIR classification).
-        self.scalar_update(&h, measured - r_pred, sigma * sigma + nvar, !mean_only)
+        let inject = if pos_only { Inject::Position } else { Inject::All };
+        self.scalar_update_masked(&h, measured - r_pred, sigma * sigma + nvar, !mean_only, inject)
+    }
+
+    /// Move the position estimate by `dp` without touching the covariance:
+    /// a gauge correction (e.g. re-centering an anchorless swarm), not a
+    /// measurement.
+    pub fn shift_position(&mut self, dp: Vec3) {
+        self.p = self.p.add(dp);
     }
 
     /// UWB AoA: measured unit bearing to the neighbor in the *body* frame.
@@ -383,12 +435,23 @@ impl Estimator {
     /// not accelerating appreciably — at a negligible cost to genuinely
     /// moving widgets (sigma is chosen well above their real speeds).
     pub fn update_zero_vel(&mut self, sigma: f32) -> u32 {
+        self.update_zero_vel_masked(sigma, false)
+    }
+
+    /// [`update_zero_vel`](Self::update_zero_vel); `keep_position` leaves
+    /// the position mean alone. When mean-only range updates have been
+    /// correcting position without touching P, P's position-velocity
+    /// cross-covariance still claims every past velocity error is an
+    /// uncorrected position error, and a full update re-applies a correction
+    /// ranging already made: the position jumps every zero-velocity period.
+    pub fn update_zero_vel_masked(&mut self, sigma: f32, keep_position: bool) -> u32 {
+        let inject = if keep_position { Inject::AllButPosition } else { Inject::All };
         let mut accepted = 0;
         let v = self.v.to_array();
         for axis in 0..3 {
             let mut h = [0.0f32; STATE_DIM];
             h[DV + axis] = 1.0;
-            if self.scalar_update(&h, -v[axis], sigma * sigma, true) {
+            if self.scalar_update_masked(&h, -v[axis], sigma * sigma, true, inject) {
                 accepted += 1;
             }
         }

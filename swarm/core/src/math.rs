@@ -53,7 +53,7 @@ impl Vec3 {
     }
 
     pub fn norm(self) -> f32 {
-        self.dot(self).sqrt()
+        libm::sqrtf(self.dot(self))
     }
 
     pub fn normalized(self) -> Vec3 {
@@ -143,7 +143,7 @@ impl Quat {
             // sin(a/2)/a ~ 1/2 - a^2/48
             (0.5 - angle * angle / 48.0, 1.0 - angle * angle / 8.0)
         } else {
-            ((0.5 * angle).sin() / angle, (0.5 * angle).cos())
+            (libm::sinf(0.5 * angle) / angle, libm::cosf(0.5 * angle))
         };
         Quat { w, x: v.x * s, y: v.y * s, z: v.z * s }
     }
@@ -158,7 +158,7 @@ impl Quat {
     }
 
     pub fn normalized(self) -> Quat {
-        let n = (self.w * self.w + self.x * self.x + self.y * self.y + self.z * self.z).sqrt();
+        let n = libm::sqrtf(self.w * self.w + self.x * self.x + self.y * self.y + self.z * self.z);
         if n < 1e-12 {
             return Quat::IDENTITY;
         }
@@ -191,7 +191,7 @@ impl Quat {
     /// Heading (rotation about world +z of the body +x axis), radians.
     pub fn yaw(self) -> f32 {
         let fwd = self.rotate(Vec3::new(1.0, 0.0, 0.0));
-        fwd.y.atan2(fwd.x)
+        libm::atan2f(fwd.y, fwd.x)
     }
 }
 

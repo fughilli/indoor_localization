@@ -6,10 +6,15 @@
 //! pose estimates are uncertain), plus optional absolute inputs (GPS,
 //! altimeter) and magnetometer heading.
 //!
-//! Constraints: no external crates, no allocation in the hot path, f32-first
-//! math — the same code must run on the embedded target.
+//! Constraints: no allocation, f32-first math, `no_std` — the same code runs
+//! on the embedded target (the classic ESP32 via the esp-rs Xtensa toolchain).
+//! The one dependency is `libm`, used on host and device alike so the
+//! simulation and the firmware run bit-identical float math.
+#![cfg_attr(not(test), no_std)]
 
+pub mod coop;
 pub mod estimator;
+#[cfg(feature = "ffi")]
 pub mod ffi;
 pub mod math;
 

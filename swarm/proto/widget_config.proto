@@ -130,4 +130,7 @@ message PoseAdvertisement {
   float quality = 5;    // mean position variance, m^2
   uint32 flags = 6;     // bit 0: anchored (healthy absolute source)
                         // bit 1: static  bit 2: gps-equipped
+  float lock = 7;       // range-innovation lock ratio (EWMA |y|/sigma):
+                        // ~1 locked to the mesh, 10 = no lock. Peers use it
+                        // to refuse a cold joiner's pulls (swarm_core::coop).
 }

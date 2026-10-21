@@ -29,6 +29,16 @@ int DWM3000Class::config[] = {
  Selects a SPI device through its Chip Select pin
  @param cs The pin number of the selected SPI device
 */
+DWM3000Pins DWM3000Class::pins = {-1, -1, -1, CHIP_SELECT_PIN, RST_PIN};
+
+/*
+ Overrides the default pin assignment; call before begin()
+*/
+void DWM3000Class::setPins(const DWM3000Pins &p)
+{
+  pins = p;
+}
+
 void DWM3000Class::spiSelect(uint8_t cs)
 {
   pinMode(cs, OUTPUT);
@@ -43,12 +53,12 @@ void DWM3000Class::spiSelect(uint8_t cs)
 void DWM3000Class::begin()
 {
   delay(5);
-  pinMode(CHIP_SELECT_PIN, OUTPUT);
-  SPI.begin();
+  pinMode(pins.cs, OUTPUT);
+  SPI.begin(pins.sck, pins.miso, pins.mosi, pins.cs);
 
   delay(5);
 
-  spiSelect(CHIP_SELECT_PIN);
+  spiSelect(pins.cs);
 
   Serial.println("[INFO] SPI ready");
 }
@@ -1014,6 +1024,16 @@ void DWM3000Class::TXInstantRX()
 }
 
 /*
+ Aborts any TX/RX in progress and returns the radio to IDLE (fast command
+ TXRXOFF). Needed after an RX timeout: the receiver is still on, and a TX
+ command issued from that state does not start a clean transmission.
+*/
+void DWM3000Class::forceTRXOff()
+{
+  DWM3000Class::writeFastCommand(0x00);
+}
+
+/*
  #####  DWM3000 Firmware Interaction  #####
 */
 
@@ -1040,10 +1060,10 @@ void DWM3000Class::softReset()
 */
 void DWM3000Class::hardReset()
 {
-  pinMode(RST_PIN, OUTPUT);
-  digitalWrite(RST_PIN, LOW); // set reset pin active low to hard-reset DWM3000 chip
+  pinMode(pins.rst, OUTPUT);
+  digitalWrite(pins.rst, LOW); // set reset pin active low to hard-reset DWM3000 chip
   delay(10);
-  pinMode(RST_PIN, INPUT); // get pin back in floating state
+  pinMode(pins.rst, INPUT); // get pin back in floating state
 }
 
 /*
@@ -1378,9 +1398,71 @@ uint32_t DWM3000Class::readOrWriteFullAddress(uint32_t base, uint32_t sub, uint3
  @param recLen The length of bytes that should be received back after sending the data b
  @return Returns 0 or the received bytes from the chip
  */
+static uint32_t g_spi_hz = 0;
+
+void DWM3000Class::setSpiClock(uint32_t hz)
+{
+  g_spi_hz = hz;
+}
+
+static void spiBegin(int cs)
+{
+  if (g_spi_hz)
+    SPI.beginTransaction(SPISettings(g_spi_hz, MSBFIRST, SPI_MODE0));
+  digitalWrite(cs, LOW);
+}
+
+static void spiEnd(int cs)
+{
+  digitalWrite(cs, HIGH);
+  if (g_spi_hz)
+    SPI.endTransaction();
+}
+
+// Header for a full (base + sub) address, as readOrWriteFullAddress builds it.
+static int fullAddressHeader(int base, int sub, bool write, uint8_t out[2])
+{
+  uint32_t header = (write ? 0x80 : 0x00) | ((base & 0x1F) << 1);
+  if (sub <= 0)
+  {
+    out[0] = header;
+    return 1;
+  }
+  out[0] = header | 0x40;
+  out[1] = (sub & 0x7F) << 2;
+  return 2;
+}
+
+void DWM3000Class::writeBytes(int base, int sub, const uint8_t *data, int len)
+{
+  uint8_t hdr[2];
+  int n = fullAddressHeader(base, sub, true, hdr);
+  spiBegin(pins.cs);
+  SPI.writeBytes(hdr, n);
+  SPI.writeBytes(data, len);
+  spiEnd(pins.cs);
+}
+
+void DWM3000Class::readBytes(int base, int sub, uint8_t *out, int len)
+{
+  uint8_t hdr[2];
+  int n = fullAddressHeader(base, sub, false, hdr);
+  spiBegin(pins.cs);
+  SPI.writeBytes(hdr, n);
+  for (int i = 0; i < len; i++)
+    out[i] = SPI.transfer(0x00);
+  spiEnd(pins.cs);
+}
+
+int DWM3000Class::rxFrameLength()
+{
+  // RX_FINFO (GEN_CFG 0x4C): RXFLEN in bits 0..9.
+  return read(GEN_CFG_AES_LOW_REG, 0x4C) & 0x3FF;
+}
+
 uint32_t DWM3000Class::sendBytes(int b[], int lenB, int recLen)
 {
-  digitalWrite(CHIP_SELECT_PIN, LOW);
+  spiBegin(pins.cs);
   for (int i = 0; i < lenB; i++)
   {
     SPI.transfer(b[i]);
@@ -1406,7 +1488,7 @@ uint32_t DWM3000Class::sendBytes(int b[], int lenB, int recLen)
   {
     val = 0;
   }
-  digitalWrite(CHIP_SELECT_PIN, HIGH);
+  spiEnd(pins.cs);
   return val;
 }
 

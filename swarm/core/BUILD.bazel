@@ -1,5 +1,6 @@
-# Station-free cooperative localization core: pure Rust, no crate deps,
-# no_std-friendly design so the same code ports to the embedded target.
+# Station-free cooperative localization core: pure no_std Rust (one dep,
+# libm), so the identical code runs in the simulation and on the firmware —
+# the classic ESP32 builds it with the esp-rs Xtensa toolchain.
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_shared_library", "rust_test")
 
 package(default_visibility = ["//visibility:public"])
@@ -8,17 +9,23 @@ rust_library(
     name = "swarm_core",
     srcs = glob(["src/**/*.rs"]),
     crate_root = "src/lib.rs",
+    deps = ["@swarm_crates//:libm"],
 )
 
-# C-ABI cdylib for the Python simulation (ctypes). The embedded port links the
-# rust_library directly instead.
+# C-ABI cdylib for the Python simulation (ctypes): the `ffi` feature adds the
+# heap-allocated handle API (std). The firmware links the no_std library.
 rust_shared_library(
     name = "swarm_core_cdylib",
     srcs = glob(["src/**/*.rs"]),
+    crate_features = ["ffi"],
     crate_root = "src/lib.rs",
+    deps = ["@swarm_crates//:libm"],
 )
 
 rust_test(
     name = "swarm_core_test",
-    crate = ":swarm_core",
+    srcs = glob(["src/**/*.rs"]),
+    crate_features = ["ffi"],
+    crate_root = "src/lib.rs",
+    deps = ["@swarm_crates//:libm"],
 )

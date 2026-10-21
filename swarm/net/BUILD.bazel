@@ -1,0 +1,62 @@
+# Swarm network (Rust, no_std): mesh packets with managed flooding,
+# authenticated live settings, signed firmware manifests and firmware page
+# distribution; see docs/swarm-network.md.
+#
+# Two builds of the same sources, differing only in the crypto backend
+# (src/crypto.rs): :swarm_net uses RustCrypto (host tests and tools);
+# :swarm_net_mbedtls calls the firmware's MbedTLS shim (apps/common).
+load("@firmware//rules:cbindgen.bzl", "rust_cbindgen")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+rust_library(
+    name = "swarm_net",
+    srcs = glob(["src/**/*.rs"]),
+    crate_root = "src/lib.rs",
+    deps = [
+        "@swarm_crates//:hmac",
+        "@swarm_crates//:p256",
+        "@swarm_crates//:sha2",
+    ],
+)
+
+rust_test(
+    name = "swarm_net_test",
+    crate = ":swarm_net",
+)
+
+rust_library(
+    name = "swarm_net_mbedtls",
+    srcs = glob(["src/**/*.rs"]),
+    crate_features = ["mbedtls"],
+    crate_name = "swarm_net",
+    crate_root = "src/lib.rs",
+)
+
+# What firmware links (through swarm_node's or the loader's staticlib):
+# MbedTLS crypto + the C ABI (src/ffi.rs).
+rust_library(
+    name = "swarm_net_fw",
+    srcs = glob(["src/**/*.rs"]),
+    crate_features = [
+        "ffi",
+        "mbedtls",
+    ],
+    crate_name = "swarm_net",
+    crate_root = "src/lib.rs",
+)
+
+rust_cbindgen(
+    name = "swarm_net_h",
+    srcs = ["src/ffi.rs"],
+    out = "swarm_net.h",
+    config = "cbindgen.toml",
+    lang = "c",
+)
+
+cc_library(
+    name = "header",
+    hdrs = [":swarm_net_h"],
+    # Included as "swarm/net/swarm_net.h".
+)

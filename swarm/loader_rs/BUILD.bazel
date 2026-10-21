@@ -1,0 +1,22 @@
+# The loader's Rust staticlib (swarm_net + panic handler); see src/lib.rs.
+load("@firmware//rules:rust_firmware.bzl", "firmware_rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_static_library")
+
+package(default_visibility = ["//visibility:public"])
+
+rust_static_library(
+    name = "loader_rs_ffi",
+    srcs = ["src/lib.rs"],
+    crate_name = "swarm_loader",
+    rustc_flags = ["-Cpanic=abort"],
+    target_compatible_with = select({
+        "@firmware//platforms:is_esp32": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+    deps = ["//swarm/net:swarm_net_fw"],
+)
+
+firmware_rust_library(
+    name = "loader_rs_fw",
+    lib = ":loader_rs_ffi",
+)

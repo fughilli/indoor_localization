@@ -1,0 +1,3 @@
+# Dependency patches. rules_rust_xtensa.patch is a symlink to the firmware
+# module's copy (third_party/embedded is outside this repo's packages).
+exports_files(["rules_rust_xtensa.patch"])

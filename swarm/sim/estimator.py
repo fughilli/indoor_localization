@@ -55,6 +55,11 @@ def _lib():
             "swarm_estimator_range_innov_ratio": ([ctypes.c_void_p], f32),
             "swarm_estimator_state": ([ctypes.c_void_p, f32p], None),
             "swarm_estimator_pos_cov": ([ctypes.c_void_p, f32p], None),
+            "swarm_coop_range_update":
+                ([ctypes.c_void_p, f32p, f32p, f32, f32, f32, f32, f32,
+                  ctypes.c_int, f32p], ctypes.c_int),
+            "swarm_coop_aoa_update":
+                ([ctypes.c_void_p, f32p, f32p, f32p, f32p, f32], ctypes.c_int),
         }
         for name, (argtypes, restype) in sigs.items():
             fn = getattr(lib, name)
@@ -70,6 +75,17 @@ def _f3(v):
 
 def _f4(v):
     return (ctypes.c_float * 4)(*[float(x) for x in v])
+
+
+def coop_config(downhill_ratio, mean_only_aoa_damping, mean_only_range_damping,
+                lock_ratio_full, lock_ratio_none, peer_lock_factor,
+                max_advert_age, aoa_downhill_max_var=25.0,
+                mean_only_pos_only=False):
+    """Flattened swarm_core::coop::CoopConfig (field order as declared)."""
+    return (ctypes.c_float * 9)(
+        downhill_ratio, mean_only_aoa_damping, mean_only_range_damping,
+        lock_ratio_full, lock_ratio_none, peer_lock_factor, max_advert_age,
+        aoa_downhill_max_var, 1.0 if mean_only_pos_only else 0.0)
 
 
 class Estimator:
@@ -142,6 +158,23 @@ class Estimator:
             "bg": list(out[13:16]),
             "pos_var": out[16],
         }
+
+    def coop_range_update(self, coop_cfg, peer_p, peer_var, peer_lock,
+                          peer_age, measured, sigma, anchored=False):
+        """Cooperative range update (swarm_core::coop — the same rules the
+        firmware runs). coop_cfg: flattened CoopConfig (see coop_config()).
+        Returns (code, decision): code 1 accepted, 0 gated, -1 stale advert,
+        -2 anchored, -3 cold peer; decision is the opaque 3-float handle
+        coop_aoa_update takes."""
+        decision = (ctypes.c_float * 3)()
+        code = self._lib.swarm_coop_range_update(
+            self._h, coop_cfg, _f3(peer_p), peer_var, peer_lock, peer_age,
+            measured, sigma, 1 if anchored else 0, decision)
+        return code, decision
+
+    def coop_aoa_update(self, coop_cfg, peer_p, decision, bearing_body, sigma):
+        return self._lib.swarm_coop_aoa_update(
+            self._h, coop_cfg, _f3(peer_p), decision, _f3(bearing_body), sigma)
 
     def pos_cov(self):
         """3x3 position covariance, row-major nested lists."""

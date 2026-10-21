@@ -37,6 +37,15 @@ python.toolchain(
 # ports to the embedded target; the Python sim binds it via ctypes.
 bazel_dep(name = "rules_rust", version = "0.71.3")
 
+# The classic ESP32 (esp-rs, xtensa-esp32-none-elf) as a known rules_rust
+# triple, so crate_universe crates resolve for it. See the patch header.
+single_version_override(
+    module_name = "rules_rust",
+    patch_strip = 1,
+    patches = ["//patches:rules_rust_xtensa.patch"],
+    version = "0.71.3",
+)
+
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
     edition = "2021",
@@ -47,6 +56,47 @@ rust.toolchain(
 use_repo(rust, "rust_toolchains")
 
 register_toolchains("@rust_toolchains//:all")
+
+# Crates for //swarm Rust that runs on host AND firmware. Just libm: pure
+# Rust float math for no_std, used on both sides so sim and device match
+# bit for bit. The triple list extends rules_rust's host-centric default with
+# the classic ESP32 (esp-rs toolchain, @firmware//toolchains/rust/esp32).
+# Repin: CARGO_BAZEL_REPIN=1 bazelisk query @swarm_crates//:libm
+swarm_crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
+swarm_crate.spec(
+    default_features = False,
+    package = "libm",
+    version = "0.2.11",
+)
+swarm_crate.spec(
+    default_features = False,
+    package = "sha2",
+    version = "0.10.8",
+)
+swarm_crate.spec(
+    default_features = False,
+    package = "hmac",
+    version = "0.12.1",
+)
+swarm_crate.spec(
+    default_features = False,
+    features = ["ecdsa"],
+    package = "p256",
+    version = "0.13.2",
+)
+swarm_crate.from_specs(
+    name = "swarm_crates",
+    cargo_lockfile = "//swarm:crates-Cargo.lock",
+    lockfile = "//swarm:crates-lock.json",
+    supported_platform_triples = [
+        "aarch64-apple-darwin",
+        "aarch64-unknown-linux-gnu",
+        "x86_64-apple-darwin",
+        "x86_64-unknown-linux-gnu",
+        "xtensa-esp32-none-elf",
+    ],
+)
+use_repo(swarm_crate, "swarm_crates")
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(

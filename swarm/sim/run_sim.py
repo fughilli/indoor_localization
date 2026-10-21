@@ -168,6 +168,8 @@ def main():
     ap.add_argument("--range-damping", type=float, default=None,
                     help="override annealed mean-only range damping "
                          "(0 disables annealing)")
+    ap.add_argument("--mean-only-pos-only", action="store_true",
+                    help="mean-only range updates correct position only")
     ap.add_argument("--zero-vel-sigma", type=float, default=None,
                     help="override the zero-velocity gauge prior sigma, m/s")
     ap.add_argument("--zero-vel-rate", type=float, default=None,
@@ -191,6 +193,8 @@ def main():
                         "uwb_multipath_prob":
                             0.0 if args.no_multipath else None,
                         "zero_vel_sigma": args.zero_vel_sigma,
+                        "mean_only_pos_only":
+                            True if args.mean_only_pos_only else None,
                         "zero_vel_rate": args.zero_vel_rate,
                     }.items() if v is not None})
     if args.json:

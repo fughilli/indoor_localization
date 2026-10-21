@@ -11,3 +11,6 @@ bazel-*
 config_local.h
 
 __pycache__/
+
+# Ranging/sensor captures recorded on the bench (swarm/tools/capture.py, range_view.py)
+captures/

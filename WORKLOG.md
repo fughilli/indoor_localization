@@ -1,6 +1,6 @@
 # WORKLOG
 
-_Last updated: 2026-07-19 (session 4, lock-annealed gain + join/leave).
+_Last updated: 2026-10-20 (session 5, hardware bring-up + embedded port).
 Read together with `git log`._
 
 ## Goal
@@ -92,16 +92,73 @@ joining cold / leaving):
   in ≤1.5 m rel without shaking veterans, anchor loss → honest variance
   regrowth with mesh held, stale-advert aging. Rust: `innov_ratio_tracks_lock`.
 
+**Session 5 (2026-10-19/20): hardware + embedded port.**
+
+- Hardware: ACEBOTT ESP32-Max-V1.0 (ESP32-WROOM-32) + Qorvo DWM3000EVB
+  shield. UNO-position -> GPIO map in `apps/mule/pins.h` (SPI on 5/16/17,
+  CS 18, RSTn 12 — a strapping pin, boots fine). IMU (MPU6050 + QMC5883L on
+  its aux bus) goes on SDA GPIO27 / SCL GPIO4: 34/35 are input-only, and the
+  shield owns 32/33 (EXTON/DW GPIO7), 12-14 and 25/26 (RSTn, DW GPIO0-3). DWM3000EVB has ONE antenna: no AoA on this hardware.
+- `apps/mule`: bring-up + 2-board DS-TWR test (initiator/responder images,
+  `probe`/`diag` tools); `swarm/tools/capture.py` + `range_view.py` (live
+  dashboard, segment recording for `characterize range`). Found+fixed: the
+  initiator wedged forever after a responder outage (RX left on + stale TX
+  flag) — idle the radio before each exchange.
+- **esp-rs**: the core stays Rust on the classic ESP32 (user direction). Nix
+  prebuilds an Xtensa sysroot from the esp-rs 1.85.0.0 release; rules_rust
+  toolchain + triple patch in the firmware module (design doc §8).
+  `swarm_core` is no_std + libm; cooperative rules moved into
+  `swarm_core::coop` (sim byte-identical); `swarm/node` runtime;
+  `apps/node` firmware (no roles: TDMA rank slots, lowest-id sync, 5-frame
+  DS-TWR, adverts on every POLL); `swarm/tools/swarm_view.py`.
+- **Session 6 (2026-10-20), on hardware**: 4 nodes with IMUs (ids 53876,
+  63124, 7408, 49736) range all-to-all at the full TDMA rate. Fixed a
+  receiver re-arm that killed the next slot's POLL (36% timeouts -> 0).
+  Anchorless swarms: centroid bleed to the origin (node.rs) and
+  position-only mean-only range updates (`CoopConfig::mean_only_pos_only`;
+  a still node had reached 41 m/s). A carried node still zigzags:
+  `zero_vel_keep_position` removes the jumps but drifts ~5x more (test
+  pins the trade-off) — tuning open.
+- **Swarm network** (docs/swarm-network.md), all live on boards 53876 +
+  63124:
+  - `swarm/net` (Rust): Meshtastic-style managed-flood mesh (unicast +
+    broadcast, attempt-aware dedupe, acks), live settings (swarm layer as
+    a 4-byte-HMAC-tagged bundle with catch-up, per-device tagged
+    overrides), and Deluge-style firmware pages with a summary-driven push
+    fallback.
+  - Crypto: MbedTLS on the device (boot KAT self-test), RustCrypto on the
+    host. Firmware manifests are ECDSA P-256; keys are in ~/.config/swarm.
+  - Flash: loader (factory) + main (ota_0) + staging + LittleFS. The loader
+    installs and verifies; IDF rollback returns to it.
+  - The radio uses spare TDMA slots for network frames.
+  - Tools: `swarm/tools/swarm_ctl.py` (flash / key / settings / set / clear
+    / push / status) and `swarm_wire.py`, whose encodings are pinned against
+    Rust.
+  - Measured: USB push of a 597 KB image 50 s; a neighbour fetched it over
+    UWB in ~90 s and installed it; old (v3) firmware was pulled through by
+    the fallback in ~11 min.
+  - Embedded repo fix: `sdk_hdrs_esp32` was missing `MBEDTLS_CONFIG_FILE`
+    (an ABI mismatch, so heap corruption in any MbedTLS user).
+
 ## Next up
 
-1. **Embedded port** of `swarm_core` per design doc §8: `#![no_std]` + libm,
-   link into firmware; extend `libs/dw3000` with DS-TWR payload piggyback.
-   Also add a firmware *capture mode* emitting the `swarm/tools/records.py`
-   JSONL schema over TCP so `characterize` runs against real sensors, and
-   wire WEXT/WINT loading (or the generated headers) into the firmware
-   boot path + apply extrinsics/intrinsics in the measurement ingest
-   (sim currently applies intrinsics only; extrinsics application in the
-   sim measurement path is future work — sensors are modeled co-located).
+1. **Swarm network**: all four boards are on the loader layout with keys,
+   and v8 is deployed over the air. That took ~3.5 min from the USB push to
+   all installed, with three receivers in parallel. Spare TDMA slots go to
+   nodes with pages to serve (radio.cpp UpdateServers); with 4 nodes the
+   rank rule had starved the servers.
+   - Untested so far: the rollback path (a deliberately crashing main), the
+     BOOT-button recovery, and multi-hop (all boards are within one hop).
+   - Speed-ups: pre-erase pages (a 40 ms erase stalls the receiver), and
+     shorten the request quiet time.
+   - Then the anchorless mover tuning, now live via settings.
+2. **Calibration**: survey >=3 nodes (no AoA ->
+   anchorless can't fix orientation), range bias capture -> antenna delay,
+   `characterize mag` -> `{"cmd":"magcal"}`, and IMU Allan deviation ->
+   Params. Consider DW3000 IRQ instead of busy-polling, delayed-TX FINAL
+   (drops the RESULT frame), and multi-hop advert relay for out-of-range
+   peers (today one hop only). Also wire WEXT/WINT (widget.v1 extrinsics/
+   intrinsics) into the node boot path.
 2. Dedup led_mapper's feat/esp32-led-mapping micropb setup onto
    `@firmware//proto` (user direction); merge embedded `micropb-support`
    after led_mapper adopts it. Eventually this repo becomes a submodule of
@@ -114,6 +171,19 @@ joining cold / leaving):
    arrive; merge embedded-repo branch `uwb-esp32-wifi` after hardware proof.
 6. (Carried over) Root-repo force-push to origin still **pending user
    confirmation** (history rewrite from 2026-07-17); now ~9 unpushed commits.
+
+## Planned: AirTags as localizers
+
+User direction (2026-10-20): reverse-engineer Apple AirTags as
+localizers / anchors for this system, starting from seemoo-lab's work:
+https://github.com/seemoo-lab/airtag (AirTag firmware research: nRF52832 +
+U1 UWB chip; firmware dumping, patching, BLE/UWB behavior). Questions to
+answer first:
+- Can the U1 be driven to range with the DW3000 (both IEEE 802.15.4z HRP,
+  but Apple's session setup is proprietary), or only tag-to-iPhone?
+- Can patched AirTag firmware act as a swarm member or a fixed anchor
+  (BLE for the advert/mesh side, UWB for ranging)?
+- Power/size: AirTags as cheap surveyed anchors in place of 3 survey nodes.
 
 ## Open questions / blockers
 

@@ -1,0 +1,98 @@
+# Firmware pieces shared by the node and the loader: the UWB radio task
+# (TDMA + DS-TWR + swarm_net frames), LittleFS storage, boot control,
+# MbedTLS crypto for swarm_net, the flash layout. The swarm_net symbols come
+# from each app's Rust staticlib (//swarm/node:swarm_node_fw or
+# //swarm/loader_rs:loader_rs_fw); these only use its header.
+package(default_visibility = ["//visibility:public"])
+
+ESP32_ONLY = select({
+    "@firmware//platforms:is_esp32": [],
+    "//conditions:default": ["@platforms//:incompatible"],
+})
+
+cc_library(
+    name = "pins",
+    hdrs = ["pins.h"],
+)
+
+cc_library(
+    name = "radio",
+    srcs = ["radio.cpp"],
+    hdrs = [
+        "protocol.h",
+        "radio.h",
+    ],
+    target_compatible_with = ESP32_ONLY,
+    deps = [
+        ":pins",
+        "//libs/dw3000",
+        "//swarm/net:header",
+        "@firmware//libs/board:arduino_core",
+    ],
+)
+
+cc_library(
+    name = "store",
+    srcs = ["store.cpp"],
+    hdrs = ["store.h"],
+    target_compatible_with = ESP32_ONLY,
+    deps = ["@firmware//libs/board:arduino_core"],
+)
+
+cc_library(
+    name = "boot",
+    srcs = ["boot.cpp"],
+    hdrs = ["boot.h"],
+    target_compatible_with = ESP32_ONLY,
+    deps = [
+        ":swarm_crypto",
+        "//swarm/net:header",
+        "@firmware//libs/board:arduino_core",
+    ],
+)
+
+cc_library(
+    name = "netstore",
+    srcs = ["netstore.cpp"],
+    hdrs = ["netstore.h"],
+    target_compatible_with = ESP32_ONLY,
+    deps = [
+        ":radio",
+        ":store",
+        "//swarm/net:header",
+    ],
+)
+
+cc_library(
+    name = "netcmd",
+    srcs = ["netcmd.cpp"],
+    hdrs = ["netcmd.h"],
+    target_compatible_with = ESP32_ONLY,
+    deps = [
+        ":netstore",
+        ":radio",
+        "//swarm/net:header",
+    ],
+)
+
+cc_library(
+    name = "fw_key",
+    hdrs = ["fw_key.h"],
+)
+
+# MbedTLS backend for swarm_net's crypto (swarm/net/src/crypto.rs).
+cc_library(
+    name = "swarm_crypto",
+    srcs = ["swarm_crypto.cpp"],
+    hdrs = ["swarm_crypto.h"],
+    target_compatible_with = ESP32_ONLY,
+    deps = ["@firmware//libs/board:arduino_core"],
+)
+
+genrule(
+    name = "partitions",
+    srcs = ["partitions.csv"],
+    outs = ["partitions.bin"],
+    cmd = "python3 $(location @firmware//libs/vendor:gen_esp32part) -q $(location partitions.csv) $@",
+    tools = ["@firmware//libs/vendor:gen_esp32part"],
+)

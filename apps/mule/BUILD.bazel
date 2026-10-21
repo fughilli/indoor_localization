@@ -1,0 +1,82 @@
+# Test mule: ACEBOTT ESP32-Max-V1.0 (UNO form factor, ESP32-WROOM-32) with a
+# Qorvo DWM3000EVB shield. Two roles for DS-TWR ranging tests; both stream
+# newline-JSON telemetry over USB serial (115200 baud).
+# Flash with e.g.: bazel run //apps/mule:flash_mule_initiator -- --port /dev/ttyUSB0
+load("@firmware//rules:firmware.bzl", "firmware_binary")
+load("@firmware//rules:flash.bzl", "esptool_flash")
+
+package(default_visibility = ["//visibility:public"])
+
+[
+    (
+        cc_binary(
+            name = "mule_%s" % role,
+            srcs = [
+                "mule.cpp",
+                "pins.h",
+            ],
+            local_defines = ["MULE_ROLE_%s" % role.upper()],
+            # Only built via firmware_binary's transition; skipped otherwise.
+            target_compatible_with = select({
+                "@firmware//platforms:is_esp32": [],
+                "//conditions:default": ["@platforms//:incompatible"],
+            }),
+            deps = ["//libs/dw3000"],
+        ),
+        firmware_binary(
+            name = "mule_%s_esp32" % role,
+            binary = ":mule_%s" % role,
+            board = "esp32",
+        ),
+        esptool_flash(
+            name = "flash_mule_%s" % role,
+            app = ":mule_%s_esp32" % role,
+            bootloader = "@firmware//libs/board:esp32_bootloader_bin",
+            bootloader_offset = "0x1000",  # classic ESP32 ROM loads from 0x1000
+            chip = "esp32",
+        ),
+    )
+    for role in [
+        "initiator",
+        "responder",
+    ]
+]
+
+# Pin-map probe for an unknown board/shield pairing (see probe.cpp).
+cc_binary(
+    name = "probe",
+    srcs = ["probe.cpp"],
+    # Only built via firmware_binary's transition; skipped otherwise.
+    target_compatible_with = select({
+        "@firmware//platforms:is_esp32": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+    deps = ["//libs/dw3000"],
+)
+
+firmware_binary(
+    name = "probe_esp32",
+    binary = ":probe",
+    board = "esp32",
+)
+
+# Line-level shield diagnostic: power, IRQ, and MISO drive (see diag.cpp).
+cc_binary(
+    name = "diag",
+    srcs = [
+        "diag.cpp",
+        "pins.h",
+    ],
+    # Only built via firmware_binary's transition; skipped otherwise.
+    target_compatible_with = select({
+        "@firmware//platforms:is_esp32": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+    deps = ["@firmware//libs/board:arduino_core"],
+)
+
+firmware_binary(
+    name = "diag_esp32",
+    binary = ":diag",
+    board = "esp32",
+)

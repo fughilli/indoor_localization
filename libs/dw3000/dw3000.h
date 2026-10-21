@@ -8,9 +8,21 @@
 #include <Arduino.h>
 #include <SPI.h>
 
-// SPI Setup
+// Default pins: the CircuitDigest breadboard wiring (SPI on the ESP32's
+// default VSPI pins SCK18/MISO19/MOSI23). Boards that route the module
+// elsewhere call DWM3000Class::setPins() before begin().
 #define RST_PIN 27
 #define CHIP_SELECT_PIN 4
+
+// SPI + control pins; -1 for sck/miso/mosi means the board's default SPI pin.
+struct DWM3000Pins
+{
+  int8_t sck;
+  int8_t miso;
+  int8_t mosi;
+  int8_t cs;
+  int8_t rst;
+};
 
 #define LEN_RX_CAL_CONF 4
 #define LEN_TX_FCTRL_CONF 6
@@ -111,7 +123,10 @@ class DWM3000Class
 public:
   static int config[9];
 
+  static DWM3000Pins pins;
+
   // Chip Setup
+  static void setPins(const DWM3000Pins &p);
   static void spiSelect(uint8_t cs);
 
   static void begin();
@@ -172,6 +187,15 @@ public:
 
   static uint32_t read(int base, int sub);
   static uint8_t read8bit(int base, int sub);
+  // Bulk transfers (frame payloads). sub < 0x80.
+  static void writeBytes(int base, int sub, const uint8_t *data, int len);
+  static void readBytes(int base, int sub, uint8_t *out, int len);
+  // Length (incl. 2-byte FCS) of the last received frame.
+  static int rxFrameLength();
+  // SPI clock for all transfers; 0 (default) keeps the Arduino default
+  // without per-transfer transactions. The DW3000 needs <= 7 MHz until its
+  // PLL locks (init()); it accepts much more afterwards.
+  static void setSpiClock(uint32_t hz);
   static uint32_t readOTP(uint8_t addr);
 
   // Delayed Sending Settings
@@ -184,6 +208,7 @@ public:
   static void standardTX();
   static void standardRX();
   static void TXInstantRX();
+  static void forceTRXOff();
 
   // DWM3000 Firmware Interaction
   static void softReset();

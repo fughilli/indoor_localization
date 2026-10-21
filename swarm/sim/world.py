@@ -69,6 +69,11 @@ class SensorConfig:
     # Ignore advertisements older than this (departed or silent widgets keep
     # dead-reckoning forever otherwise).
     max_advert_age: float = 1.0
+    # AoA in the downhill regime only once my own position variance is
+    # below this (m^2); before that a bearing can't be linearized usefully.
+    aoa_downhill_max_var: float = 25.0
+    # Mean-only range updates correct position only (CoopConfig field).
+    mean_only_pos_only: bool = False
     # Weak zero-velocity gauge prior (see Estimator::update_zero_vel): pins
     # the swarm frame when no widget has an absolute position source. Sigma
     # is far above real widget speeds so it barely biases motion.
@@ -327,6 +332,12 @@ class World:
         self.dt = 1.0 / self.cfg.imu_rate
         self.step_count = 0
         self._rebuild_pairs()
+        self._coop = estimator.coop_config(
+            self.cfg.downhill_ratio, self.cfg.mean_only_aoa_damping,
+            self.cfg.mean_only_range_damping, self.cfg.lock_ratio_full,
+            self.cfg.lock_ratio_none, self.cfg.peer_lock_factor,
+            self.cfg.max_advert_age, self.cfg.aoa_downhill_max_var,
+            self.cfg.mean_only_pos_only)
         self._slot_acc = 0.0
         self.last_links = []  # (wid, wid) pairs ranged in the most recent step
 
@@ -414,81 +425,29 @@ class World:
             if me.spec.surveyed:
                 continue  # already knows where it is
             peer_p, peer_var, peer_lock, advert_age = other.advertised_at(t)
-            if advert_age > cfg.max_advert_age:
-                continue  # departed/silent peer: don't chase its ghost
-            my_var = me.est.state()["pos_var"]
-            # Three regimes by relative quality:
-            #  - downhill (peer clearly better-localized): full Kalman update
-            #    with cold-start damping — the peer variance is floored at
-            #    half my own so a badly-localized widget takes bounded,
-            #    re-linearized steps (damped Gauss-Newton) instead of
-            #    unity-gain snaps from a garbage linearization point.
-            #  - comparable: mean-only update — the state is pulled onto the
-            #    mutually consistent mesh but no information gain is claimed,
-            #    which is what lets an anchorless swarm converge *relatively*
-            #    while covariance honestly tracks the unobservable absolute
-            #    frame.
-            #  - unlocked peer: ignore — being relaxed toward a peer whose
-            #    own ranges don't fit its advertised position only drags the
-            #    mesh off.
-            # Variance ranks peers only when it is *meaningfully* small
-            # (absolute sources and downhill-converged widgets). Anchorless
-            # variances are honestly huge on both sides, and they diverge
-            # for the wrong reasons: a veteran's grows with process noise
-            # while a cold joiner's stays at its (frozen) init, so by
-            # variance the clueless joiner eventually looks "better" than
-            # the converged mesh. The advertised lock ratio is what actually
-            # ranks mesh quality, so it gates both regimes.
-            downhill = (peer_var < cfg.downhill_ratio * my_var
-                        and peer_lock < cfg.lock_ratio_none)
-            mean_only = not downhill
-            # An absolutely-anchored widget (healthy GPS) never takes
-            # consensus (mean-only) pulls: the 33 Hz mesh relaxation would
-            # overpower its 1 Hz absolute fixes and drag the whole swarm's
-            # gauge off truth. It still accepts clearly-downhill updates.
-            if mean_only and me.spec.has_gps:
-                continue
-            # Mean-only annealing (see SensorConfig): damping factor from my
-            # own lock ratio, interpolated 0.5 -> mean_only_range_damping.
-            anneal = 1.0
-            if mean_only:
-                my_lock = me.est.range_innov_ratio()
-                if peer_lock > cfg.peer_lock_factor * max(my_lock,
-                                                          cfg.lock_ratio_full):
-                    continue  # cold joiner: it pulls itself in, not the mesh
-                u = min(max((cfg.lock_ratio_none - my_lock)
-                            / (cfg.lock_ratio_none - cfg.lock_ratio_full),
-                            0.0), 1.0)
-                if cfg.mean_only_range_damping > 0.5:
-                    anneal = 1.0 + u * (cfg.mean_only_range_damping - 0.5) / 0.5
-            # Downhill: damp with the peer's variance (floored for cold
-            # start). Mean-only: no covariance is updated so there is no
-            # double-count risk — do NOT deweight by the peer's (honestly
-            # huge, mostly common-mode) absolute variance or AoA vanishes
-            # and the mesh orientation floats; damp against my own variance
-            # only, which bounds the relaxation gain at ~2/3 cold and
-            # ~1/(1+damping) at lock.
-            nvar_eff = (max(peer_var, 0.5 * my_var - cfg.uwb_range_sigma ** 2)
-                        if downhill else anneal * 0.5 * my_var)
-            ok = me.est.update_range(peer_p, nvar_eff, rng_meas,
-                                     cfg.uwb_range_sigma, mean_only=mean_only)
-            me.accepted_ranges += ok
-            me.rejected_ranges += not ok
-            if me.spec.has_aoa and (mean_only or my_var < 25.0):
+            # The cooperative rules (downhill / mean-only / skip, cold-start
+            # damping, lock annealing, advert aging, anchored widgets refusing
+            # consensus pulls) live in swarm_core::coop — the same code the
+            # firmware runs; see coop.rs for the reasoning behind each.
+            code, decision = me.est.coop_range_update(
+                self._coop, peer_p, peer_var, peer_lock, advert_age, rng_meas,
+                cfg.uwb_range_sigma, anchored=me.spec.has_gps)
+            if code < 0:
+                continue  # skipped: stale advert / anchored / cold peer
+            me.accepted_ranges += code == 1
+            me.rejected_ranges += code == 0
+            # Same condition coop::aoa_update applies (mean-only, or downhill
+            # once roughly localized), mirrored only to keep the noise draws
+            # (and so seeded runs) identical.
+            mean_only = decision[0] == 2.0
+            if me.spec.has_aoa and (mean_only or decision[2] < cfg.aoa_downhill_max_var):
                 # True bearing to the peer in my body frame, plus noise.
                 d_w = other.truth.pos(t) - me.truth.pos(t)
                 u_b = _rot_z(me.truth.yaw(t)).T @ (d_w / np.linalg.norm(d_w))
                 meas = u_b + self.rng.normal(0, cfg.uwb_aoa_sigma, 3)
                 meas /= np.linalg.norm(meas)
-                # AoA is NOT annealed: its job in the mean-only regime is
-                # pinning the mesh's global orientation, and annealing it
-                # (even by sqrt of the range factor) lets the whole mesh
-                # slowly rotate — rel RMSE blows up while rot-rel stays
-                # tight. Its fixed damping bounds its jitter contribution.
-                aoa_nvar = (cfg.mean_only_aoa_damping * my_var
-                            if mean_only else nvar_eff)
-                me.est.update_aoa(peer_p, aoa_nvar, meas, cfg.uwb_aoa_sigma,
-                                  mean_only=mean_only)
+                me.est.coop_aoa_update(self._coop, peer_p, decision, meas,
+                                       cfg.uwb_aoa_sigma)
         self.last_links.append((wi.spec.wid, wj.spec.wid))
 
     def run(self, seconds, frame_cb=None, frame_rate=10.0):

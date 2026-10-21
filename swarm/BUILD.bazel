@@ -1,0 +1,5 @@
+# Pinned crate universe for //swarm Rust (see MODULE.bazel: swarm_crates).
+exports_files([
+    "crates-Cargo.lock",
+    "crates-lock.json",
+])
