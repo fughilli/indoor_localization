@@ -25,6 +25,54 @@ pub struct NodeConfig {
     pub coop: CoopConfig,
     /// UWB range noise, m (1 sigma).
     pub range_sigma: f32,
+    /// Blocked-link (NLOS) weighting. The DW3000 reports the first path's
+    /// power next to the total received power; with a clear line of sight
+    /// they're within a few dB, and when the direct path is blocked (a
+    /// body, a wall) the first path is weak and the range reads long. The
+    /// bench (captures/swarm_v23.jsonl): gap < 10 dB, 0.5% of ranges read
+    /// > 0.3 m long; above it 15-30% do, by up to ~2 m. A range's sigma
+    /// grows by `nlos_sigma_per_db` per dB of gap above `nlos_gap_db`,
+    /// capped at `nlos_sigma_max` (added in quadrature to range_sigma).
+    /// Ranges with a gap above `nlos_reject_db` aren't used (0 = never).
+    /// A flagged range's error is a precise core plus a one-sided long tail
+    /// (sim: inflating sigma let the tail in past the gate and did worse
+    /// than nothing), so flagged ranges can also take a tighter innovation
+    /// gate, `nlos_gate` sigmas (0 = params.gate).
+    pub nlos_gap_db: f32,
+    pub nlos_sigma_per_db: f32,
+    pub nlos_sigma_max: f32,
+    pub nlos_reject_db: f32,
+    pub nlos_gate: f32,
+    /// Huber-style clip of a flagged range's excess: once I'm past cold
+    /// start (lock < coop.lock_ratio_none), a flagged range reading more
+    /// than this (m) longer than predicted is used as if it read only this
+    /// much longer. It keeps the core's information without the tail's
+    /// pull (the filter averages, and a link reading +6 cm usually but
+    /// sometimes +1 m averages ~+25 cm). 0 = off. `nlos_clip_still_only`:
+    /// only while I'm still — moving, my estimate lags and a long read is
+    /// as likely my error as the link's (sim: clipping movers cost more
+    /// than it saved).
+    pub nlos_clip_m: f32,
+    pub nlos_clip_still_only: bool,
+    /// The sigma growth applies only to flagged ranges reading longer than
+    /// predicted: a blocked path can only add length, so a flagged range
+    /// reading short is as good as a clear one.
+    pub nlos_asymmetric: bool,
+    /// Online range-bias calibration (the estimator's rb state, prior
+    /// params.init_range_bias_sigma): a widget learns its own share of every
+    /// range's constant offset, and advertises it for peers to subtract.
+    /// Free widgets learn it in full range updates; an anchored one, which
+    /// doesn't range-update its position, learns it from ranges to moving,
+    /// tracking (lock < `bias_learn_lock`) peers, trusting their position to
+    /// `bias_learn_nvar_scale` x (their lock x range_sigma)^2 — moving
+    /// widgets sweep geometry, which is what separates bias from position.
+    /// The anchor point was solved with the old bias: past `reanchor_bias_m`
+    /// of change it lets go (sigma auto_anchor_sigma) to re-solve and
+    /// re-anchors once calm again. 0 = never.
+    pub bias_learn_anchored: bool,
+    pub bias_learn_lock: f32,
+    pub bias_learn_nvar_scale: f32,
+    pub reanchor_bias_m: f32,
     /// Gravity tilt aiding on every Nth IMU sample, when | |a| - g | < gate.
     pub gravity_every: u32,
     pub gravity_gate: f32,
@@ -80,11 +128,20 @@ pub struct NodeConfig {
     /// (downhill) updates and lags then snaps; against anchors it does,
     /// velocity included. Moving releases the anchor at once, keeping the
     /// position with sigma `auto_anchor_release_sigma`.
-    /// Divergence recovery: this many consecutive gated ranges means the
-    /// filter is confidently wrong (the innovation gate will reject every
-    /// range from here on and it dead-reckons away). Reset the position
-    /// uncertainty to `init_pos_sigma` and re-acquire, as at boot. 0 = off.
+    /// Divergence recovery: when `regain_gated_frac` of the last this-many
+    /// (<= 32) ranges that reached the filter were gated, it is confidently
+    /// wrong (the
+    /// innovation gate rejects nearly every range and it dead-reckons
+    /// away). Reset the position uncertainty to `init_pos_sigma` and
+    /// re-acquire, as at boot. 0 = off. (Consecutive gated ranges missed
+    /// it: a peer along the direction the error doesn't show in kept
+    /// being accepted, resetting the count — sim, a carried widget 2.7 m
+    /// off for 20 s.)
     pub regain_after_gated: u32,
+    /// (~5% of ranges are gated in normal running; sim: a carried widget
+    /// with one clear link and two blocked ones sat at ~60% while 1-2 m
+    /// off.)
+    pub regain_gated_frac: f32,
     pub auto_anchor_on: bool,
     pub auto_anchor_lock: f32,
     pub auto_anchor_hold_us: i64,
@@ -130,10 +187,24 @@ pub struct NodeConfig {
 impl Default for NodeConfig {
     fn default() -> NodeConfig {
         NodeConfig {
-            params: Params::default(),
+            // Antenna delays are uncalibrated out of the box: a few cm to
+            // ~0.1 m per device.
+            params: Params { init_range_bias_sigma: 0.1, range_bias_rw: 1e-4, ..Params::default() },
             // No GPS indoors: a swarm can be entirely anchorless.
             coop: CoopConfig { mean_only_pos_only: true, ..CoopConfig::default() },
             range_sigma: 0.10,
+            nlos_gap_db: 10.0,
+            nlos_sigma_per_db: 0.05,
+            nlos_sigma_max: 0.3,
+            nlos_reject_db: 0.0,
+            nlos_gate: 0.0,
+            nlos_clip_m: 0.05,
+            nlos_clip_still_only: true,
+            nlos_asymmetric: true,
+            bias_learn_anchored: true,
+            bias_learn_lock: 2.0,
+            bias_learn_nvar_scale: 4.0,
+            reanchor_bias_m: 0.03,
             gravity_every: 5,
             gravity_gate: 0.5,
             gravity_sigma: 0.1,
@@ -153,9 +224,9 @@ impl Default for NodeConfig {
             still_hold_us: 500_000,
             still_sigma: 0.01,
             still_period_us: 50_000,
-            // ~0.5 s of a widget's ranges at the bench rate; a real outlier
-            // is one or two in a row.
+            // ~0.5 s of a widget's ranges at the bench rate.
             regain_after_gated: 16,
+            regain_gated_frac: 0.5,
             auto_anchor_on: true,
             // Tuned in the sim's room scenario (per-device range bias, carried
             // walker): at 0.6 a still mesh never anchors (lock sits ~0.6-0.8
@@ -232,6 +303,10 @@ pub enum RangeResult {
     NotReady = -6,
     /// I'm still and the peer is moving (coop::SkipReason::MovingPeer).
     MovingPeer = -7,
+    /// The radio flagged the link as blocked past nlos_reject_db.
+    Blocked = -8,
+    /// I'm anchored: used to calibrate my range bias only.
+    Calibrated = 2,
 }
 
 /// Result of the boot-time static IMU calibration.
@@ -268,12 +343,16 @@ pub struct Node {
     /// sample: x points to magnetic north (horizontal), z up.
     mag_world: Option<Vec3>,
     surveyed: Option<(Vec3, f32)>,
-    /// Auto-anchored here (see NodeConfig::auto_anchor_on).
+    /// Auto-anchored here (see NodeConfig::auto_anchor_on), and the range
+    /// bias it was solved with.
     auto_anchor: Option<Vec3>,
+    anchor_rb: f32,
     /// Since when the auto-anchor conditions have held.
     calm_since_us: Option<i64>,
-    /// Consecutive gated ranges (any peer), and how often we re-acquired.
-    gated_streak: u32,
+    /// Recent ranges' outcomes (bit set = gated; newest in bit 0, `gated_n`
+    /// of them valid), and how often we re-acquired.
+    gated_bits: u32,
+    gated_n: u32,
     pub regains: u32,
     seq: u32,
     initialized: bool,
@@ -311,8 +390,10 @@ impl Node {
             mag_world: None,
             surveyed: None,
             auto_anchor: None,
+            anchor_rb: 0.0,
             calm_since_us: None,
-            gated_streak: 0,
+            gated_bits: 0,
+            gated_n: 0,
             regains: 0,
             seq: 0,
             initialized: false,
@@ -496,6 +577,18 @@ impl Node {
         }
         let still = self.is_still(t_us);
         if self.auto_anchor.is_some() {
+            let drifted = self.cfg.reanchor_bias_m > 0.0
+                && libm::fabsf(self.est.rb - self.anchor_rb) > self.cfg.reanchor_bias_m;
+            if still && drifted {
+                // The bias calibration moved: re-solve the position with it
+                // (still, so velocity stays pinned), then re-anchor.
+                self.auto_anchor = None;
+                self.calm_since_us = None;
+                let (p, q) = (self.est.p, self.est.q);
+                self.est.set_pose(p, Vec3::ZERO, q, self.cfg.auto_anchor_sigma, 0.05,
+                                  self.cfg.init_att_sigma);
+                return;
+            }
             if !still {
                 // Moving: back to a normal widget, keeping where it was.
                 self.auto_anchor = None;
@@ -518,6 +611,7 @@ impl Node {
         if t_us - since >= self.cfg.auto_anchor_hold_us {
             let (p, q) = (self.est.p, self.est.q);
             self.auto_anchor = Some(p);
+            self.anchor_rb = self.est.rb;
             self.est.set_pose(p, Vec3::ZERO, q, self.cfg.auto_anchor_sigma, 0.05, self.cfg.init_att_sigma);
         }
     }
@@ -687,31 +781,85 @@ impl Node {
         self.heard(t_us, a).then_some(id)
     }
 
-    /// A UWB range (m) to `peer_id`, measured at `t_us`.
-    pub fn range(&mut self, t_us: i64, peer_id: u32, range_m: f32) -> RangeResult {
+    /// Range sigma for a measurement whose first-path power sits `gap_db`
+    /// below the total (NaN: unknown, nominal); None if it's to be dropped.
+    pub fn range_sigma_for(&self, gap_db: f32) -> Option<f32> {
+        let c = &self.cfg;
+        if !(gap_db > c.nlos_gap_db) {
+            return Some(c.range_sigma); // also NaN
+        }
+        if c.nlos_reject_db > 0.0 && gap_db > c.nlos_reject_db {
+            return None;
+        }
+        let extra = ((gap_db - c.nlos_gap_db) * c.nlos_sigma_per_db).min(c.nlos_sigma_max);
+        Some(libm::sqrtf(c.range_sigma * c.range_sigma + extra * extra))
+    }
+
+    /// A UWB range (m) to `peer_id`, measured at `t_us`, its first-path
+    /// power `fp_gap_db` below the total received power (NaN if unknown).
+    pub fn range(&mut self, t_us: i64, peer_id: u32, range_m: f32, fp_gap_db: f32) -> RangeResult {
         if !self.initialized {
             return RangeResult::NotReady;
         }
-        if self.anchor().is_some() {
-            return RangeResult::Surveyed;
-        }
-        let Some(i) = self.peer_index(peer_id) else { return RangeResult::UnknownPeer };
+        let Some(i) = self.peer_index(peer_id) else {
+            return if self.anchor().is_some() { RangeResult::Surveyed } else { RangeResult::UnknownPeer };
+        };
         let mut peer = self.peers[i].unwrap();
         let view = peer.view(t_us);
+        // The peer's share of the range bias, as it advertises it.
+        let range_m = range_m - peer.advert.range_bias;
+        let Some(mut sigma) = self.range_sigma_for(fp_gap_db) else {
+            peer.ranges_skipped += 1;
+            self.peers[i] = Some(peer);
+            return RangeResult::Blocked;
+        };
+        let predicted = self.est.p.sub(view.p).norm() + self.est.rb;
+        if self.cfg.nlos_asymmetric && range_m <= predicted {
+            sigma = self.cfg.range_sigma;
+        }
+        if self.anchor().is_some() {
+            let r = if self.cfg.bias_learn_anchored && !view.still && !view.anchored
+                && view.age <= self.cfg.coop.max_advert_age && view.lock < self.cfg.bias_learn_lock
+            {
+                let rel = view.lock * self.cfg.range_sigma;
+                let nvar = self.cfg.bias_learn_nvar_scale * rel * rel;
+                if self.est.update_range_bias(view.p, nvar, range_m, sigma) {
+                    RangeResult::Calibrated
+                } else {
+                    RangeResult::Surveyed
+                }
+            } else {
+                RangeResult::Surveyed
+            };
+            return r;
+        }
         // Coincident estimates (all widgets start at the origin) can't be
         // linearized: the estimator declines those ranges, which isn't a
         // gate rejection and mustn't count toward divergence recovery.
         let degenerate = self.est.p.sub(view.p).norm() < 0.05;
         let me_still = self.is_still(t_us);
-        let (outcome, _decision): (Outcome, Decision) = coop::range_update(
+        let flagged = fp_gap_db > self.cfg.nlos_gap_db;
+        let mut range_m = range_m;
+        if flagged && self.cfg.nlos_clip_m > 0.0 && (me_still || !self.cfg.nlos_clip_still_only)
+            && self.est.range_innov_ratio() < self.cfg.coop.lock_ratio_none
+        {
+            range_m = range_m.min(predicted + self.cfg.nlos_clip_m);
+        }
+        let gate = self.est.params.gate;
+        if flagged && self.cfg.nlos_gate > 0.0 {
+            self.est.params.gate = self.cfg.nlos_gate;
+        }
+        let (outcome, _decision): (Outcome, Decision) = coop::range_update_weighted(
             &self.cfg.coop,
             &mut self.est,
             &view,
             range_m,
             self.cfg.range_sigma,
+            sigma,
             false, // no GPS on these widgets
             me_still,
         );
+        self.est.params.gate = gate;
         let r = match outcome {
             Outcome::Applied { accepted: true, .. } => RangeResult::Accepted,
             Outcome::Applied { accepted: false, .. } => RangeResult::Gated,
@@ -726,13 +874,22 @@ impl Node {
             _ => peer.ranges_skipped += 1,
         }
         self.peers[i] = Some(peer);
-        match r {
-            RangeResult::Gated if !degenerate => self.gated_streak += 1,
-            RangeResult::Accepted => self.gated_streak = 0,
-            _ => {}
+        let window = self.cfg.regain_after_gated.min(32);
+        let gated = match r {
+            RangeResult::Gated if !degenerate => Some(true),
+            RangeResult::Accepted => Some(false),
+            _ => None,
+        };
+        if let (Some(g), true) = (gated, window > 0) {
+            self.gated_bits = (self.gated_bits << 1) | g as u32;
+            self.gated_n = (self.gated_n + 1).min(window);
         }
-        if self.cfg.regain_after_gated > 0 && self.gated_streak >= self.cfg.regain_after_gated {
-            self.gated_streak = 0;
+        let mask = if window >= 32 { u32::MAX } else { (1u32 << window) - 1 };
+        if window > 0 && self.gated_n >= window
+            && (self.gated_bits & mask).count_ones() as f32 >= self.cfg.regain_gated_frac * window as f32
+        {
+            self.gated_bits = 0;
+            self.gated_n = 0;
             self.regains += 1;
             let (p, q) = (self.est.p, self.est.q);
             self.est.set_pose(p, Vec3::ZERO, q, self.cfg.init_pos_sigma, self.cfg.init_vel_sigma,
@@ -755,6 +912,7 @@ impl Node {
                 quality: if self.surveyed.is_some() { 1e-4 } else { sigma * sigma },
                 flags: FLAG_ANCHORED | FLAG_STATIC,
                 lock: 1.0,
+                range_bias: self.est.rb,
             },
             None => Advert {
                 widget_id: self.id,
@@ -764,6 +922,7 @@ impl Node {
                 quality: self.est.pos_var(),
                 flags: if still { FLAG_STATIC } else { 0 },
                 lock: self.est.range_innov_ratio(),
+                range_bias: self.est.rb,
             },
         }
     }
@@ -842,7 +1001,7 @@ mod tests {
     const S: i64 = 1_000_000;
 
     fn locked_peer(id: u32, p: Vec3) -> Advert {
-        Advert { widget_id: id, seq: 1, p, v: Vec3::ZERO, quality: 1e-4, flags: FLAG_ANCHORED, lock: 1.0 }
+        Advert { widget_id: id, seq: 1, p, v: Vec3::ZERO, quality: 1e-4, flags: FLAG_ANCHORED, lock: 1.0, range_bias: 0.0 }
     }
 
     /// Three surveyed peers + noise-free ranges at 25 Hz each: a stationary
@@ -861,7 +1020,7 @@ mod tests {
             for (k, a) in anchors.iter().enumerate() {
                 n.heard(t, locked_peer(100 + k as u32, *a));
                 if step % 4 == k {
-                    n.range(t, 100 + k as u32, truth.sub(*a).norm());
+                    n.range(t, 100 + k as u32, truth.sub(*a).norm(), f32::NAN);
                 }
             }
         }
@@ -943,13 +1102,13 @@ mod tests {
                 for (k, p) in peers.iter().enumerate() {
                     // Comparable peers: as unanchored as me, well locked.
                     let a = Advert { widget_id: 10 + k as u32, seq: step, p: *p, v: Vec3::ZERO,
-                                     quality: n.est.pos_var(), flags: 0, lock: 1.0 };
+                                     quality: n.est.pos_var(), flags: 0, lock: 1.0, range_bias: 0.0 };
                     n.heard(t, a);
                 }
                 // ~33 exchanges/s, round-robin over the peers.
                 if step % 6 == 0 {
                     let k = (step / 6) as usize % 3;
-                    n.range(t, 10 + k as u32, peers[k].norm());
+                    n.range(t, 10 + k as u32, peers[k].norm(), f32::NAN);
                 }
                 let before = n.est.p;
                 n.imu(t, biased, Vec3::ZERO);
@@ -1069,7 +1228,7 @@ mod tests {
                 n.tick(t);
                 // One range per tick, round-robin (both ends measure it).
                 let j = (i + 1 + step % 3) % 4;
-                n.range(t, 10 + j as u32, truth[i].sub(truth[j]).norm());
+                n.range(t, 10 + j as u32, truth[i].sub(truth[j]).norm(), f32::NAN);
             }
             if anchored_at.is_none() && nodes[..3].iter().all(|n| n.auto_anchored()) {
                 anchored_at = Some(t);
@@ -1111,7 +1270,7 @@ mod tests {
             for (k, a) in anchors.iter().enumerate() {
                 n.heard(t, locked_peer(100 + k as u32, *a));
                 if step % 4 == k {
-                    n.range(t, 100 + k as u32, truth.sub(*a).norm());
+                    n.range(t, 100 + k as u32, truth.sub(*a).norm(), f32::NAN);
                 }
             }
         }
@@ -1121,12 +1280,54 @@ mod tests {
     }
 
     #[test]
+    fn blocked_ranges_widen_only_when_long_and_reject_past_the_limit() {
+        let mut n = Node::new(1, false, NodeConfig::default());
+        let c = n.cfg;
+        assert_eq!(n.range_sigma_for(f32::NAN), Some(c.range_sigma));
+        assert_eq!(n.range_sigma_for(c.nlos_gap_db - 1.0), Some(c.range_sigma));
+        let s = n.range_sigma_for(c.nlos_gap_db + 4.0).unwrap();
+        let extra = 4.0 * c.nlos_sigma_per_db;
+        assert!((s * s - (c.range_sigma * c.range_sigma + extra * extra)).abs() < 1e-5);
+        let capped = n.range_sigma_for(c.nlos_gap_db + 1000.0).unwrap();
+        assert!((capped * capped - (c.range_sigma * c.range_sigma + c.nlos_sigma_max * c.nlos_sigma_max)).abs() < 1e-5);
+        n.cfg.nlos_reject_db = 20.0;
+        assert_eq!(n.range_sigma_for(21.0), None);
+        n.tick(0);
+        n.heard(0, locked_peer(2, Vec3::new(3.0, 0.0, 0.0)));
+        assert_eq!(n.range(1000, 2, 3.0, 25.0), RangeResult::Blocked);
+    }
+
+    #[test]
+    fn peer_range_bias_is_subtracted() {
+        // Surveyed peers advertising a bias: ranges carry it, and the
+        // widget converges to the truth anyway.
+        let anchors = [Vec3::new(0.0, 0.0, 0.0), Vec3::new(6.0, 0.0, 0.0), Vec3::new(0.0, 6.0, 0.0),
+                       Vec3::new(6.0, 6.0, 2.0)];
+        let truth = Vec3::new(2.0, 3.0, 1.0);
+        let mut cfg = NodeConfig::default();
+        cfg.params.init_range_bias_sigma = 0.0; // isolate the peers' bias
+        let mut n = Node::new(1, false, cfg);
+        let mut t = 0;
+        for _ in 0..400 {
+            t += 10_000;
+            n.tick(t);
+            for (k, a) in anchors.iter().enumerate() {
+                let mut adv = locked_peer(100 + k as u32, *a);
+                adv.range_bias = 0.15;
+                n.heard(t, adv);
+                n.range(t, 100 + k as u32, truth.sub(*a).norm() + 0.15, f32::NAN);
+            }
+        }
+        assert!(n.est.p.sub(truth).norm() < 0.05, "error {}", n.est.p.sub(truth).norm());
+    }
+
+    #[test]
     fn stale_and_unknown_peers_are_skipped() {
         let mut n = Node::new(1, false, NodeConfig::default());
         n.tick(0);
-        assert_eq!(n.range(10, 2, 3.0), RangeResult::UnknownPeer);
+        assert_eq!(n.range(10, 2, 3.0, f32::NAN), RangeResult::UnknownPeer);
         n.heard(0, locked_peer(2, Vec3::new(3.0, 0.0, 0.0)));
-        assert_eq!(n.range(2 * S, 2, 3.0), RangeResult::StaleAdvert);
+        assert_eq!(n.range(2 * S, 2, 3.0, f32::NAN), RangeResult::StaleAdvert);
         // Own adverts are ignored.
         assert!(!n.heard(0, locked_peer(1, Vec3::ZERO)));
     }
@@ -1143,7 +1344,7 @@ mod tests {
         assert_eq!(a.flags & FLAG_ANCHORED, FLAG_ANCHORED);
         assert!(a.p.sub(Vec3::new(1.0, 2.0, 0.5)).norm() < 1e-6);
         assert!(n.est.p.sub(Vec3::new(1.0, 2.0, 0.5)).norm() < 0.01);
-        assert_eq!(n.range(S, 9, 1.0), RangeResult::Surveyed);
+        assert_eq!(n.range(S, 9, 1.0, f32::NAN), RangeResult::Surveyed);
     }
 
     #[test]

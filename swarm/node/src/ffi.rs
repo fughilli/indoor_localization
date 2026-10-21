@@ -32,9 +32,9 @@ pub const SWARM_NODE_MAX_PEERS: usize = 16;
 const _: () = assert!(SWARM_NODE_ADVERT_MAX == MAX_ENCODED);
 const _: () = assert!(SWARM_NODE_MAX_PEERS == MAX_PEERS);
 /// Floats written by swarm_node_state.
-pub const SWARM_NODE_STATE_LEN: usize = 12;
+pub const SWARM_NODE_STATE_LEN: usize = 13;
 /// Floats written by swarm_node_peer.
-pub const SWARM_NODE_PEER_LEN: usize = 11;
+pub const SWARM_NODE_PEER_LEN: usize = 12;
 
 /// (Re)create the node. `range_sigma` <= 0 keeps the default (0.10 m).
 #[no_mangle]
@@ -95,13 +95,15 @@ pub extern "C" fn swarm_node_mag(t_us: i64, raw: *const f32) {
     }
 }
 
-/// A UWB range to `peer_id`. Returns a RangeResult code: 1 accepted, 0 gated,
-/// -1 stale advert, -2 anchored, -3 cold peer, -4 unknown peer, -5 surveyed,
-/// -6 not initialized.
+/// A UWB range to `peer_id`; `fp_gap_db`: total received power minus the
+/// first path's (dB; NaN if unknown). Returns a RangeResult code: 2 used for
+/// bias calibration (anchored), 1 accepted, 0 gated, -1 stale advert, -2
+/// anchored, -3 cold peer, -4 unknown peer, -5 surveyed, -6 not initialized,
+/// -7 moving peer, -8 blocked link.
 #[no_mangle]
-pub extern "C" fn swarm_node_range(t_us: i64, peer_id: u32, range_m: f32) -> i32 {
+pub extern "C" fn swarm_node_range(t_us: i64, peer_id: u32, range_m: f32, fp_gap_db: f32) -> i32 {
     match node() {
-        Some(n) => n.range(t_us, peer_id, range_m) as i32,
+        Some(n) => n.range(t_us, peer_id, range_m, fp_gap_db) as i32,
         None => RangeResult::NotReady as i32,
     }
 }
@@ -124,7 +126,7 @@ pub extern "C" fn swarm_node_advert_tx(out: *mut u8, cap: usize) -> usize {
     n.advert_tx(b).unwrap_or(0)
 }
 
-/// My state: p[3] v[3] q[4] (w,x,y,z) pos_var lock — SWARM_NODE_STATE_LEN
+/// My state: p[3] v[3] q[4] (w,x,y,z) pos_var lock range_bias — SWARM_NODE_STATE_LEN
 /// floats. Returns false until the filter is initialized.
 #[no_mangle]
 pub extern "C" fn swarm_node_state(out: *mut f32) -> bool {
@@ -136,11 +138,12 @@ pub extern "C" fn swarm_node_state(out: *mut f32) -> bool {
     o[6..10].copy_from_slice(&e.q.to_array());
     o[10] = e.pos_var();
     o[11] = e.range_innov_ratio();
+    o[12] = e.rb;
     n.initialized()
 }
 
 /// Peer table entry `index` (0..SWARM_NODE_MAX_PEERS) as of `t_us`: p[3]
-/// (dead-reckoned) v[3] var lock age_s flags seq — SWARM_NODE_PEER_LEN
+/// (dead-reckoned) v[3] var lock age_s flags seq range_bias — SWARM_NODE_PEER_LEN
 /// floats. Returns the peer id, 0 for an empty or expired slot.
 #[no_mangle]
 pub extern "C" fn swarm_node_peer(index: usize, t_us: i64, out: *mut f32) -> u32 {
@@ -158,6 +161,7 @@ pub extern "C" fn swarm_node_peer(index: usize, t_us: i64, out: *mut f32) -> u32
     o[8] = view.age;
     o[9] = p.advert.flags as f32;
     o[10] = p.advert.seq as f32;
+    o[11] = p.advert.range_bias;
     p.advert.widget_id
 }
 

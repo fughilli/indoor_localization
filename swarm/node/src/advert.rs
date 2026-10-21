@@ -11,7 +11,7 @@ pub const FLAG_STATIC: u32 = 1 << 1;
 pub const FLAG_GPS: u32 = 1 << 2;
 
 /// Largest encoded advertisement: 2 varints (<=5 B each + tag), 2 nested
-/// Vec3f (2 + 3*5 B each), 2 fixed32 (5 B each), flags varint. ~60 B.
+/// Vec3f (2 + 3*5 B each), 3 fixed32 (5 B each), flags varint: 63 B.
 pub const MAX_ENCODED: usize = 64;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -25,6 +25,9 @@ pub struct Advert {
     pub flags: u32,
     /// Range-innovation lock ratio.
     pub lock: f32,
+    /// The sender's share of every range's constant offset, m: receivers
+    /// subtract it from ranges to it (an older sender: 0).
+    pub range_bias: f32,
 }
 
 fn to_pb(v: Vec3) -> pb::Vec3f {
@@ -49,6 +52,7 @@ pub fn encode(a: &Advert, out: &mut [u8]) -> Option<usize> {
     m.r#quality = a.quality;
     m.r#flags = a.flags;
     m.r#lock = a.lock;
+    m.r#range_bias = a.range_bias;
     let mut enc = PbEncoder::new(micropb::heapless::Vec::<u8, MAX_ENCODED>::new());
     m.encode(&mut enc).ok()?;
     let bytes = enc.into_writer();
@@ -70,6 +74,7 @@ pub fn decode(bytes: &[u8]) -> Option<Advert> {
         quality: m.r#quality,
         flags: m.r#flags,
         lock: if m.r#lock > 0.0 { m.r#lock } else { swarm_core::estimator::INNOV_RATIO_MAX },
+        range_bias: m.r#range_bias,
     })
 }
 
@@ -87,10 +92,11 @@ mod tests {
             quality: 0.42,
             flags: FLAG_ANCHORED | FLAG_STATIC,
             lock: 1.3,
+            range_bias: -0.042,
         };
         let mut buf = [0u8; MAX_ENCODED];
         let n = encode(&a, &mut buf).unwrap();
-        assert!(n <= 60, "{} bytes", n);
+        assert!(n <= MAX_ENCODED, "{} bytes", n);
         assert_eq!(decode(&buf[..n]).unwrap(), a);
         assert!(encode(&a, &mut [0u8; 8]).is_none(), "must refuse a short buffer");
         assert!(decode(&[0xff, 0xff, 0xff]).is_none());

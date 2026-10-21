@@ -211,6 +211,24 @@ pub fn range_update(
     anchored: bool,
     me_still: bool,
 ) -> (Outcome, Decision) {
+    range_update_weighted(cfg, me, peer, measured, range_sigma, range_sigma, anchored, me_still)
+}
+
+/// [`range_update`] for a measurement whose own noise `meas_sigma` differs
+/// from the nominal `range_sigma` the rules reason with (a range the radio
+/// flags as probably blocked: weighted down, without making the peer look
+/// less trustworthy).
+#[allow(clippy::too_many_arguments)]
+pub fn range_update_weighted(
+    cfg: &CoopConfig,
+    me: &mut Estimator,
+    peer: &PeerView,
+    measured: f32,
+    range_sigma: f32,
+    meas_sigma: f32,
+    anchored: bool,
+    me_still: bool,
+) -> (Outcome, Decision) {
     let decision = decide(cfg, me, peer, anchored, range_sigma, me_still);
     let outcome = match decision {
         Decision::Skip(r) => Outcome::Skipped(r),
@@ -218,7 +236,7 @@ pub fn range_update(
             let mean_only = regime == Regime::MeanOnly;
             let pos_only = mean_only && cfg.mean_only_pos_only;
             let accepted =
-                me.update_range_masked(peer.p, nvar, measured, range_sigma, mean_only, pos_only);
+                me.update_range_masked(peer.p, nvar, measured, meas_sigma, mean_only, pos_only);
             Outcome::Applied { regime, accepted }
         }
     };

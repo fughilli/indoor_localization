@@ -249,6 +249,76 @@ went into v21, from 5-seed comparisons:
 
 Regression tests: sim_test RoomScenarioTest.
 
+### Radio channel in the sim; blocked links; online range bias (v24, 2026-10-21)
+
+Bench data (captures/swarm_v23.jsonl, 535k ranges): the DW3000's gap
+between total and first-path received power predicts bad ranges.
+- With a gap under 10 dB, 0.5% of ranges read more than 0.3 m long
+  (residual against the solved mesh).
+- With a gap over 10 dB, 15-30% do, by up to about 2 m, and almost never
+  short.
+- A carried board saw a gap over 15 dB on 52% of its ranges, against 31%
+  still: the carrier's body.
+- Two of six links were persistently over 12 dB, with a median residual
+  of about 0.
+- About 18% of POLLs time out.
+
+The sim (`room_sensors`, `uwb_channel`) now models:
+- the gap per range;
+- blocked links (persistent, and through the carrier's body behind the
+  heading) that read long: Exp(5 cm), plus 25% of the time Exp(0.8 m);
+- dropped exchanges;
+- 3 cm noise on clear-path ranges;
+- an IMU reporting the mean specific force over each sample period, plus
+  a smoothstepped pickup. The point-sampled pickup jerk was a 155 m/s²
+  sample, a sim artifact.
+
+**Metric change:** `tail_frame_rmse_m` is error after the still boards'
+2-D rigid fit, with mirror handedness from the all-widget fit. The old
+all-widget Kabsch spread a lost walker's error onto the statics and
+flattered it: the walker read about 10 cm where it is really about 20 cm
+on the old channel.
+
+**Findings** (24 seeds, room, 120 s; walker / statics, static-frame RMSE):
+
+| Configuration | Walker | Statics |
+|---|---|---|
+| v23 logic, old channel | 20.4 cm | 9.0 cm |
+| v23 logic, new channel | 32.5 cm (max 1.55 m) | 12.1 cm |
+| v24 defaults, new channel | 19.1 cm (max 54 cm) | 9.1 cm |
+
+v24 defaults are also better on room_static (10.2 to 8.2 cm) and on the
+old channel (walker 20.4 to 18.3 cm). One old-channel seed's walker hit
+81 cm against a 35 cm max before; this is unexplained.
+
+What worked, and what didn't:
+- **Inflating sigma for flagged ranges (symmetric) was worse than doing
+  nothing.** It let the long tail in past the innovation gate.
+- **Rejecting flagged ranges was worse still.** A carried board loses a
+  third of its links.
+- **What works:**
+  - widen sigma only when a flagged range reads longer than predicted
+    (`nlos.asymmetric`), 0.05 m/dB above 10 dB, capped at 0.3 m;
+  - clip a flagged range's excess at 5 cm while still (`nlos.clip_m`,
+    Huber-style), so a still mesh doesn't average in the tail. Clipping
+    movers hurt.
+- **Divergence recovery** fired on consecutive gated ranges. A carried
+  board with one clear link and two blocked ones sat at about 60% gated
+  while 1-2 m off: the clear one kept resetting the count. It is now a
+  window: regain when ≥ 50% of the last 16 ranges are gated.
+- **Online range bias:** an estimator state `rb`, prior 0.1 m, advertised
+  (PoseAdvertisement.range_bias). Peers subtract it.
+  - A free widget learns it in full range updates.
+  - An anchored one learns it from ranges to moving, locked peers
+    (bias-only update) and re-anchors when it has moved 3 cm.
+  - The walker goes 26.4 to 19.1 cm, the statics 10.6 to 9.1 cm.
+  - It does not converge to the true per-device delays: about 6.4 cm mean
+    error against a 7 cm spread. It is slow and only partly observable one
+    filter at a time.
+  - To do: a batch solve over logged ranges (still positions, biases,
+    walker track) to calibrate properly, then push the result as settings.
+  - To try: learn rb only from unflagged ranges.
+
 
 
 User direction (2026-10-20): reverse-engineer Apple AirTags as

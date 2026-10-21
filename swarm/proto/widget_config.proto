@@ -133,4 +133,7 @@ message PoseAdvertisement {
   float lock = 7;       // range-innovation lock ratio (EWMA |y|/sigma):
                         // ~1 locked to the mesh, 10 = no lock. Peers use it
                         // to refuse a cold joiner's pulls (swarm_core::coop).
+  float range_bias = 8; // m: the sender's share of every range's constant
+                        // offset (online antenna-delay calibration);
+                        // receivers subtract it from ranges to the sender.
 }

@@ -102,6 +102,29 @@ class SensorConfig:
     # Per-device constant range offset (uncalibrated antenna delay): a range
     # between i and j reads true + bias_i + bias_j. 0 = off.
     uwb_device_bias_sigma: float = 0.0
+    # Radio channel (off = the design study's: Gaussian noise plus rare
+    # multipath). Fitted to the bench (captures/swarm_v23.jsonl). Every
+    # range comes with the DW3000's total-minus-first-path power gap: ~N(3.5,
+    # 1.2) dB with a clear line of sight, ~N(18, 3.5) when the direct path is
+    # blocked. A blocked range reads long: always a little (Exp mean
+    # uwb_nlos_excess), and with probability uwb_nlos_jump_prob by an extra
+    # Exp(uwb_nlos_jump_scale) (the first path lost under the noise, a
+    # reflection timed instead). A link is blocked when it's persistently
+    # obstructed (each link, with probability uwb_link_nlos_prob, by
+    # furniture/walls) or passes through the person carrying a widget:
+    # within uwb_body_half_angle of straight behind the widget's heading.
+    # Exchanges fail (timeouts) with uwb_drop_prob, uwb_nlos_drop_prob if
+    # blocked.
+    uwb_channel: bool = False
+    uwb_los_gap_db: tuple = (3.5, 1.2)
+    uwb_nlos_gap_db: tuple = (18.0, 3.5)
+    uwb_nlos_excess: float = 0.05
+    uwb_nlos_jump_prob: float = 0.25
+    uwb_nlos_jump_scale: float = 0.8
+    uwb_link_nlos_prob: float = 0.0
+    uwb_body_half_angle: float = math.radians(60.0)
+    uwb_drop_prob: float = 0.0
+    uwb_nlos_drop_prob: float = 0.0
     uwb_slot_rate: float = 100.0     # ranging slots per second, network-wide
     uwb_max_range: float = 60.0      # m, radio range cutoff
     gps_sigma_h: float = 1.5         # m
@@ -116,6 +139,11 @@ class SensorConfig:
     accel_scale_sigma: float = 0.0
     accel_bias_rw: float = 0.0       # m/s^2 per sqrt(s)
     gyro_bias_rw: float = 0.0        # rad/s per sqrt(s)
+    # IMU reports the mean specific force over each sample period (as a
+    # real part's anti-alias filter does) instead of the instantaneous
+    # value: a hand's jerks are short next to 1/imu_rate, and point-sampling
+    # them integrates into velocity errors no real IMU makes.
+    imu_average: bool = False
     # Seconds every widget holds still at the start (the firmware calibrates
     # its IMU in its first second, if still).
     still_start: float = 0.0
@@ -301,7 +329,10 @@ class TruthWidget:
         te = t - self.spec.start_delay
         h = 1e-3
         dm = (_motion_time(self.spec, te + h) - _motion_time(self.spec, te - h)) / (2 * h)
-        return min(1.0, dm / max(self.spec.motion_rate, 1e-9))
+        g = min(1.0, dm / max(self.spec.motion_rate, 1e-9))
+        # Smoothstep: the speed ramps linearly, so a linear gait would put a
+        # velocity step (an acceleration impulse) into the lift at pickup.
+        return g * g * (3.0 - 2.0 * g)
 
     def rot(self, t):
         """Body -> world rotation: yaw spin, plus roll/pitch sway when
@@ -336,6 +367,12 @@ class TruthWidget:
 
     def acc(self, t, h=1e-3):
         return (self.pos(t + h) - 2 * self.pos(t) + self.pos(t - h)) / (h * h)
+
+    def carried(self, t):
+        """In someone's hand (a person next to it, blocking links): a
+        hand-carried widget from when it's first picked up."""
+        return bool(self.spec.sway or self.spec.handling) and self.spec.kind == "orbit" \
+            and t >= self.spec.start_delay
 
     def yaw(self, t):
         if (self.spec.sway or self.spec.handling) and self.spec.kind == "orbit":
@@ -402,7 +439,12 @@ class SimWidget:
     def imu_sample(self, t):
         """Raw accel (specific force) + gyro in the body frame, with errors."""
         r_wb = self.truth.rot(t)                  # body -> world
-        f_world = self.truth.acc(t) - G_WORLD     # specific force, world
+        if self.cfg.imu_average:
+            dt = 1.0 / self.cfg.imu_rate
+            r_wb = self.truth.rot(t - 0.5 * dt)
+            f_world = (self.truth.vel(t) - self.truth.vel(t - dt)) / dt - G_WORLD
+        else:
+            f_world = self.truth.acc(t) - G_WORLD     # specific force, world
         f_body = r_wb.T @ f_world
         accel = (self.accel_scale * f_body + self.accel_bias
                  + self.rng.normal(0, self.cfg.accel_sigma, 3))
@@ -466,6 +508,16 @@ class World:
             self.cfg.mean_only_pos_only)
         self._slot_acc = 0.0
         self.last_links = []  # (wid, wid) pairs ranged in the most recent step
+        # Persistently obstructed links (uwb_channel), by widget id pair.
+        self._blocked_links = set()
+        if self.cfg.uwb_channel and self.cfg.uwb_link_nlos_prob > 0:
+            ids = sorted(w.spec.wid for w in self.widgets)
+            for a in range(len(ids)):
+                for b in range(a + 1, len(ids)):
+                    if self.rng.random() < self.cfg.uwb_link_nlos_prob:
+                        self._blocked_links.add((ids[a], ids[b]))
+        self.nlos_ranges = 0
+        self.dropped_ranges = 0
 
     def _rebuild_pairs(self):
         self._pairs = [(i, j) for i in range(len(self.widgets))
@@ -572,10 +624,24 @@ class World:
         rng_meas = true_d + self.rng.normal(0, cfg.uwb_range_sigma) + wi.range_bias + wj.range_bias
         if self.rng.random() < cfg.uwb_multipath_prob:
             rng_meas += self.rng.exponential(cfg.uwb_multipath_scale)
+        gaps = (float("nan"), float("nan"))
+        if cfg.uwb_channel:
+            blocked = self._link_blocked(wi, wj, t)
+            if self.rng.random() < (cfg.uwb_nlos_drop_prob if blocked else cfg.uwb_drop_prob):
+                self.dropped_ranges += 1
+                return
+            mean, sd = cfg.uwb_nlos_gap_db if blocked else cfg.uwb_los_gap_db
+            # Each end measures the power of the frame it received.
+            gaps = tuple(float(self.rng.normal(mean, sd)) for _ in range(2))
+            if blocked:
+                self.nlos_ranges += 1
+                rng_meas += self.rng.exponential(cfg.uwb_nlos_excess)
+                if self.rng.random() < cfg.uwb_nlos_jump_prob:
+                    rng_meas += self.rng.exponential(cfg.uwb_nlos_jump_scale)
         if cfg.backend == "node":
             # DS-TWR: both ends fold the same measurement.
-            for me, other in ((wi, wj), (wj, wi)):
-                code = me.node.range(t, other.spec.wid + 100, rng_meas)
+            for (me, other), gap in zip(((wi, wj), (wj, wi)), gaps):
+                code = me.node.range(t, other.spec.wid + 100, rng_meas, gap)
                 me.accepted_ranges += code == 1
                 me.rejected_ranges += code == 0
             self.last_links.append((wi.spec.wid, wj.spec.wid))
@@ -608,6 +674,23 @@ class World:
                 me.est.coop_aoa_update(self._coop, peer_p, decision, meas,
                                        cfg.uwb_aoa_sigma)
         self.last_links.append((wi.spec.wid, wj.spec.wid))
+
+    def _link_blocked(self, wi, wj, t):
+        """Is the direct path between two widgets blocked (uwb_channel)?"""
+        a, b = sorted((wi.spec.wid, wj.spec.wid))
+        if (a, b) in self._blocked_links:
+            return True
+        for me, other in ((wi, wj), (wj, wi)):
+            if not me.truth.carried(t):
+                continue
+            # The carrier stands behind the widget (held out in front).
+            to_peer = other.truth.pos(t) - me.truth.pos(t)
+            yaw = me.truth.yaw(t)
+            behind = np.array([-math.cos(yaw), -math.sin(yaw)])
+            n = np.linalg.norm(to_peer[:2])
+            if n > 1e-6 and float(behind @ to_peer[:2]) / n > math.cos(self.cfg.uwb_body_half_angle):
+                return True
+        return False
 
     def run(self, seconds, frame_cb=None, frame_rate=10.0):
         """Run for sim-seconds; optionally emit frames at frame_rate."""
@@ -714,11 +797,16 @@ def room_sensors(**overrides):
         accel_scale_sigma=0.03,
         accel_bias_rw=0.002,
         gyro_bias_rw=0.0002,
+        imu_average=True,
         still_start=4.0,
-        uwb_range_sigma=0.05,
-        uwb_multipath_prob=0.02,
+        uwb_range_sigma=0.03,        # bench: 2-5 cm windowed sd, still links
+        uwb_multipath_prob=0.005,    # bench: 0.5% of clear-path ranges > 0.3 m long
         uwb_multipath_scale=0.3,
         uwb_device_bias_sigma=0.08,
+        uwb_channel=True,
+        uwb_link_nlos_prob=0.3,      # bench: 2 of 6 links persistently > 12 dB
+        uwb_drop_prob=0.15,          # bench: ~18% of POLLs time out
+        uwb_nlos_drop_prob=0.3,
         uwb_slot_rate=133.0,
         broadcast_rate=33.0,
         node_settings={"planar.on": True},

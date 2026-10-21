@@ -60,13 +60,20 @@ ABI an embedded C/C++ shell would use.
 
 Error-state Kalman filter per widget. Nominal state: position `p`, velocity
 `v` (world ENU, m), attitude quaternion `q` (body→world), accel bias `ba`,
-gyro bias `bg`. 15-dim error state `[δp δv δθ δba δbg]`, attitude error
-body-side (`R_true = R_est·exp([δθ]×)`).
+gyro bias `bg`, own UWB range bias `rb` (this widget's share of every
+range's constant offset: the uncalibrated antenna delay). 16-dim error
+state `[δp δv δθ δba δbg δrb]`, attitude error body-side
+(`R_true = R_est·exp([δθ]×)`). `rb` is inert unless its prior sigma is set
+(the node runtime: 0.1 m).
 
 - **Propagation** (per IMU sample): standard strapdown; first-order discrete
   transition; process noise from continuous densities.
 - **Updates** (all sequential scalar, each behind a 5σ innovation gate):
-  - UWB range to peer: `h = |p−p_peer|`, noise `σ_uwb² + nvar_peer`.
+  - UWB range to peer: `h = |p−p_peer| + rb` (the peer's advertised `rb`
+    already subtracted), noise `σ_uwb² + nvar_peer`. The node runtime
+    widens `σ_uwb` for ranges the radio flags as blocked (first-path power
+    well below total) when they read long, and clips their excess while
+    still (swarm/node `NodeConfig::nlos_*`).
   - UWB AoA: measured body-frame bearing unit vector, three scalar
     components; couples `δp` and `δθ`; peer noise projects as `nvar/r²`.
   - GPS: direct position; altimeter: direct z.
@@ -163,7 +170,8 @@ mean-only pulls on anchored widgets.
 | quality | f32 | 4 | mean position variance, m² |
 | flags | u8 | 1 | anchored / GPS-fix / static |
 | lock | f32 | 4 | range-innovation lock ratio (~1 locked, 10 none) |
-| **total** | | **37 B** | fits one UWB MAC frame |
+| range_bias | f32 | 4 | own range bias `rb`, m; receivers subtract it |
+| **total** | | **41 B** | fits one UWB MAC frame |
 
 `lock` is what lets peers refuse a cold joiner's pulls (§4.2): by variance
 alone a just-booted widget is indistinguishable from a converged anchorless
@@ -173,7 +181,7 @@ Simulation shows the loop is insensitive to advertisement rate down to 2 Hz
 (§7.3) because the estimator consumes advertised *variance*, and static /
 slow peers dominate the downhill flow. 10 Hz is chosen to bound staleness
 error at ≤0.1 s × v. On the wire this is the `widget.v1.PoseAdvertisement`
-protobuf message (§11), ~40 B encoded with micropb on-device.
+protobuf message (§11), ≤63 B encoded with micropb on-device.
 
 ### 5.3 Ranging exchange (per TDMA slot)
 

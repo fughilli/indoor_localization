@@ -8,7 +8,7 @@ import os
 import struct
 
 _LIB = None
-STATE_LEN = 16
+STATE_LEN = 17
 
 
 def _find_library():
@@ -36,7 +36,7 @@ def _lib():
             "swarm_sim_node_imu": ([vp, i64, f32p, f32p], None),
             "swarm_sim_node_tick": ([vp, i64], None),
             "swarm_sim_node_mag": ([vp, i64, f32p], None),
-            "swarm_sim_node_range": ([vp, i64, u32, ctypes.c_float], ctypes.c_int32),
+            "swarm_sim_node_range": ([vp, i64, u32, ctypes.c_float, ctypes.c_float], ctypes.c_int32),
             "swarm_sim_node_advert_tx": ([vp, u8p, ctypes.c_size_t], ctypes.c_size_t),
             "swarm_sim_node_advert_rx": ([vp, i64, u8p, ctypes.c_size_t], u32),
             "swarm_sim_node_state": ([vp, i64, f32p], None),
@@ -101,8 +101,10 @@ class Node:
     def mag(self, t, raw):
         self._lib.swarm_sim_node_mag(self._h, int(t * 1e6), _vec(raw))
 
-    def range(self, t, peer, r):
-        return self._lib.swarm_sim_node_range(self._h, int(t * 1e6), peer, float(r))
+    def range(self, t, peer, r, fp_gap_db=float("nan")):
+        """fp_gap_db: total minus first-path received power, dB (NaN:
+        unknown, as from a radio that doesn't report it)."""
+        return self._lib.swarm_sim_node_range(self._h, int(t * 1e6), peer, float(r), float(fp_gap_db))
 
     def advert_tx(self):
         buf = (ctypes.c_uint8 * 64)()
@@ -120,4 +122,4 @@ class Node:
         self._lib.swarm_sim_node_state(self._h, int(t * 1e6), o)
         return {"p": list(o[0:3]), "v": list(o[3:6]), "q": list(o[6:10]), "pos_var": o[10], "lock": o[11],
                 "still": o[12] > 0.5, "anchored": o[13] > 0.5, "initialized": o[14] > 0.5,
-                "regains": int(o[15])}
+                "regains": int(o[15]), "range_bias": o[16]}

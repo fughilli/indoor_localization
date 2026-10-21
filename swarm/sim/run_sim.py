@@ -7,6 +7,7 @@ time-to-converge (first time the error stays below --converged-m).
 """
 
 import argparse
+import ast
 import json
 import math
 
@@ -90,8 +91,36 @@ def run(n_widgets, n_gps, seconds, seed=1234, converged_m=1.0, aoa=True,
         rot_rel = np.linalg.norm(rot_res, axis=1)
         # est - true per widget: frame-to-frame changes of this deviation
         # are the visible "jitter" (truth motion subtracted out).
+        # Static frame: the rigid fit of the static widgets alone, applied to
+        # everyone — a walker's error measured against the mesh it moves in
+        # (the all-widget fit spreads a lost walker's error onto the
+        # statics).
+        st = [k for k, sp in enumerate(specs) if sp.kind == "static"]
+        frame_err = rot_rel
+        if len(st) >= 3:
+            # In the plane (the room scenarios are planar): three nearly
+            # collinear statics leave a 3-D fit free to roll about their line.
+            # Ranges can't tell a planar layout from its mirror image (the
+            # 3-D fits above flip it as a rotation); take the handedness
+            # that fits everyone best, then the statics' rotation.
+            def fit(e, t):
+                ce, ct = e.mean(axis=0), t.mean(axis=0)
+                u2, _, vt2 = np.linalg.svd((e - ce).T @ (t - ct))
+                d2 = np.sign(np.linalg.det(u2 @ vt2))
+                return (u2 @ np.diag([1.0, d2]) @ vt2).T, ce, ct
+
+            def apply(f, e):
+                r2, ce, ct = f
+                return (r2 @ (e - ce).T).T + ct
+
+            e2, t2 = est[:, :2], true[:, :2]
+            mirror = np.array([1.0, -1.0])
+            if (np.linalg.norm(apply(fit(e2 * mirror, t2), e2 * mirror) - t2)
+                    < np.linalg.norm(apply(fit(e2, t2), e2) - t2)):
+                e2 = e2 * mirror
+            frame_err = np.linalg.norm(apply(fit(e2[st], t2[st]), e2) - t2, axis=1)
         history.append((frame["t"], [wg["err"] for wg in frame["widgets"]],
-                        list(rel), list(rot_rel), est - true, rot_res))
+                        list(rel), list(rot_rel), est - true, rot_res, list(frame_err)))
         if trace and abs(frame["t"] % 1.0) < 0.05:
             verr = [np.linalg.norm(np.array(wg["est_v"]) - wg["true_v"])
                     for wg in frame["widgets"]]
@@ -112,6 +141,8 @@ def run(n_widgets, n_gps, seconds, seed=1234, converged_m=1.0, aoa=True,
     tail = errs[int(len(errs) * 0.75):]
     rel_tail = rels[int(len(rels) * 0.75):]
     rot_tail = rot_rels[int(len(rot_rels) * 0.75):]
+    frame_errs = np.array([h[6] for h in history])
+    frame_tail = frame_errs[int(len(frame_errs) * 0.75):]
     # Post-convergence jitter: mean per-frame step of (est - true).
     dev_tail = devs[int(len(devs) * 0.75):]
     jitter = np.linalg.norm(np.diff(dev_tail, axis=0), axis=2).mean(axis=0)
@@ -134,11 +165,16 @@ def run(n_widgets, n_gps, seconds, seed=1234, converged_m=1.0, aoa=True,
                 round(float(np.sqrt(np.mean(rel_tail[:, i] ** 2))), 3),
             "tail_rot_rel_rmse_m":
                 round(float(np.sqrt(np.mean(rot_tail[:, i] ** 2))), 3),
+            "tail_frame_rmse_m":
+                round(float(np.sqrt(np.mean(frame_tail[:, i] ** 2))), 3),
+            "frame_p95_m": round(float(np.percentile(frame_errs[len(frame_errs) // 4:, i], 95)), 3),
             "tail_jitter_m": round(float(jitter[i]), 4),
             "tail_rot_jitter_m": round(float(rot_jitter[i]), 4),
             "lock": round(float(w.widgets[i].est_state(w.t)["lock"]), 2),
             "anchored": w.widgets[i].est_state(w.t)["anchored"],
             "regains": w.widgets[i].est_state(w.t)["regains"],
+            "range_bias_true": round(float(w.widgets[i].range_bias), 3),
+            "range_bias_est": round(float(w.widgets[i].est_state(w.t).get("range_bias", 0.0)), 3),
             "kind": specs[i].kind,
             "converge_s": conv_t,
             "accepted_ranges": w.widgets[i].accepted_ranges,
@@ -195,6 +231,8 @@ def main():
                          "room_static: the bench with all 4 still")
     ap.add_argument("--set", action="append", default=[], metavar="NAME=VALUE",
                     help="node setting (swarm/node settings registry), room scenarios")
+    ap.add_argument("--sensor", action="append", default=[], metavar="NAME=VALUE",
+                    help="SensorConfig field override (Python literal), e.g. uwb_channel=False")
     ap.add_argument("--json", action="store_true", help="emit the report as JSON")
     ap.add_argument("--trace", action="store_true",
                     help="print per-second err/sigma per widget")
@@ -218,20 +256,22 @@ def main():
                         "mean_only_pos_only":
                             True if args.mean_only_pos_only else None,
                         "zero_vel_rate": args.zero_vel_rate,
-                    }.items() if v is not None})
+                    }.items() if v is not None} | {
+                        k: ast.literal_eval(v) for k, v in (kv.split("=", 1) for kv in args.sensor)})
     if args.json:
         print(json.dumps(report, indent=2))
         return
     if args.scenario != "ring":
         print("%s scenario, %.0f s, seed %d, settings %s" % (args.scenario, args.seconds, args.seed, args.set))
         print("regains:", [wg["regains"] for wg in report["widgets"]])
-        print("%3s %7s %10s %12s %12s %6s %8s %9s" %
-              ("id", "kind", "rot-rel m", "rot-jitter m", "raw jitter", "lock", "anchored", "rejects"))
+        print("%3s %7s %10s %12s %12s %6s %8s %9s %13s" %
+              ("id", "kind", "rot-rel m", "rot-jitter m", "raw jitter", "lock", "anchored", "rejects",
+               "bias true/est"))
         for wg in report["widgets"]:
-            print("%3d %7s %10.3f %12.4f %12.4f %6.2f %8s %9d" %
+            print("%3d %7s %10.3f %12.4f %12.4f %6.2f %8s %9d %6.3f/%6.3f" %
                   (wg["id"], wg["kind"], wg["tail_rot_rel_rmse_m"], wg["tail_rot_jitter_m"],
                    wg["tail_jitter_m"], wg["lock"], "yes" if wg["anchored"] else "",
-                   wg["rejected_ranges"]))
+                   wg["rejected_ranges"], wg["range_bias_true"], wg["range_bias_est"]))
         return
     print("%d widgets (%d GPS), %.0f s, seed %d" %
           (args.widgets, args.gps, args.seconds, args.seed))

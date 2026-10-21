@@ -1,9 +1,12 @@
 //! Per-widget error-state Kalman filter (ESKF).
 //!
 //! Nominal state: position p, velocity v (world ENU, meters), attitude q
-//! (body-to-world), accelerometer bias ba, gyro bias bg. The 15-dim error
-//! state [dp, dv, dtheta, dba, dbg] carries the covariance; attitude error is
-//! body-side (R_true = R_est * exp([dtheta]x)).
+//! (body-to-world), accelerometer bias ba, gyro bias bg, and this widget's
+//! UWB range bias rb (its share of every range's constant offset: the
+//! uncalibrated antenna delay). The 16-dim error state [dp, dv, dtheta, dba,
+//! dbg, drb] carries the covariance; attitude error is body-side
+//! (R_true = R_est * exp([dtheta]x)). The range bias is inert (zero
+//! variance, never moves) unless `Params::init_range_bias_sigma` > 0.
 //!
 //! Propagation consumes raw IMU samples. Corrections are processed as
 //! sequential scalar updates (no matrix inversion anywhere), each guarded by
@@ -22,6 +25,7 @@ const DV: usize = 3;
 const DTH: usize = 6;
 const DBA: usize = 9;
 const DBG: usize = 12;
+const DRB: usize = 15;
 
 /// Noise model, expressed as continuous-time densities (per sqrt(Hz)).
 #[derive(Clone, Copy, Debug)]
@@ -41,6 +45,10 @@ pub struct Params {
     pub gate: f32,
     /// EWMA coefficient for the range-innovation lock statistic.
     pub innov_alpha: f32,
+    /// 1-sigma prior of the own range bias rb (m); 0 = not estimated.
+    pub init_range_bias_sigma: f32,
+    /// Range bias random walk, m/sqrt(s) (temperature drift).
+    pub range_bias_rw: f32,
 }
 
 /// Initial / saturated value of the range-innovation ratio: "no lock".
@@ -60,6 +68,8 @@ impl Default for Params {
             init_gyro_bias_sigma: 0.01,
             gate: 5.0,
             innov_alpha: 0.02,
+            init_range_bias_sigma: 0.0,
+            range_bias_rw: 0.0,
         }
     }
 }
@@ -75,6 +85,9 @@ enum Inject {
     Position,
     /// Everything but position (see `update_zero_vel_masked`).
     AllButPosition,
+    /// The range bias only (an anchored widget calibrating, see
+    /// `update_range_bias`).
+    RangeBias,
 }
 
 #[derive(Clone, Debug)]
@@ -84,6 +97,8 @@ pub struct Estimator {
     pub q: Quat,
     pub ba: Vec3,
     pub bg: Vec3,
+    /// Own range bias, m: a range to a peer reads true + rb + the peer's.
+    pub rb: f32,
     pub cov: Cov,
     pub params: Params,
     /// EWMA of |range innovation| / sigma — a self-measured "location lock"
@@ -107,6 +122,7 @@ impl Estimator {
             q: Quat::IDENTITY,
             ba: Vec3::ZERO,
             bg: Vec3::ZERO,
+            rb: 0.0,
             cov: cov_zero(),
             params,
             range_innov_ratio: INNOV_RATIO_MAX,
@@ -133,7 +149,12 @@ impl Estimator {
     }
 
     fn reset_cov(&mut self, pos_sigma: f32, vel_sigma: f32, att_sigma: f32) {
+        // The range bias is a property of the hardware, not of the pose:
+        // what was learned survives re-initializing the pose.
+        let rb_var = self.cov[DRB][DRB];
         self.cov = cov_zero();
+        let s = self.params.init_range_bias_sigma;
+        self.cov[DRB][DRB] = if rb_var > 0.0 && s > 0.0 { rb_var } else { s * s };
         for i in 0..3 {
             self.cov[DP + i][DP + i] = pos_sigma * pos_sigma;
             self.cov[DV + i][DV + i] = vel_sigma * vel_sigma;
@@ -200,6 +221,9 @@ impl Estimator {
         let qth = self.params.gyro_noise * self.params.gyro_noise * dt;
         let qba = self.params.accel_bias_rw * self.params.accel_bias_rw * dt;
         let qbg = self.params.gyro_bias_rw * self.params.gyro_bias_rw * dt;
+        if self.params.init_range_bias_sigma > 0.0 {
+            self.cov[DRB][DRB] += self.params.range_bias_rw * self.params.range_bias_rw * dt;
+        }
         for i in 0..3 {
             self.cov[DV + i][DV + i] += qv;
             self.cov[DTH + i][DTH + i] += qth;
@@ -274,14 +298,17 @@ impl Estimator {
         }
         // Inject dx = K*y into the nominal state.
         let dx = |base: usize| Vec3::new(k[base] * y, k[base + 1] * y, k[base + 2] * y);
-        if inject != Inject::AllButPosition {
+        if inject == Inject::All || inject == Inject::Position {
             self.p = self.p.add(dx(DP));
         }
-        if inject != Inject::Position {
+        if inject == Inject::All || inject == Inject::AllButPosition {
             self.v = self.v.add(dx(DV));
             self.q = self.q.mul(Quat::from_rotvec(dx(DTH))).normalized();
             self.ba = self.ba.add(dx(DBA));
             self.bg = self.bg.add(dx(DBG));
+        }
+        if inject != Inject::Position {
+            self.rb += k[DRB] * y;
         }
         if update_cov {
             // P <- P - K (P H^T)^T
@@ -296,8 +323,9 @@ impl Estimator {
     }
 
     /// UWB two-way range (meters) to a neighbor whose advertised position is
-    /// `np` with mean position variance `nvar` (m^2). `mean_only` for the
-    /// symmetric (no-downhill) regime. Returns acceptance.
+    /// `np` with mean position variance `nvar` (m^2), the neighbor's own
+    /// range bias already subtracted (predicted: |p - np| + rb). `mean_only`
+    /// for the symmetric (no-downhill) regime. Returns acceptance.
     pub fn update_range(
         &mut self,
         np: Vec3,
@@ -321,10 +349,11 @@ impl Estimator {
         pos_only: bool,
     ) -> bool {
         let d = self.p.sub(np);
-        let r_pred = d.norm();
-        if r_pred < 0.05 {
+        let dist = d.norm();
+        if dist < 0.05 {
             return false;
         }
+        let r_pred = dist + self.rb;
         // Fold this innovation into the lock statistic (any regime: it
         // measures consistency with the mesh either way). Per-sample cap so
         // a multipath tail nudges the EWMA rather than resetting it.
@@ -333,11 +362,12 @@ impl Estimator {
             let a = self.params.innov_alpha;
             self.range_innov_ratio += a * (sample - self.range_innov_ratio);
         }
-        let u = d.scale(1.0 / r_pred);
+        let u = d.scale(1.0 / dist);
         let mut h = [0.0f32; STATE_DIM];
         h[DP] = u.x;
         h[DP + 1] = u.y;
         h[DP + 2] = u.z;
+        h[DRB] = 1.0;
         // Multipath outliers in the symmetric (mean-only) regime are absorbed,
         // not gated: the S-based gate is blind there (S is dominated by the
         // honestly-huge absolute variance) and a per-widget adaptive
@@ -347,6 +377,21 @@ impl Estimator {
         // rejection belongs at the radio layer (CIR classification).
         let inject = if pos_only { Inject::Position } else { Inject::All };
         self.scalar_update_masked(&h, measured - r_pred, sigma * sigma + nvar, !mean_only, inject)
+    }
+
+    /// A range used only to calibrate the own range bias: a widget pinned
+    /// where it is (anchored) learns rb from ranges to peers whose positions
+    /// it trusts to `nvar` (m^2), without its position moving. Returns
+    /// acceptance; false also when rb isn't being estimated.
+    pub fn update_range_bias(&mut self, np: Vec3, nvar: f32, measured: f32, sigma: f32) -> bool {
+        let dist = self.p.sub(np).norm();
+        if dist < 0.05 || self.params.init_range_bias_sigma <= 0.0 {
+            return false;
+        }
+        let mut h = [0.0f32; STATE_DIM];
+        h[DRB] = 1.0;
+        let y = measured - dist - self.rb;
+        self.scalar_update_masked(&h, y, sigma * sigma + nvar, true, Inject::RangeBias)
     }
 
     /// Move the position estimate by `dp` without touching the covariance:
@@ -537,6 +582,50 @@ mod tests {
         let err = e.p.sub(truth).norm();
         assert!(err < 0.05, "position error {} m", err);
         assert!(e.pos_var() < 0.1);
+    }
+
+    /// With the range bias state on, a constant offset on every range is
+    /// learned (enough anchors to separate it from position), and the
+    /// position comes out unbiased. Off, the state never moves.
+    #[test]
+    fn range_bias_is_learned_when_enabled() {
+        let anchors = [
+            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(10.0, 0.0, 0.0),
+            Vec3::new(0.0, 10.0, 0.0),
+            Vec3::new(10.0, 10.0, 3.0),
+            Vec3::new(5.0, -4.0, 2.0),
+        ];
+        let truth = Vec3::new(3.0, 4.0, 1.0);
+        let run = |sigma: f32| {
+            let mut e = Estimator::new(Params { init_range_bias_sigma: sigma, ..quiet_params() });
+            e.set_pose(Vec3::new(6.0, 7.0, 0.0), Vec3::ZERO, Quat::IDENTITY, 10.0, 0.1, 0.1);
+            for _ in 0..200 {
+                e.predict(Vec3::new(0.0, 0.0, GRAVITY), Vec3::ZERO, 0.01);
+                for a in &anchors {
+                    e.update_range(*a, 0.0, truth.sub(*a).norm() + 0.12, 0.05, false);
+                }
+            }
+            e
+        };
+        let e = run(0.2);
+        assert!((e.rb - 0.12).abs() < 0.02, "rb {}", e.rb);
+        assert!(e.p.sub(truth).norm() < 0.05, "position error {}", e.p.sub(truth).norm());
+        // Survives a pose reset.
+        let mut e2 = e.clone();
+        e2.set_pose(e.p, Vec3::ZERO, Quat::IDENTITY, 1.0, 0.1, 0.1);
+        assert!(e2.cov[DRB][DRB] < 0.01 && e2.rb == e.rb);
+        assert_eq!(run(0.0).rb, 0.0);
+        // Anchored calibration: position held, rb only.
+        let mut a = Estimator::new(Params { init_range_bias_sigma: 0.2, ..quiet_params() });
+        a.set_pose(truth, Vec3::ZERO, Quat::IDENTITY, 0.05, 0.05, 0.1);
+        for _ in 0..100 {
+            for n in &anchors {
+                a.update_range_bias(*n, 0.0, truth.sub(*n).norm() - 0.07, 0.05);
+            }
+        }
+        assert!((a.rb + 0.07).abs() < 0.01, "rb {}", a.rb);
+        assert_eq!(a.p, truth);
     }
 
     /// GPS fixes alone must converge position and shrink covariance.

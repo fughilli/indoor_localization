@@ -86,8 +86,8 @@ pub extern "C" fn swarm_sim_node_mag(h: *mut Node, t_us: i64, raw: *const f32) {
 
 /// RangeResult code (see ffi.rs).
 #[no_mangle]
-pub extern "C" fn swarm_sim_node_range(h: *mut Node, t_us: i64, peer: u32, range_m: f32) -> i32 {
-    node(h).range(t_us, peer, range_m) as i32
+pub extern "C" fn swarm_sim_node_range(h: *mut Node, t_us: i64, peer: u32, range_m: f32, fp_gap_db: f32) -> i32 {
+    node(h).range(t_us, peer, range_m, fp_gap_db) as i32
 }
 
 /// Encoded advertisement into `out` (>= 64 bytes); its length or 0.
@@ -103,11 +103,11 @@ pub unsafe extern "C" fn swarm_sim_node_advert_rx(h: *mut Node, t_us: i64, data:
 }
 
 /// State for the sim's metrics: p(3) v(3) q(4) pos_var lock still anchored
-/// initialized regains — 16 floats.
+/// initialized regains range_bias — 17 floats.
 #[no_mangle]
 pub unsafe extern "C" fn swarm_sim_node_state(h: *mut Node, t_us: i64, out: *mut f32) {
     let n = node(h);
-    let o = core::slice::from_raw_parts_mut(out, 16);
+    let o = core::slice::from_raw_parts_mut(out, 17);
     let e = &n.est;
     o[0..3].copy_from_slice(&e.p.to_array());
     o[3..6].copy_from_slice(&e.v.to_array());
@@ -118,4 +118,5 @@ pub unsafe extern "C" fn swarm_sim_node_state(h: *mut Node, t_us: i64, out: *mut
     o[13] = n.auto_anchored() as u32 as f32;
     o[14] = n.initialized() as u32 as f32;
     o[15] = n.regains as f32;
+    o[16] = e.rb;
 }

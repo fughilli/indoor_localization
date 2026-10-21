@@ -1,9 +1,9 @@
 //! Minimal fixed-size math for the estimator: Vec3, Mat3, unit quaternion,
 //! and the NxN covariance helpers. No allocation, f32 throughout.
 
-pub const STATE_DIM: usize = 15;
+pub const STATE_DIM: usize = 16;
 
-/// Dense covariance / system matrix over the 15-dim error state.
+/// Dense covariance / system matrix over the 16-dim error state.
 pub type Cov = [[f32; STATE_DIM]; STATE_DIM];
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]

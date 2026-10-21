@@ -24,6 +24,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 #include <freertos/task.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -337,8 +338,8 @@ void EmitSelf(int64_t t)
   if (!swarm_node_state(s))
     return;
   EMITF("{\"t\":%.4f,\"type\":\"self\",\"id\":%u,\"p\":[%.4f,%.4f,%.4f],\"v\":[%.3f,%.3f,%.3f],"
-        "\"q\":[%.4f,%.4f,%.4f,%.4f],\"var\":%.4g,\"lock\":%.2f}\n",
-        Secs(t), g_id, s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], s[8], s[9], s[10], s[11]);
+        "\"q\":[%.4f,%.4f,%.4f,%.4f],\"var\":%.4g,\"lock\":%.2f,\"rb\":%.3f}\n",
+        Secs(t), g_id, s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], s[8], s[9], s[10], s[11], s[12]);
 }
 
 void EmitSwarm(int64_t t)
@@ -348,8 +349,8 @@ void EmitSwarm(int64_t t)
   bool ready = swarm_node_state(s);
   int n = snprintf(buf, sizeof(buf),
                    "{\"t\":%.3f,\"type\":\"swarm\",\"id\":%u,\"nodes\":[{\"id\":%u,\"self\":true,"
-                   "\"ready\":%s,\"p\":[%.3f,%.3f,%.3f],\"var\":%.4g,\"lock\":%.2f,\"age\":0}",
-                   Secs(t), g_id, g_id, ready ? "true" : "false", s[0], s[1], s[2], s[10], s[11]);
+                   "\"ready\":%s,\"p\":[%.3f,%.3f,%.3f],\"var\":%.4g,\"lock\":%.2f,\"rb\":%.3f,\"age\":0}",
+                   Secs(t), g_id, g_id, ready ? "true" : "false", s[0], s[1], s[2], s[10], s[11], s[12]);
   float pe[SWARM_NODE_PEER_LEN];
   for (int i = 0; i < SWARM_NODE_MAX_PEERS && n < (int)sizeof(buf) - 200; i++)
   {
@@ -358,9 +359,9 @@ void EmitSwarm(int64_t t)
       continue;
     n += snprintf(buf + n, sizeof(buf) - n,
                   ",{\"id\":%u,\"p\":[%.3f,%.3f,%.3f],\"v\":[%.2f,%.2f,%.2f],\"var\":%.4g,"
-                  "\"lock\":%.2f,\"age\":%.3f,\"flags\":%d,\"seq\":%u}",
+                  "\"lock\":%.2f,\"age\":%.3f,\"flags\":%d,\"seq\":%u,\"rb\":%.3f}",
                   id, pe[0], pe[1], pe[2], pe[3], pe[4], pe[5], pe[6], pe[7], pe[8], (int)pe[9],
-                  (unsigned)pe[10]);
+                  (unsigned)pe[10], pe[11]);
   }
   n += snprintf(buf + n, sizeof(buf) - n, "]}\n");
   if (n < (int)sizeof(buf))
@@ -448,7 +449,9 @@ void FusionTask(void *)
       }
       else
       {
-        int code = swarm_node_range(ev.t_us, ev.peer, ev.range_m);
+        // First-path power below total: the blocked-link signal (NLOS).
+        float gap = ev.rssi - ev.fp_rssi;
+        int code = swarm_node_range(ev.t_us, ev.peer, ev.range_m, isfinite(gap) ? gap : NAN);
         EMITF("{\"t\":%.4f,\"type\":\"range\",\"peer\":%u,\"range_m\":%.4f,\"rssi\":%.1f,"
               "\"fp_rssi\":%.1f,\"init\":%d,\"result\":%d}\n",
               Secs(ev.t_us), ev.peer, ev.range_m, ev.rssi, ev.fp_rssi, ev.initiator, code);
