@@ -80,6 +80,11 @@ pub struct NodeConfig {
     /// (downhill) updates and lags then snaps; against anchors it does,
     /// velocity included. Moving releases the anchor at once, keeping the
     /// position with sigma `auto_anchor_release_sigma`.
+    /// Divergence recovery: this many consecutive gated ranges means the
+    /// filter is confidently wrong (the innovation gate will reject every
+    /// range from here on and it dead-reckons away). Reset the position
+    /// uncertainty to `init_pos_sigma` and re-acquire, as at boot. 0 = off.
+    pub regain_after_gated: u32,
     pub auto_anchor_on: bool,
     pub auto_anchor_lock: f32,
     pub auto_anchor_hold_us: i64,
@@ -148,6 +153,9 @@ impl Default for NodeConfig {
             still_hold_us: 500_000,
             still_sigma: 0.01,
             still_period_us: 50_000,
+            // ~0.5 s of a widget's ranges at the bench rate; a real outlier
+            // is one or two in a row.
+            regain_after_gated: 16,
             auto_anchor_on: true,
             // Tuned in the sim's room scenario (per-device range bias, carried
             // walker): at 0.6 a still mesh never anchors (lock sits ~0.6-0.8
@@ -202,6 +210,7 @@ impl Peer {
             lock: self.advert.lock,
             age,
             anchored: self.advert.flags & FLAG_ANCHORED != 0,
+            still: self.advert.flags & FLAG_STATIC != 0,
         }
     }
 }
@@ -221,6 +230,8 @@ pub enum RangeResult {
     Surveyed = -5,
     /// Filter not initialized yet (waiting for the first IMU sample).
     NotReady = -6,
+    /// I'm still and the peer is moving (coop::SkipReason::MovingPeer).
+    MovingPeer = -7,
 }
 
 /// Result of the boot-time static IMU calibration.
@@ -261,6 +272,9 @@ pub struct Node {
     auto_anchor: Option<Vec3>,
     /// Since when the auto-anchor conditions have held.
     calm_since_us: Option<i64>,
+    /// Consecutive gated ranges (any peer), and how often we re-acquired.
+    gated_streak: u32,
+    pub regains: u32,
     seq: u32,
     initialized: bool,
     last_t_us: i64,
@@ -298,6 +312,8 @@ impl Node {
             surveyed: None,
             auto_anchor: None,
             calm_since_us: None,
+            gated_streak: 0,
+            regains: 0,
             seq: 0,
             initialized: false,
             last_t_us: 0,
@@ -682,6 +698,11 @@ impl Node {
         let Some(i) = self.peer_index(peer_id) else { return RangeResult::UnknownPeer };
         let mut peer = self.peers[i].unwrap();
         let view = peer.view(t_us);
+        // Coincident estimates (all widgets start at the origin) can't be
+        // linearized: the estimator declines those ranges, which isn't a
+        // gate rejection and mustn't count toward divergence recovery.
+        let degenerate = self.est.p.sub(view.p).norm() < 0.05;
+        let me_still = self.is_still(t_us);
         let (outcome, _decision): (Outcome, Decision) = coop::range_update(
             &self.cfg.coop,
             &mut self.est,
@@ -689,6 +710,7 @@ impl Node {
             range_m,
             self.cfg.range_sigma,
             false, // no GPS on these widgets
+            me_still,
         );
         let r = match outcome {
             Outcome::Applied { accepted: true, .. } => RangeResult::Accepted,
@@ -696,6 +718,7 @@ impl Node {
             Outcome::Skipped(SkipReason::StaleAdvert) => RangeResult::StaleAdvert,
             Outcome::Skipped(SkipReason::Anchored) => RangeResult::Anchored,
             Outcome::Skipped(SkipReason::ColdPeer) => RangeResult::ColdPeer,
+            Outcome::Skipped(SkipReason::MovingPeer) => RangeResult::MovingPeer,
         };
         match r {
             RangeResult::Accepted => peer.ranges_ok += 1,
@@ -703,6 +726,18 @@ impl Node {
             _ => peer.ranges_skipped += 1,
         }
         self.peers[i] = Some(peer);
+        match r {
+            RangeResult::Gated if !degenerate => self.gated_streak += 1,
+            RangeResult::Accepted => self.gated_streak = 0,
+            _ => {}
+        }
+        if self.cfg.regain_after_gated > 0 && self.gated_streak >= self.cfg.regain_after_gated {
+            self.gated_streak = 0;
+            self.regains += 1;
+            let (p, q) = (self.est.p, self.est.q);
+            self.est.set_pose(p, Vec3::ZERO, q, self.cfg.init_pos_sigma, self.cfg.init_vel_sigma,
+                              self.cfg.init_att_sigma);
+        }
         r
     }
 
@@ -710,6 +745,7 @@ impl Node {
     /// position as an absolute source (var ~0, locked).
     pub fn advert(&mut self) -> Advert {
         self.seq = self.seq.wrapping_add(1);
+        let still = self.is_still(self.last_t_us);
         match self.anchor() {
             Some((p, sigma)) => Advert {
                 widget_id: self.id,
@@ -726,7 +762,7 @@ impl Node {
                 p: self.est.p,
                 v: self.est.v,
                 quality: self.est.pos_var(),
-                flags: 0,
+                flags: if still { FLAG_STATIC } else { 0 },
                 lock: self.est.range_innov_ratio(),
             },
         }
@@ -1052,6 +1088,36 @@ mod tests {
                 assert!((est - tru).abs() < 0.1, "{}-{}: {} vs {} m", i, j, est, tru);
             }
         }
+    }
+
+    /// A widget whose estimate ran 30 m off with an overconfident
+    /// covariance gets every range gated; it must notice and re-acquire
+    /// against its anchored peers instead of dead-reckoning away for good.
+    #[test]
+    fn diverged_widget_reacquires() {
+        let truth = Vec3::new(2.0, 3.0, 0.0);
+        let anchors = [Vec3::new(0.0, 0.0, 0.0), Vec3::new(6.0, 0.0, 0.0), Vec3::new(0.0, 6.0, 0.0),
+                       Vec3::new(6.0, 6.0, 0.0)];
+        let mut cfg = NodeConfig::default();
+        cfg.centroid_bleed_tau_s = 0.0;
+        let mut n = Node::new(7, false, cfg);
+        let mut t = 0;
+        n.tick(t);
+        let q = n.est.q;
+        n.est.set_pose(Vec3::new(30.0, -20.0, 0.0), Vec3::ZERO, q, 0.3, 0.1, 0.3);
+        for step in 0..1500 {
+            t += 10_000;
+            n.tick(t);
+            for (k, a) in anchors.iter().enumerate() {
+                n.heard(t, locked_peer(100 + k as u32, *a));
+                if step % 4 == k {
+                    n.range(t, 100 + k as u32, truth.sub(*a).norm());
+                }
+            }
+        }
+        assert!(n.regains >= 1, "noticed the divergence");
+        let err = n.est.p.sub(truth).norm();
+        assert!(err < 0.1, "{} m off at {:?}", err, n.est.p);
     }
 
     #[test]

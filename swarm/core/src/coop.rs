@@ -88,6 +88,8 @@ pub struct PeerView {
     /// is close to a tracking widget's, which then fell back to
     /// position-only mean-only updates and never corrected its velocity.)
     pub anchored: bool,
+    /// The peer advertises itself as still (stationary detection).
+    pub still: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -114,6 +116,9 @@ pub enum SkipReason {
     Anchored,
     /// Peer's lock is far worse than mine: a cold joiner.
     ColdPeer,
+    /// I'm still and the peer is moving: a mover's estimate is the least
+    /// reliable thing around, so it adapts to the still mesh, not vice versa.
+    MovingPeer,
 }
 
 /// Classify one range measurement to `peer` for a widget whose estimator is
@@ -125,9 +130,18 @@ pub fn decide(
     peer: &PeerView,
     anchored: bool,
     range_sigma: f32,
+    me_still: bool,
 ) -> Decision {
     if peer.age > cfg.max_advert_age {
         return Decision::Skip(SkipReason::StaleAdvert);
+    }
+    // Information flows from still widgets to moving ones (bench + sim: a
+    // carried widget's bad estimate dragged a converged still mesh apart
+    // before it could anchor). Ahead of the variance test: a tracking
+    // mover's small variance would otherwise look "downhill" to a still,
+    // anchorless widget.
+    if me_still && !peer.still && !peer.anchored {
+        return Decision::Skip(SkipReason::MovingPeer);
     }
     let my_var = me.pos_var();
     // Variance ranks peers only when meaningfully small; anchorless variances
@@ -138,6 +152,22 @@ pub fn decide(
         // Damp with the peer's variance, floored for cold start.
         let floor = 0.5 * my_var - range_sigma * range_sigma;
         let nvar = if peer.var > floor { peer.var } else { floor };
+        return Decision::Use { regime: Regime::Downhill, nvar, my_var };
+    }
+    // Moving, against a still and locked peer: use it as a reference right
+    // away (full update, so velocity is corrected), with the peer's
+    // relative quality from its lock — not its honestly-huge absolute
+    // variance — and the same cold-start floor.
+    if !me_still && peer.still && peer.lock < cfg.lock_ratio_none {
+        let rel = peer.lock * range_sigma;
+        let floor = 0.5 * my_var - range_sigma * range_sigma;
+        let mut nvar = rel * rel;
+        if nvar < range_sigma * range_sigma {
+            nvar = range_sigma * range_sigma;
+        }
+        if nvar < floor {
+            nvar = floor;
+        }
         return Decision::Use { regime: Regime::Downhill, nvar, my_var };
     }
     if anchored {
@@ -179,8 +209,9 @@ pub fn range_update(
     measured: f32,
     range_sigma: f32,
     anchored: bool,
+    me_still: bool,
 ) -> (Outcome, Decision) {
-    let decision = decide(cfg, me, peer, anchored, range_sigma);
+    let decision = decide(cfg, me, peer, anchored, range_sigma, me_still);
     let outcome = match decision {
         Decision::Skip(r) => Outcome::Skipped(r),
         Decision::Use { regime, nvar, .. } => {
@@ -231,7 +262,7 @@ mod tests {
     }
 
     fn peer(var: f32, lock: f32, age: f32) -> PeerView {
-        PeerView { p: Vec3::new(5.0, 0.0, 0.0), var, lock, age, anchored: false }
+        PeerView { p: Vec3::new(5.0, 0.0, 0.0), var, lock, age, anchored: false, still: false }
     }
 
     #[test]
@@ -239,7 +270,7 @@ mod tests {
         let cfg = CoopConfig::default();
         let me = est(10.0); // var 100, lock 10 (cold)
         // Tight, locked peer: downhill, floored at half my variance.
-        match decide(&cfg, &me, &peer(1e-4, 1.0, 0.1), false, 0.1) {
+        match decide(&cfg, &me, &peer(1e-4, 1.0, 0.1), false, 0.1, false) {
             Decision::Use { regime: Regime::Downhill, nvar, .. } => {
                 assert!((nvar - (50.0 - 0.01)).abs() < 1e-3)
             }
@@ -247,16 +278,16 @@ mod tests {
         }
         // Comparable: mean-only, cold-start damping 0.5 * my_var.
         assert_eq!(
-            decide(&cfg, &me, &peer(100.0, 5.0, 0.1), false, 0.1),
+            decide(&cfg, &me, &peer(100.0, 5.0, 0.1), false, 0.1, false),
             Decision::Use { regime: Regime::MeanOnly, nvar: 50.0, my_var: 100.0 }
         );
         // Stale advert, anchored, cold peer.
         assert_eq!(
-            decide(&cfg, &me, &peer(1e-4, 1.0, 1.5), false, 0.1),
+            decide(&cfg, &me, &peer(1e-4, 1.0, 1.5), false, 0.1, false),
             Decision::Skip(SkipReason::StaleAdvert)
         );
         assert_eq!(
-            decide(&cfg, &me, &peer(100.0, 5.0, 0.1), true, 0.1),
+            decide(&cfg, &me, &peer(100.0, 5.0, 0.1), true, 0.1, false),
             Decision::Skip(SkipReason::Anchored)
         );
         let mut locked = est(10.0);
@@ -269,7 +300,7 @@ mod tests {
         }
         assert!(locked.range_innov_ratio() < 2.0);
         assert_eq!(
-            decide(&cfg, &locked, &peer(100.0, 10.0, 0.1), false, 0.1),
+            decide(&cfg, &locked, &peer(100.0, 10.0, 0.1), false, 0.1, false),
             Decision::Skip(SkipReason::ColdPeer)
         );
     }
@@ -284,7 +315,7 @@ mod tests {
             me.update_range(anchor, 4.0, d + 0.01, 0.1, true);
         }
         // Fully locked: anneal = 1 + (30-0.5)/0.5 = 60 -> nvar = 30 * my_var.
-        match decide(&cfg, &me, &peer(100.0, 1.5, 0.1), false, 0.1) {
+        match decide(&cfg, &me, &peer(100.0, 1.5, 0.1), false, 0.1, false) {
             Decision::Use { regime: Regime::MeanOnly, nvar, .. } => {
                 assert!((nvar / me.pos_var() - 30.0).abs() < 1e-3, "{}", nvar / me.pos_var())
             }

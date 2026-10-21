@@ -138,6 +138,7 @@ def run(n_widgets, n_gps, seconds, seed=1234, converged_m=1.0, aoa=True,
             "tail_rot_jitter_m": round(float(rot_jitter[i]), 4),
             "lock": round(float(w.widgets[i].est_state(w.t)["lock"]), 2),
             "anchored": w.widgets[i].est_state(w.t)["anchored"],
+            "regains": w.widgets[i].est_state(w.t)["regains"],
             "kind": specs[i].kind,
             "converge_s": conv_t,
             "accepted_ranges": w.widgets[i].accepted_ranges,
@@ -223,6 +224,7 @@ def main():
         return
     if args.scenario != "ring":
         print("%s scenario, %.0f s, seed %d, settings %s" % (args.scenario, args.seconds, args.seed, args.set))
+        print("regains:", [wg["regains"] for wg in report["widgets"]])
         print("%3s %7s %10s %12s %12s %6s %8s %9s" %
               ("id", "kind", "rot-rel m", "rot-jitter m", "raw jitter", "lock", "anchored", "rejects"))
         for wg in report["widgets"]:

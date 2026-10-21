@@ -8,7 +8,7 @@ import os
 import struct
 
 _LIB = None
-STATE_LEN = 15
+STATE_LEN = 16
 
 
 def _find_library():
@@ -119,4 +119,5 @@ class Node:
         o = (ctypes.c_float * STATE_LEN)()
         self._lib.swarm_sim_node_state(self._h, int(t * 1e6), o)
         return {"p": list(o[0:3]), "v": list(o[3:6]), "q": list(o[6:10]), "pos_var": o[10], "lock": o[11],
-                "still": o[12] > 0.5, "anchored": o[13] > 0.5, "initialized": o[14] > 0.5}
+                "still": o[12] > 0.5, "anchored": o[13] > 0.5, "initialized": o[14] > 0.5,
+                "regains": int(o[15])}

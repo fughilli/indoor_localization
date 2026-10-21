@@ -159,6 +159,10 @@ class WidgetSpec:
     sway: float = 0.0
     bob: float = 0.0
     step_hz: float = 1.8
+    # Hand handling while carried: slow multi-axis wrist rotation (rad
+    # amplitude) and a lift (m) from where it rested.
+    handling: float = 0.0
+    lift: float = 0.0
 
 
 # Each move/pause transition ramps the speed linearly over this fraction of
@@ -283,8 +287,10 @@ class TruthWidget:
         # sample (and so its attitude init) for nothing.
         te = max(0.0, t - self.spec.start_delay) if self.spec.start_delay > 0 else t
         p = _true_pos(self.spec, te)
-        if self.spec.bob:
-            p = p + np.array([0.0, 0.0, self.spec.bob * self._gait(t) * math.sin(2 * math.pi * self.spec.step_hz * t)])
+        if self.spec.bob or self.spec.lift:
+            g = self._gait(t)
+            p = p + np.array([0.0, 0.0, self.spec.lift * g
+                              + self.spec.bob * g * math.sin(2 * math.pi * self.spec.step_hz * t)])
         return p
 
     def _gait(self, t):
@@ -300,18 +306,25 @@ class TruthWidget:
     def rot(self, t):
         """Body -> world rotation: yaw spin, plus roll/pitch sway when
         carried."""
-        r = _rot_z(self.yaw(t))
-        if self.spec.sway:
+        yaw = self.yaw(t)
+        roll = pitch = 0.0
+        if self.spec.sway or self.spec.handling:
             g = self._gait(t)
             w = 2 * math.pi * self.spec.step_hz
             roll = self.spec.sway * g * math.sin(w * t)
             pitch = 0.6 * self.spec.sway * g * math.sin(0.5 * w * t + 0.7)
+            h = self.spec.handling * g
+            yaw += h * math.sin(2 * math.pi * 0.31 * t)
+            roll += 0.7 * h * math.sin(2 * math.pi * 0.53 * t + 1.0)
+            pitch += 0.6 * h * math.sin(2 * math.pi * 0.71 * t + 2.0)
+        r = _rot_z(yaw)
+        if roll or pitch:
             r = r @ _rot_y(pitch) @ _rot_x(roll)
         return r
 
     def body_rate(self, t, h=1e-3):
         """Gyro truth: body angular rate from the rotation's derivative."""
-        if not self.spec.sway:
+        if not (self.spec.sway or self.spec.handling):
             return np.array([0.0, 0.0, self.spec.yaw_rate if t >= self.spec.start_delay else 0.0])
         r0, r1 = self.rot(t - h), self.rot(t + h)
         rd = (r1 - r0) / (2 * h)
@@ -325,7 +338,7 @@ class TruthWidget:
         return (self.pos(t + h) - 2 * self.pos(t) + self.pos(t - h)) / (h * h)
 
     def yaw(self, t):
-        if self.spec.sway and self.spec.kind == "orbit":
+        if (self.spec.sway or self.spec.handling) and self.spec.kind == "orbit":
             # Carried: facing along the path, turning only while moving.
             te = max(0.0, t - self.spec.start_delay)
             return self.spec.omega * _motion_time(self.spec, te) + self.spec.phase + math.pi / 2
@@ -411,7 +424,7 @@ class SimWidget:
         s = self.est.state()
         return {"p": s["p"], "v": s["v"], "q": s["q"], "pos_var": s["pos_var"],
                 "lock": self.est.range_innov_ratio(), "still": False, "anchored": False,
-                "initialized": True}
+                "initialized": True, "regains": 0}
 
     def broadcast(self, t):
         if self.spec.surveyed:
@@ -680,7 +693,7 @@ def room_swarm(walker=True, still=4.0):
         specs.append(WidgetSpec(
             wid=3, kind="orbit", center=(1.2, 2.0, 0.0), radius=1.8, omega=0.35, yaw_rate=0.2,
             move_period=20.0, move_duty=0.6, has_alt=False, has_aoa=False, start_delay=still,
-            sway=0.15, bob=0.03))
+            sway=0.15, bob=0.03, handling=0.5, lift=0.25))
     else:
         specs.append(WidgetSpec(wid=3, kind="static", center=(-1.0, 4.0, 0.0), yaw_rate=0.0,
                                 has_alt=False, has_aoa=False))

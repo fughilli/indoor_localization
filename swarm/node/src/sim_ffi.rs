@@ -103,11 +103,11 @@ pub unsafe extern "C" fn swarm_sim_node_advert_rx(h: *mut Node, t_us: i64, data:
 }
 
 /// State for the sim's metrics: p(3) v(3) q(4) pos_var lock still anchored
-/// initialized — 15 floats.
+/// initialized regains — 16 floats.
 #[no_mangle]
 pub unsafe extern "C" fn swarm_sim_node_state(h: *mut Node, t_us: i64, out: *mut f32) {
     let n = node(h);
-    let o = core::slice::from_raw_parts_mut(out, 15);
+    let o = core::slice::from_raw_parts_mut(out, 16);
     let e = &n.est;
     o[0..3].copy_from_slice(&e.p.to_array());
     o[3..6].copy_from_slice(&e.v.to_array());
@@ -117,4 +117,5 @@ pub unsafe extern "C" fn swarm_sim_node_state(h: *mut Node, t_us: i64, out: *mut
     o[12] = n.is_still(t_us) as u32 as f32;
     o[13] = n.auto_anchored() as u32 as f32;
     o[14] = n.initialized() as u32 as f32;
+    o[15] = n.regains as f32;
 }

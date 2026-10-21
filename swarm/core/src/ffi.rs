@@ -231,7 +231,7 @@ fn coop_config(cfg: *const f32) -> CoopConfig {
 }
 
 fn peer_view(p: *const f32, var: f32, lock: f32, age: f32) -> PeerView {
-    PeerView { p: vec3(p), var, lock, age, anchored: false }
+    PeerView { p: vec3(p), var, lock, age, anchored: false, still: false }
 }
 
 /// Cooperative range update ([`coop::range_update`]). `cfg` is a flattened
@@ -255,7 +255,7 @@ pub extern "C" fn swarm_coop_range_update(
     let Some(e) = (unsafe { e.as_mut() }) else { return 0 };
     let peer = peer_view(peer_p, peer_var, peer_lock, peer_age);
     let (outcome, decision) =
-        coop::range_update(&coop_config(cfg), e, &peer, measured, range_sigma, anchored != 0);
+        coop::range_update(&coop_config(cfg), e, &peer, measured, range_sigma, anchored != 0, false);
     if !decision_out.is_null() {
         let out = unsafe { core::slice::from_raw_parts_mut(decision_out, 3) };
         let flat: [f32; 3] = match decision {
@@ -271,6 +271,7 @@ pub extern "C" fn swarm_coop_range_update(
         Outcome::Skipped(SkipReason::StaleAdvert) => -1,
         Outcome::Skipped(SkipReason::Anchored) => -2,
         Outcome::Skipped(SkipReason::ColdPeer) => -3,
+        Outcome::Skipped(SkipReason::MovingPeer) => -7,
     }
 }
 

@@ -145,6 +145,7 @@ pub static REGISTRY: &[Setting] = &[
     bools!(319, "planar.on", node.planar_on),
     bools!(323, "still.on", node.still_on),
     bools!(330, "auto_anchor.on", node.auto_anchor_on),
+    i32s!(337, "regain_after_gated", 0, 100_000, u32, node.regain_after_gated),
     f32s!(331, "auto_anchor.lock", 0.0, 100.0, node.auto_anchor_lock),
     i32s!(332, "auto_anchor.hold_us", 0, 600_000_000, i64, node.auto_anchor_hold_us),
     f32s!(333, "auto_anchor.sigma", 1e-3, 100.0, node.auto_anchor_sigma),
