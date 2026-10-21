@@ -48,6 +48,29 @@ pub struct NodeConfig {
     /// widget applies the same shift). <= 0 disables.
     pub centroid_bleed_tau_s: f32,
     pub centroid_period_us: i64,
+    /// Planar deployment (every widget at about one height): an altitude
+    /// pseudo-measurement holds z at `planar_z`. Without it a flat swarm is
+    /// ill-conditioned in z (a widget inside a triangle of others can pop
+    /// out of the plane either way to absorb range bias, and flips).
+    /// Stationary detection (ZUPT): when the bias-corrected gyro rate and
+    /// the deviation of |accel| from g both stay under their thresholds
+    /// (EWMA, time constant `still_tau_us`) for `still_hold_us`, the widget
+    /// is still, and velocity is pinned to zero with sigma `still_sigma`
+    /// every `still_period_us`. Velocity and biases only, never position
+    /// (no kick). Nothing else corrects velocity once range updates are
+    /// position-only, and a few cm/s of IMU drift kept a still mesh flexing
+    /// by tens of cm.
+    pub still_on: bool,
+    pub still_gyro: f32,
+    pub still_accel: f32,
+    pub still_tau_us: i64,
+    pub still_hold_us: i64,
+    pub still_sigma: f32,
+    pub still_period_us: i64,
+    pub planar_on: bool,
+    pub planar_z: f32,
+    pub planar_sigma: f32,
+    pub planar_period_us: i64,
     /// Surveyed (fixed, known-position) widgets re-pin to it at this rate.
     pub survey_period_us: i64,
     pub survey_sigma: f32,
@@ -93,8 +116,22 @@ impl Default for NodeConfig {
             zero_vel_sigma: 3.0,
             zero_vel_period_us: 500_000,
             zero_vel_keep_position: false,
-            centroid_bleed_tau_s: 5.0,
+            // Slow next to ranging: each widget computes the centroid from
+            // its own view of the others, and at 5 s those differences
+            // distorted the mesh (hardware: lock ~6 -> ~2 with it off).
+            centroid_bleed_tau_s: 60.0,
             centroid_period_us: 100_000,
+            still_on: true,
+            still_gyro: 0.03,
+            still_accel: 0.25,
+            still_tau_us: 100_000,
+            still_hold_us: 500_000,
+            still_sigma: 0.01,
+            still_period_us: 50_000,
+            planar_on: false,
+            planar_z: 0.0,
+            planar_sigma: 0.05,
+            planar_period_us: 100_000,
             survey_period_us: 100_000,
             survey_sigma: 0.02,
             mag_sigma: 0.05,
@@ -195,6 +232,13 @@ pub struct Node {
     imu_count: u32,
     next_zero_vel_us: i64,
     next_centroid_us: i64,
+    next_planar_us: i64,
+    /// Stationary detector: EWMAs of |gyro - bias| and ||a| - g|, when the
+    /// widget last moved, next ZUPT.
+    still_gyro_avg: f32,
+    still_accel_avg: f32,
+    moved_us: i64,
+    next_still_us: i64,
     next_survey_us: i64,
     next_mag_us: i64,
     last_mag_body: Option<Vec3>,
@@ -223,6 +267,11 @@ impl Node {
             imu_count: 0,
             next_zero_vel_us: 0,
             next_centroid_us: 0,
+            next_planar_us: 0,
+            still_gyro_avg: 1.0,
+            still_accel_avg: 1.0,
+            moved_us: 0,
+            next_still_us: 0,
             next_survey_us: 0,
             next_mag_us: 0,
             last_mag_body: None,
@@ -365,6 +414,7 @@ impl Node {
         }
         self.est.predict(accel, gyro, dt);
         self.imu_count = self.imu_count.wrapping_add(1);
+        self.stationary(t_us, accel, gyro, dt);
         // Quasi-static gravity tilt aiding.
         if self.imu_count % self.cfg.gravity_every == 0
             && libm::fabsf(accel.norm() - GRAVITY) < self.cfg.gravity_gate
@@ -372,6 +422,26 @@ impl Node {
             self.est.update_gravity(accel, self.cfg.gravity_sigma);
         }
         self.periodic(t_us);
+    }
+
+    /// Is the widget still (see NodeConfig::still_on)?
+    pub fn is_still(&self, t_us: i64) -> bool {
+        self.cfg.still_on && self.initialized && t_us - self.moved_us >= self.cfg.still_hold_us
+    }
+
+    fn stationary(&mut self, t_us: i64, accel: Vec3, gyro: Vec3, dt: f32) {
+        let a = (dt / (self.cfg.still_tau_us as f32 * 1e-6)).min(1.0);
+        let g = gyro.sub(self.est.bg).norm();
+        let f = libm::fabsf(accel.norm() - GRAVITY);
+        self.still_gyro_avg += a * (g - self.still_gyro_avg);
+        self.still_accel_avg += a * (f - self.still_accel_avg);
+        if self.still_gyro_avg > self.cfg.still_gyro || self.still_accel_avg > self.cfg.still_accel {
+            self.moved_us = t_us;
+        }
+        if self.is_still(t_us) && t_us >= self.next_still_us {
+            self.next_still_us = t_us + self.cfg.still_period_us;
+            self.est.update_zero_vel_masked(self.cfg.still_sigma, true);
+        }
     }
 
     /// Without an IMU: propagate against a stationary model. Call often
@@ -400,10 +470,17 @@ impl Node {
         }
         if t_us >= self.next_centroid_us && self.cfg.centroid_bleed_tau_s > 0.0 {
             self.next_centroid_us = t_us + self.cfg.centroid_period_us;
-            if let Some(c) = self.anchorless_centroid(t_us) {
+            if let Some(mut c) = self.anchorless_centroid(t_us) {
+                if self.cfg.planar_on {
+                    c.z = 0.0; // the plane owns z
+                }
                 let k = self.cfg.centroid_period_us as f32 * 1e-6 / self.cfg.centroid_bleed_tau_s;
                 self.est.shift_position(c.scale(-k.min(1.0)));
             }
+        }
+        if self.cfg.planar_on && self.surveyed.is_none() && t_us >= self.next_planar_us {
+            self.next_planar_us = t_us + self.cfg.planar_period_us;
+            self.est.update_alt(self.cfg.planar_z, self.cfg.planar_sigma);
         }
         if let Some((p, sigma)) = self.surveyed {
             if t_us >= self.next_survey_us {
@@ -682,7 +759,9 @@ mod tests {
         let offset = Vec3::new(30.0, -10.0, 50.0);
         let shape = [Vec3::new(0.0, 0.0, 0.0), Vec3::new(4.0, 0.0, 0.0), Vec3::new(0.0, 3.0, 0.0),
                      Vec3::new(4.0, 3.0, 1.0)];
-        let mut nodes: Vec<Node> = (0..4).map(|i| Node::new(1 + i, false, NodeConfig::default())).collect();
+        let mut cfg = NodeConfig::default();
+        cfg.centroid_bleed_tau_s = 5.0;
+        let mut nodes: Vec<Node> = (0..4).map(|i| Node::new(1 + i, false, cfg)).collect();
         for (n, s) in nodes.iter_mut().zip(shape) {
             n.tick(0);
             n.est.p = s.add(offset);
@@ -727,6 +806,9 @@ mod tests {
         fn run(keep_position: bool) -> (f32, f32) {
             let mut cfg = NodeConfig::default();
             cfg.zero_vel_keep_position = keep_position;
+            // The carried-node case: stationary detection would pin this
+            // (motionless, synthetic) widget and hide the trade-off.
+            cfg.still_on = false;
             let mut n = Node::new(1, true, cfg);
             let still = Vec3::new(0.0, 0.0, GRAVITY);
             let mut t = 0;
@@ -768,6 +850,73 @@ mod tests {
         // The trade-off: without the jumps, nothing trims velocity-driven
         // position drift. Pinned so a tuning change shows up here.
         assert!(err_full < 0.5 && err_kept < 2.0, "drift {} / {} m", err_full, err_kept);
+    }
+
+    /// Planar mode pulls an out-of-plane widget back to the plane's height
+    /// and leaves x/y alone.
+    #[test]
+    fn planar_mode_holds_height() {
+        let mut cfg = NodeConfig::default();
+        cfg.planar_on = true;
+        cfg.planar_z = 0.5;
+        cfg.centroid_bleed_tau_s = 0.0; // a lone node would bleed to (0, 0)
+        let mut n = Node::new(1, false, cfg);
+        n.tick(0);
+        n.est.p = Vec3::new(2.0, -1.0, -0.8);
+        for i in 1..1000 {
+            n.tick(i * 10_000);
+        }
+        assert!((n.est.p.z - 0.5).abs() < 0.05, "z {}", n.est.p.z);
+        assert!((n.est.p.x - 2.0).abs() < 0.05 && (n.est.p.y + 1.0).abs() < 0.05, "{:?}", n.est.p);
+    }
+
+    /// A still widget with a residual accel bias: stationary detection pins
+    /// velocity (and learns the bias) so it doesn't drift; without it the
+    /// same widget drifts metres. Motion turns it off.
+    #[test]
+    fn stationary_detection_pins_velocity() {
+        fn run(still_on: bool) -> (f32, bool) {
+            let mut cfg = NodeConfig::default();
+            cfg.still_on = still_on;
+            cfg.centroid_bleed_tau_s = 0.0;
+            let mut n = Node::new(1, true, cfg);
+            let mut t = 0;
+            for _ in 0..400 {
+                t += 5_000;
+                n.imu(t, Vec3::new(0.0, 0.0, GRAVITY), Vec3::ZERO);
+            }
+            let p0 = n.est.p;
+            let biased = Vec3::new(0.03, -0.02, GRAVITY + 0.04);
+            let mut rng = 1u32;
+            for _ in 0..6000 {
+                t += 5_000;
+                rng ^= rng << 13;
+                rng ^= rng >> 17;
+                rng ^= rng << 5;
+                let noise = (rng % 1000) as f32 / 1000.0 - 0.5;
+                n.imu(t, biased.add(Vec3::new(0.0, 0.0, 0.02 * noise)), Vec3::new(0.001 * noise, 0.0, 0.0));
+            }
+            (n.est.p.sub(p0).norm(), n.is_still(t))
+        }
+        let (drift_on, still) = run(true);
+        let (drift_off, _) = run(false);
+        assert!(still, "a still widget is detected as still");
+        assert!(drift_on < 0.1, "drifted {} m with stationary detection", drift_on);
+        assert!(drift_off > 5.0 * drift_on, "{} vs {}", drift_off, drift_on);
+
+        // Shaking it: not still.
+        let mut n = Node::new(1, true, NodeConfig::default());
+        let mut t = 0;
+        for _ in 0..400 {
+            t += 5_000;
+            n.imu(t, Vec3::new(0.0, 0.0, GRAVITY), Vec3::ZERO);
+        }
+        for k in 0..400 {
+            t += 5_000;
+            let s = if k % 20 < 10 { 2.0 } else { -2.0 };
+            n.imu(t, Vec3::new(s, 0.0, GRAVITY), Vec3::new(0.0, 0.0, 0.3 * s));
+        }
+        assert!(!n.is_still(t));
     }
 
     #[test]

@@ -154,12 +154,37 @@ joining cold / leaving):
        inline rwdt_ll_*.
      - Arduino marks a pending app valid unless verifyRollbackLater()
        returns true.
-   - Still open:
-     - A main that hangs or crashes *after* validating loops on itself; it
-       needs a crash-loop guard (count short-lived boots).
-     - The loader never updates over the air (FLAG_LOADER reserved).
-     - BOOT-button recovery is untested, and so is multi-hop (all boards
-       are within one hop).
+   - **To fix: late failures.** A main that hangs or crashes *after*
+     validating loops on itself forever: the image is valid, so no rollback.
+     Needs a crash-loop guard: count consecutive short-lived boots (RTC
+     no-init memory + reset reason), and after N of them invalidate the
+     image and restart into the loader. A post-validation hang also needs
+     the task watchdog on the radio/fusion/loop tasks (today it only
+     watches core 0's idle task), so a hang becomes a counted reset.
+   - **Nice to have: loader updates over the air.** The loader is USB-only
+     today. FLAG_LOADER is reserved in the manifest; main would stage and
+     install the loader image, then verify it before the next reset. Needs
+     its own safety story, since a bad loader means no recovery path.
+   - **Testing gaps** (none of these has been exercised on hardware):
+     - BOOT-button (GPIO0) forced recovery.
+     - Multi-hop: mesh relays, firmware pages and settings catch-up beyond
+       one hop. All four boards are within range of each other; needs
+       distance or attenuation, or an rssi-gated test mode.
+     - Power loss during the loader's copy into main (it should redo the
+       copy on the next boot).
+     - Power loss mid-page while staging; corrupted staging; a manifest
+       signed with the wrong key arriving over the air.
+     - Two images pushed at once through different nodes (version race).
+     - Settings: a bundle arriving while a node is mid-reassembly of an
+       older one; an override sequence counter that went backwards (host
+       state lost); key rotation (re-provisioning the HMAC key on all
+       nodes).
+     - Mesh: ack and retry under real loss, and a full outbox (send refused
+       — seen once, unexercised since).
+     - More than 6 nodes: spare slots disappear and the slot assignment
+       wraps (MySlot % kSlots).
+     - Long soak: hours of ranging plus OTA (LittleFS wear, heap, counter
+       wrap).
    - Speed-ups: pre-erase pages (a 40 ms erase stalls the receiver), and
      shorten the request quiet time.
    - Then the anchorless mover tuning, now live via settings.
@@ -180,6 +205,25 @@ joining cold / leaving):
    extrinsics, bias random-walk in truth (now constant per run).
 5. (Carried over) RTLS hardware bring-up per README §Bring-up when boards
    arrive; merge embedded-repo branch `uwb-esp32-wifi` after hardware proof.
+
+## Solver on hardware (2026-10-20, 4 still boards, one roughly mid-triangle)
+
+All tuned live through swarm settings and deployed over the air.
+- Centroid bleed at 5 s distorted the mesh: each widget re-centers from its
+  own view. With it off, lock went ~6 -> ~2. Default is now 60 s, x/y only
+  in planar mode.
+- `planar.on` (swarm setting, now on): an altitude pseudo-measurement at
+  `planar.z`. A flat swarm is ill-conditioned in z: the middle widget
+  popped out of plane either way. Now z = 0 and lock 0.2-0.5.
+- Stationary detection (`still.*`, default on): ZUPT on velocity and biases
+  only. Range updates are position-only, so nothing else pinned velocity;
+  a still widget's velocity is now 0.001 m/s (was 2-4 cm/s).
+- Left: the 7408 / 49736 / 53876 pairs still flex by ±12-28 cm while pairs
+  with 63124 hold ±1-3 cm. In the fit those three are nearly collinear
+  (~5°), which observes the across-line direction weakly. Lock also rises
+  back to ~2 every few minutes; cause not yet known. Next: re-place 7408
+  off that line, log all six ranges (rotate USB), calibrate antenna
+  delays.
 
 ## Planned: AirTags as localizers
 
