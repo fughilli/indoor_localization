@@ -324,6 +324,80 @@ What worked, and what didn't:
     it isn't the true delay. On hardware, board 3 learned -0.21 m within a
     minute of v24 booting.
 
+### v24 bench walk: range-bias learning distorts the mesh (2026-10-21, end of day)
+
+All four boards run v24, deployed over the air with
+`swarm_ctl.py push ... --version 24`. The image came from the
+`mule-build` container. On macOS the esp-rust Nix hash for aarch64-darwin
+is a placeholder (fakeHash), so firmware only builds in the container.
+
+The recording is `captures/swarm_v24.jsonl`. Board 3 (7408, on USB with
+the laptop) was carried from t≈700 s to 800 s; the others stayed still.
+The user has since unplugged board 3.
+
+**Problem: the still boards' range biases ran away, and the mesh
+moved.**
+- At t≈320, before any walk, 53876 learned rb +0.31 and re-anchored
+  about 0.35 m away.
+- During the walk, the anchors' rb went from about 0 to +0.15..+0.46 m.
+  Board 3's rb went from -0.21 to 0.
+- Each 3 cm of rb change released an anchor (`bias.reanchor_m`) and
+  re-solved it. 49736 moved from (0.11, -2.30) to (0.23, -1.17), 1.1 m,
+  and the mesh contracted. Positive rb means shorter corrected ranges.
+- Likely cause: the anchors learned rb (bias-only updates,
+  `bias.learn_anchored`) from the carried board's ranges. Those were
+  often body-blocked, so they read long.
+- The mover and anchor rbs also trade off along an unobservable sum.
+  Nothing pins it except the 0.1 m prior.
+- The sim did not show this. The sim walker may be blocked less than a
+  person carrying a laptop and board, or the sim runs (120 s) are too
+  short to show the drift.
+
+**Problem: "flagged" (power gap > 10 dB) is the norm in this room.**
+- Before the walk, board 3 at the laptop had 89% of its ranges flagged:
+  49736 at 100% with a median gap of 17 dB, 63124 at 98%. Those ranges
+  were consistent (the board stayed anchored).
+- During the walk, 45% were flagged.
+- `nlos.gap_db` = 10 is likely too low for this room. The v23 stats
+  showed the 12-15 dB bin was still clean; jumps start around 15 dB. Try
+  13-15 dB.
+
+**Uncommitted and untested (working tree, swarm/node node.rs and
+settings.rs):**
+- New setting `bias.learn_flagged` (id 352, default off): neither free
+  nor anchored widgets learn rb from flagged ranges.
+- It was written but not built or simulated (interrupted).
+
+**Next, in order:**
+1. Build and run the sim A/B already scripted in the scratchpad `ab.py`.
+   Compare:
+   - v24 (`bias.learn_flagged=true`);
+   - unflagged only;
+   - unflagged with `bias.learn_anchored=false`;
+   - unflagged with `bias.reanchor_m=0`;
+   - no bias (`est.init_range_bias_sigma=0`).
+
+   Use 24 seeds of room. Also run longer runs (600 s) to look for rb
+   drift, and check that the static boards' positions don't wander. Add a
+   metric for anchor drift and mesh scale.
+2. Make the sim's walker blocked more often (a person plus a laptop) and
+   persistently-flagged-but-clean links (high gap, no jumps) like the
+   bench's. Re-fit the gap thresholds.
+3. Likely default change: no anchored rb learning and no re-anchoring
+   (or a much larger threshold), and no learning from flagged ranges.
+   Consider pinning the rb gauge, e.g. zero-mean rb across the swarm via
+   adverts, like the centroid bleed.
+4. Live mitigation without firmware is possible through settings:
+   `bias.learn_anchored=false`, `bias.reanchor_m=0`, or
+   `est.init_range_bias_sigma=0`. But rb isn't persisted and settings
+   don't reset it, so a reboot clears the learned values (rb → 0 on
+   boot).
+5. Proper delay calibration remains a batch solve over a recorded walk,
+   pushed as `antenna_delay`.
+6. Then deploy v25, and have the user walk again. Plug board 3 back in on
+   USB; the viewer runs with
+   `swarm_view.py --port /dev/cu.usbserial-10 --capture captures/swarm_v25.jsonl`.
+
 
 
 User direction (2026-10-20): reverse-engineer Apple AirTags as
