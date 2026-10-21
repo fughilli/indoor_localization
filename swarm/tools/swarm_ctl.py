@@ -66,7 +66,9 @@ class Node:
             self.buf += self.s.read(4096)
             while b"\n" in self.buf:
                 line, self.buf = self.buf.split(b"\n", 1)
-                line = line.strip()
+                # After a reset the boot ROM's output (no trailing newline)
+                # prefixes the first JSON line: parse from the first brace.
+                line = line[line.find(b"{"):].strip() if b"{" in line else b""
                 if line.startswith(b"{"):
                     try:
                         yield json.loads(line)

@@ -147,8 +147,19 @@ joining cold / leaving):
    all installed, with three receivers in parallel. Spare TDMA slots go to
    nodes with pages to serve (radio.cpp UpdateServers); with 4 nodes the
    rank rule had starved the servers.
-   - Untested so far: the rollback path (a deliberately crashing main), the
-     BOOT-button recovery, and multi-hop (all boards are within one hop).
+   - Rollback tested on hardware: hang and crash images both roll back
+     to the loader, never spread (canary rule), and recover with a good
+     push (docs/swarm-network.md "Canary rule"). Gotchas:
+     - The prebuilt wdt_hal_* calls don't arm the RTC watchdog; use the
+       inline rwdt_ll_*.
+     - Arduino marks a pending app valid unless verifyRollbackLater()
+       returns true.
+   - Still open:
+     - A main that hangs or crashes *after* validating loops on itself; it
+       needs a crash-loop guard (count short-lived boots).
+     - The loader never updates over the air (FLAG_LOADER reserved).
+     - BOOT-button recovery is untested, and so is multi-hop (all boards
+       are within one hop).
    - Speed-ups: pre-erase pages (a 40 ms erase stalls the receiver), and
      shorten the request quiet time.
    - Then the anchorless mover tuning, now live via settings.
@@ -169,8 +180,6 @@ joining cold / leaving):
    extrinsics, bias random-walk in truth (now constant per run).
 5. (Carried over) RTLS hardware bring-up per README §Bring-up when boards
    arrive; merge embedded-repo branch `uwb-esp32-wifi` after hardware proof.
-6. (Carried over) Root-repo force-push to origin still **pending user
-   confirmation** (history rewrite from 2026-07-17); now ~9 unpushed commits.
 
 ## Planned: AirTags as localizers
 
@@ -188,7 +197,6 @@ answer first:
 ## Open questions / blockers
 
 - Hardware still not attached (blocks RTLS bring-up and swarm port testing).
-- Force-push confirmation (above).
 - cm-level *absolute* accuracy requires ≥3 surveyed/RTK-grade anchored
   widgets; plain GPS anchors give ~1–3 m absolute. Relative-frame split
   (design doc §9) is the route to cm-relative under GPS-only anchoring —

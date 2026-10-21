@@ -504,8 +504,7 @@ void setup()
   // First: a fresh install that hangs anywhere from here on gets reset (and
   // so rolled back) by the RTC watchdog.
   bool pending = boot::PendingVerify();
-  if (pending)
-    boot::ArmHealthDeadline(kHealthDeadlineS);
+  uint32_t armed_config = pending ? boot::ArmHealthDeadline(kHealthDeadlineS) : 0;
   Serial.setRxBufferSize(4096);
   Serial.setTxBufferSize(8192);
   Serial.begin(kBaud);
@@ -513,9 +512,10 @@ void setup()
   g_id = IdFromMac();
   netcmd::Init();
   netcmd::Reply("{\"t\":%.3f,\"type\":\"health_deadline\",\"pending\":%s,\"armed_s\":%lu,"
-                "\"rwdt_config0\":\"0x%08lx\",\"slow_hz\":%lu}\n",
+                "\"armed_config0\":\"0x%08lx\",\"rwdt_config0\":\"0x%08lx\",\"slow_hz\":%lu}\n",
                 millis() / 1000.0, pending ? "true" : "false",
-                (unsigned long)(pending ? kHealthDeadlineS : 0), (unsigned long)boot::HealthDeadlineConfig(),
+                (unsigned long)(pending ? kHealthDeadlineS : 0), (unsigned long)armed_config,
+                (unsigned long)boot::HealthDeadlineConfig(),
                 (unsigned long)rtc_clk_slow_freq_get_hz());
 
   // BOOT held at reset: back to the loader (recovery).

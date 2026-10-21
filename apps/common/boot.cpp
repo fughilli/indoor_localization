@@ -8,7 +8,7 @@
 #include <esp_ota_ops.h>
 #include <esp_partition.h>
 #include <esp_system.h>
-#include <hal/wdt_hal.h>
+#include <hal/rwdt_ll.h>
 #include <soc/rtc.h>
 #include <soc/rtc_cntl_reg.h>
 #include <string.h>
@@ -72,15 +72,26 @@ bool RunningLoader()
 
 void MarkValid() { esp_ota_mark_app_valid_cancel_rollback(); }
 
-void ArmHealthDeadline(uint32_t seconds)
+// Straight to the registers (ESP-IDF's inline rwdt_ll): through the
+// prebuilt wdt_hal_* calls the configuration never reached the hardware
+// (config0 read back 0x0001fb80: disabled, stage 0 off).
+uint32_t ArmHealthDeadline(uint32_t seconds)
 {
-  wdt_hal_context_t rwdt = RWDT_HAL_CONTEXT_DEFAULT();
+  rtc_cntl_dev_t *hw = &RTCCNTL;
   uint32_t ticks = (uint32_t)((uint64_t)seconds * rtc_clk_slow_freq_get_hz());
-  wdt_hal_write_protect_disable(&rwdt);
-  wdt_hal_init(&rwdt, WDT_RWDT, 0, false);
-  wdt_hal_config_stage(&rwdt, WDT_STAGE0, ticks, WDT_STAGE_ACTION_RESET_SYSTEM);
-  wdt_hal_enable(&rwdt);
-  wdt_hal_write_protect_enable(&rwdt);
+  rwdt_ll_write_protect_disable(hw);
+  rwdt_ll_disable(hw);
+  rwdt_ll_set_flashboot_en(hw, false);
+  rwdt_ll_set_sys_reset_length(hw, WDT_RESET_SIG_LENGTH_3_2us);
+  rwdt_ll_set_cpu_reset_length(hw, WDT_RESET_SIG_LENGTH_3_2us);
+  rwdt_ll_config_stage(hw, WDT_STAGE0, ticks, WDT_STAGE_ACTION_RESET_RTC);
+  rwdt_ll_disable_stage(hw, WDT_STAGE1);
+  rwdt_ll_disable_stage(hw, WDT_STAGE2);
+  rwdt_ll_disable_stage(hw, WDT_STAGE3);
+  rwdt_ll_feed(hw);
+  rwdt_ll_enable(hw);
+  rwdt_ll_write_protect_enable(hw);
+  return HealthDeadlineConfig();
 }
 
 bool PendingVerify()
@@ -94,10 +105,10 @@ uint32_t HealthDeadlineConfig() { return REG_READ(RTC_CNTL_WDTCONFIG0_REG); }
 
 void DisarmHealthDeadline()
 {
-  wdt_hal_context_t rwdt = RWDT_HAL_CONTEXT_DEFAULT();
-  wdt_hal_write_protect_disable(&rwdt);
-  wdt_hal_disable(&rwdt);
-  wdt_hal_write_protect_enable(&rwdt);
+  rtc_cntl_dev_t *hw = &RTCCNTL;
+  rwdt_ll_write_protect_disable(hw);
+  rwdt_ll_disable(hw);
+  rwdt_ll_write_protect_enable(hw);
 }
 
 void RestartIntoLoader()

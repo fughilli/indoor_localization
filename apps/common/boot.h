@@ -25,7 +25,8 @@ void MarkValid();
 // main that hangs before proving healthy therefore resets, and a reset of
 // an image still pending verification rolls back to the loader. (Without
 // this, only crashes roll back: a hung board just sits there.)
-void ArmHealthDeadline(uint32_t seconds);
+// Returns the watchdog config register read back (bit 31: enabled).
+uint32_t ArmHealthDeadline(uint32_t seconds);
 // Main: is this image still pending verification (first boots after an
 // install)? Only then is a missed health deadline a reason to roll back.
 bool PendingVerify();

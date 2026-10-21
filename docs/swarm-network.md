@@ -185,7 +185,12 @@ loader (boots when otadata doesn't select a valid main):
      pages; no fusion), report "loader" in its summaries, and when a newer
      verified image completes, mark it "install" and go to 1.
 main:
-  - radio up and fusion running for 10 s -> mark valid (cancel rollback).
+  - pending verify (a fresh install): arm the RTC watchdog for 30 s. It is
+    independent of both cores, so a hang anywhere becomes a reset, and a
+    reset of a pending image rolls back to the loader.
+  - healthy (up 10 s, the radio task exchanging, the fusion task ticking) ->
+    mark valid (cancel rollback), disarm the watchdog, and only now let the
+    swarm have this image (canary rule, below).
   - a newer verified image completes -> mark "install", select the loader,
      restart.
   - "reboot to loader" (serial or mesh command, or BOOT/GPIO0 held at
@@ -240,6 +245,32 @@ server.
 The node on USB gets the image from the host over serial (`fw_push.py`:
 manifest, then base64 chunks), stages it, and then serves it like any other
 node.
+
+### Canary rule
+
+A node offers and serves only the image it runs *and* has validated. A
+staged image, an installed one that hasn't proven healthy yet, and anything
+a loader holds are never handed out, and the host's manifest isn't flooded
+either. An image that hangs or crashes therefore stops at the first node
+that tries it: that node rolls back to its loader, and the rest of the swarm
+never sees the image. It costs one boot (~10 s) per hop.
+
+Tested on hardware (2026-10-20, board 7408):
+- A hang image (`//apps/node:node_hang_esp32`) wedged at boot. The RTC
+  watchdog reset it 30 s later, and the loader came up in recovery with main
+  marked aborted.
+- A crash image (`node_crash_esp32`) aborted, and the loader was in
+  recovery 1.5 s later.
+- Both times the other three nodes stayed on their image (0 chunks served),
+  and a good image pushed into the waiting loader installed and spread
+  normally.
+
+### Spare slots
+
+The ranging exchange fills most of a node's own slot. Slots beyond the
+members' ranks carry network frames only, and go to the nodes that hold pages
+a neighbour lacks, ordered by id. Every node derives that list from the same
+POLL summaries. With 4 nodes the rank rule had starved the servers.
 
 ### Flash writes vs. the radio
 
