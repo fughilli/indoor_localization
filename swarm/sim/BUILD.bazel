@@ -17,10 +17,17 @@ py_test(
 )
 
 py_library(
+    name = "node_backend_lib",
+    srcs = ["node_backend.py"],
+    data = ["//swarm/node:swarm_node_sim"],
+)
+
+py_library(
     name = "world_lib",
     srcs = ["world.py"],
     deps = [
         ":estimator_lib",
+        ":node_backend_lib",
         "@pypi//numpy",
     ],
 )
@@ -65,5 +72,11 @@ py_test(
     name = "sim_test",
     size = "large",
     srcs = ["sim_test.py"],
+    deps = [":run_sim_lib"],
+)
+
+py_binary(
+    name = "trace_room",
+    srcs = ["trace_room.py"],
     deps = [":run_sim_lib"],
 )

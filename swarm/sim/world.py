@@ -16,6 +16,14 @@ Truth kinematics are closed-form trajectories differentiated numerically, so
 new trajectory shapes only need a position function. Attitude truth is
 yaw-only (constant spin), which exercises the attitude filter without full
 6-DOF flight dynamics.
+
+Two backends (SensorConfig.backend):
+  - "estimator": the Rust ESKF + swarm_core::coop driven from Python (the
+    design-study harness: GPS, AoA, altimeter).
+  - "node": the firmware's node runtime (swarm/node via node_backend) per
+    widget — stationary detection, auto-anchoring, planar mode, centroid
+    bleed, settings — fed synthetic IMU at the firmware rate, ranges on the
+    TDMA schedule and peers' encoded adverts. No GPS / AoA, like the boards.
 """
 
 import dataclasses
@@ -24,6 +32,7 @@ import math
 import numpy as np
 
 from swarm.sim import estimator
+from swarm.sim import node_backend
 
 GRAVITY = 9.80665
 G_WORLD = np.array([0.0, 0.0, -GRAVITY])
@@ -90,6 +99,9 @@ class SensorConfig:
     uwb_multipath_prob: float = 0.05
     uwb_multipath_scale: float = 1.0  # Exp() mean of the positive range bias, m
     uwb_aoa_sigma: float = 0.12      # rad-ish, on bearing components
+    # Per-device constant range offset (uncalibrated antenna delay): a range
+    # between i and j reads true + bias_i + bias_j. 0 = off.
+    uwb_device_bias_sigma: float = 0.0
     uwb_slot_rate: float = 100.0     # ranging slots per second, network-wide
     uwb_max_range: float = 60.0      # m, radio range cutoff
     gps_sigma_h: float = 1.5         # m
@@ -98,6 +110,19 @@ class SensorConfig:
     alt_sigma: float = 0.3           # m
     alt_rate: float = 10.0
     broadcast_rate: float = 10.0     # pose advertisements per second per widget
+    # IMU realism beyond white noise + constant bias (0 = off, the design
+    # study's defaults). Scale: per-axis gain error draw (an MPU6050 here read
+    # 14% low; the firmware's boot calibration fixes the magnitude only).
+    accel_scale_sigma: float = 0.0
+    accel_bias_rw: float = 0.0       # m/s^2 per sqrt(s)
+    gyro_bias_rw: float = 0.0        # rad/s per sqrt(s)
+    # Seconds every widget holds still at the start (the firmware calibrates
+    # its IMU in its first second, if still).
+    still_start: float = 0.0
+    backend: str = "estimator"       # "estimator" | "node"
+    # "node" backend: settings by registry name (swarm/node/src/settings.rs),
+    # applied to every widget like a swarm-layer bundle.
+    node_settings: dict = dataclasses.field(default_factory=dict)
 
 
 @dataclasses.dataclass
@@ -127,6 +152,13 @@ class WidgetSpec:
     # A surveyed widget knows its own (static) absolute position — the
     # "any widget that knows its absolute position provides it" case.
     surveyed: bool = False
+    # Truth holds still (at its t=0 pose) this long before moving.
+    start_delay: float = 0.0
+    # Hand-carried motion while moving: roll/pitch sway (rad) and vertical
+    # bob (m) at the step rate (Hz). 0 = a flat-gliding widget.
+    sway: float = 0.0
+    bob: float = 0.0
+    step_hz: float = 1.8
 
 
 # Each move/pause transition ramps the speed linearly over this fraction of
@@ -224,6 +256,16 @@ def triad(up_body, mag_body, mag_world):
     return _quat_from_mat(ref @ body.T)
 
 
+def _rot_x(a):
+    c, s = math.cos(a), math.sin(a)
+    return np.array([[1.0, 0.0, 0.0], [0.0, c, -s], [0.0, s, c]])
+
+
+def _rot_y(a):
+    c, s = math.cos(a), math.sin(a)
+    return np.array([[c, 0.0, s], [0.0, 1.0, 0.0], [-s, 0.0, c]])
+
+
 def _rot_z(yaw):
     c, s = math.cos(yaw), math.sin(yaw)
     return np.array([[c, -s, 0.0], [s, c, 0.0], [0.0, 0.0, 1.0]])
@@ -236,7 +278,45 @@ class TruthWidget:
         self.spec = spec
 
     def pos(self, t):
-        return _true_pos(self.spec, t)
+        # Clamp only with a start delay: the numerical derivatives sample
+        # t +- h, and clamping at 0 would distort every widget's first IMU
+        # sample (and so its attitude init) for nothing.
+        te = max(0.0, t - self.spec.start_delay) if self.spec.start_delay > 0 else t
+        p = _true_pos(self.spec, te)
+        if self.spec.bob:
+            p = p + np.array([0.0, 0.0, self.spec.bob * self._gait(t) * math.sin(2 * math.pi * self.spec.step_hz * t)])
+        return p
+
+    def _gait(self, t):
+        """0..1: how much the widget is being carried (its translational
+        speed relative to full speed), so sway and bob stop when it does."""
+        if self.spec.kind == "static" or t < self.spec.start_delay:
+            return 0.0
+        te = t - self.spec.start_delay
+        h = 1e-3
+        dm = (_motion_time(self.spec, te + h) - _motion_time(self.spec, te - h)) / (2 * h)
+        return min(1.0, dm / max(self.spec.motion_rate, 1e-9))
+
+    def rot(self, t):
+        """Body -> world rotation: yaw spin, plus roll/pitch sway when
+        carried."""
+        r = _rot_z(self.yaw(t))
+        if self.spec.sway:
+            g = self._gait(t)
+            w = 2 * math.pi * self.spec.step_hz
+            roll = self.spec.sway * g * math.sin(w * t)
+            pitch = 0.6 * self.spec.sway * g * math.sin(0.5 * w * t + 0.7)
+            r = r @ _rot_y(pitch) @ _rot_x(roll)
+        return r
+
+    def body_rate(self, t, h=1e-3):
+        """Gyro truth: body angular rate from the rotation's derivative."""
+        if not self.spec.sway:
+            return np.array([0.0, 0.0, self.spec.yaw_rate if t >= self.spec.start_delay else 0.0])
+        r0, r1 = self.rot(t - h), self.rot(t + h)
+        rd = (r1 - r0) / (2 * h)
+        w = self.rot(t).T @ rd
+        return np.array([w[2, 1], w[0, 2], w[1, 0]])
 
     def vel(self, t, h=1e-3):
         return (self.pos(t + h) - self.pos(t - h)) / (2 * h)
@@ -245,7 +325,11 @@ class TruthWidget:
         return (self.pos(t + h) - 2 * self.pos(t) + self.pos(t - h)) / (h * h)
 
     def yaw(self, t):
-        return self.spec.yaw_rate * t + 0.7 * self.spec.wid
+        if self.spec.sway and self.spec.kind == "orbit":
+            # Carried: facing along the path, turning only while moving.
+            te = max(0.0, t - self.spec.start_delay)
+            return self.spec.omega * _motion_time(self.spec, te) + self.spec.phase + math.pi / 2
+        return self.spec.yaw_rate * max(0.0, t - self.spec.start_delay) + 0.7 * self.spec.wid
 
     def quat(self, t):
         return _yaw_quat(self.yaw(t))
@@ -265,6 +349,18 @@ class SimWidget:
         self.rng = rng
         self.accel_bias = rng.normal(0.0, sensors.accel_bias_sigma, 3)
         self.gyro_bias = rng.normal(0.0, sensors.gyro_bias_sigma, 3)
+        self.accel_scale = (1.0 + rng.normal(0.0, sensors.accel_scale_sigma, 3)
+                            if sensors.accel_scale_sigma > 0 else np.ones(3))
+        self.range_bias = (rng.normal(0.0, sensors.uwb_device_bias_sigma)
+                           if sensors.uwb_device_bias_sigma > 0 else 0.0)
+        self.node = None
+        self.accepted_ranges = 0
+        self.rejected_ranges = 0
+        if sensors.backend == "node":
+            # Firmware runtime; ids offset so none is 0.
+            self.node = node_backend.Node(spec.wid + 100, True, sensors.node_settings)
+            self.est = None
+            return
         # Filter noise densities from per-sample sigmas: density = sigma/sqrt(rate).
         sqrt_rate = math.sqrt(sensors.imu_rate)
         self.est = estimator.Estimator(
@@ -292,13 +388,30 @@ class SimWidget:
 
     def imu_sample(self, t):
         """Raw accel (specific force) + gyro in the body frame, with errors."""
-        r_wb = _rot_z(self.truth.yaw(t))          # body -> world
+        r_wb = self.truth.rot(t)                  # body -> world
         f_world = self.truth.acc(t) - G_WORLD     # specific force, world
         f_body = r_wb.T @ f_world
-        accel = f_body + self.accel_bias + self.rng.normal(0, self.cfg.accel_sigma, 3)
-        gyro = (np.array([0.0, 0.0, self.spec.yaw_rate]) + self.gyro_bias
+        accel = (self.accel_scale * f_body + self.accel_bias
+                 + self.rng.normal(0, self.cfg.accel_sigma, 3))
+        gyro = (self.truth.body_rate(t) + self.gyro_bias
                 + self.rng.normal(0, self.cfg.gyro_sigma, 3))
         return accel, gyro
+
+    def drift_biases(self, dt):
+        """Bias random walk (SensorConfig accel_bias_rw / gyro_bias_rw)."""
+        if self.cfg.accel_bias_rw > 0:
+            self.accel_bias += self.rng.normal(0, self.cfg.accel_bias_rw * math.sqrt(dt), 3)
+        if self.cfg.gyro_bias_rw > 0:
+            self.gyro_bias += self.rng.normal(0, self.cfg.gyro_bias_rw * math.sqrt(dt), 3)
+
+    def est_state(self, t):
+        """Estimated state in one shape for both backends."""
+        if self.node is not None:
+            return self.node.state(t)
+        s = self.est.state()
+        return {"p": s["p"], "v": s["v"], "q": s["q"], "pos_var": s["pos_var"],
+                "lock": self.est.range_innov_ratio(), "still": False, "anchored": False,
+                "initialized": True}
 
     def broadcast(self, t):
         if self.spec.surveyed:
@@ -318,7 +431,7 @@ class SimWidget:
         return p + v * (t - t0), var, lock, t - t0
 
     def pos_error(self, t):
-        return float(np.linalg.norm(np.array(self.est.state()["p"]) - self.truth.pos(t)))
+        return float(np.linalg.norm(np.array(self.est_state(t)["p"]) - self.truth.pos(t)))
 
 
 class World:
@@ -365,6 +478,8 @@ class World:
 
     def step(self):
         """Advance one IMU period."""
+        if self.cfg.backend == "node":
+            return self._step_node()
         t = self.t + self.dt
         cfg = self.cfg
         for w in self.widgets:
@@ -405,6 +520,29 @@ class World:
         self.t = t
         self.step_count += 1
 
+    def _step_node(self):
+        """Node backend: what the firmware's tasks see, at the IMU rate."""
+        t = self.t + self.dt
+        cfg = self.cfg
+        for w in self.widgets:
+            w.drift_biases(self.dt)
+            accel, gyro = w.imu_sample(t)
+            w.node.imu(t, accel, gyro)
+        self.last_links = []
+        self._slot_acc += cfg.uwb_slot_rate * self.dt
+        while self._slot_acc >= 1.0 and self._pairs:
+            self._slot_acc -= 1.0
+            self._run_slot(t)
+        if self._every(cfg.broadcast_rate):
+            # Adverts ride on POLLs: everyone in range hears every widget's.
+            for w in self.widgets:
+                data = w.node.advert_tx()
+                for o in self.widgets:
+                    if o is not w and np.linalg.norm(o.truth.pos(t) - w.truth.pos(t)) <= cfg.uwb_max_range:
+                        o.node.advert_rx(t, data)
+        self.t = t
+        self.step_count += 1
+
     def _run_slot(self, t):
         """One TDMA ranging slot: the next round-robin pair in radio range."""
         cfg = self.cfg
@@ -418,9 +556,17 @@ class World:
         else:
             return
         # Two-way ranging: one shared range value for both sides.
-        rng_meas = true_d + self.rng.normal(0, cfg.uwb_range_sigma)
+        rng_meas = true_d + self.rng.normal(0, cfg.uwb_range_sigma) + wi.range_bias + wj.range_bias
         if self.rng.random() < cfg.uwb_multipath_prob:
             rng_meas += self.rng.exponential(cfg.uwb_multipath_scale)
+        if cfg.backend == "node":
+            # DS-TWR: both ends fold the same measurement.
+            for me, other in ((wi, wj), (wj, wi)):
+                code = me.node.range(t, other.spec.wid + 100, rng_meas)
+                me.accepted_ranges += code == 1
+                me.rejected_ranges += code == 0
+            self.last_links.append((wi.spec.wid, wj.spec.wid))
+            return
         for me, other in ((wi, wj), (wj, wi)):
             if me.spec.surveyed:
                 continue  # already knows where it is
@@ -463,9 +609,13 @@ class World:
         """Snapshot for viewers/metrics: truth vs estimate per widget."""
         out = {"t": round(self.t, 3), "widgets": [],
                "links": list(self.last_links)}
-        for w in self.widgets:
-            s = w.est.state()
-            cov = w.est.pos_cov()
+        aligned = self.aligned_estimates() if self.cfg.backend == "node" else None
+        for k, w in enumerate(self.widgets):
+            s = w.est_state(self.t)
+            if w.est is not None:
+                cov = w.est.pos_cov()
+            else:
+                cov = [[s["pos_var"], 0.0], [0.0, s["pos_var"]]]
             out["widgets"].append({
                 "id": w.spec.wid,
                 "gps": w.spec.has_gps,
@@ -477,11 +627,32 @@ class World:
                 "true_v": [round(float(x), 3) for x in w.truth.vel(self.t)],
                 "est_yaw": round(_quat_yaw(s["q"]), 3),
                 "pos_var": round(float(s["pos_var"]), 4),
-                "lock": round(float(w.est.range_innov_ratio()), 2),
+                "lock": round(float(s["lock"]), 2),
                 "cov_xy": [[round(cov[r][c], 4) for c in range(2)] for r in range(2)],
                 "err": round(w.pos_error(self.t), 3),
+                "still": s["still"],
+                "anchored": s["anchored"],
             })
+            if aligned is not None:
+                out["widgets"][-1]["aligned_p"] = [round(float(x), 3) for x in aligned[k]]
+                out["widgets"][-1]["aligned_err"] = round(
+                    float(np.linalg.norm(aligned[k] - w.truth.pos(self.t))), 3)
         return out
+
+    def aligned_estimates(self):
+        """Estimates after the best rigid fit (Kabsch) onto truth: an
+        anchorless swarm's frame is arbitrary, so its error is the shape's.
+        With fewer than 3 widgets, translation only."""
+        est = np.array([w.est_state(self.t)["p"] for w in self.widgets], dtype=float)
+        tru = np.array([w.truth.pos(self.t) for w in self.widgets], dtype=float)
+        ce, ct = est.mean(axis=0), tru.mean(axis=0)
+        if len(est) < 3:
+            return est - ce + ct
+        h = (est - ce).T @ (tru - ct)
+        u, _, vt = np.linalg.svd(h)
+        d = np.sign(np.linalg.det(vt.T @ u.T))
+        r = vt.T @ np.diag([1.0, 1.0, d]) @ u.T
+        return (r @ (est - ce).T).T + ct
 
     def errors(self):
         return [w.pos_error(self.t) for w in self.widgets]
@@ -493,6 +664,55 @@ def _quat_yaw(q):
     fx = 1.0 - 2.0 * (y * y + z * z)
     fy = 2.0 * (x * y + w * z)
     return math.atan2(fy, fx) % (2 * math.pi)
+
+
+def room_swarm(walker=True, still=4.0):
+    """The bench setup: four widgets in a room at one height. Widget 1 sits
+    roughly mid-triangle but nearly on the 0-2 edge (as on the bench, where
+    three widgets came out within ~5 deg of collinear); widget 3, if
+    `walker`, is carried around the room with stops."""
+    specs = [
+        WidgetSpec(wid=0, kind="static", center=(0.0, 0.0, 0.0), yaw_rate=0.0, has_alt=False, has_aoa=False),
+        WidgetSpec(wid=1, kind="static", center=(0.85, 0.12, 0.0), yaw_rate=0.0, has_alt=False, has_aoa=False),
+        WidgetSpec(wid=2, kind="static", center=(3.35, 0.45, 0.0), yaw_rate=0.0, has_alt=False, has_aoa=False),
+    ]
+    if walker:
+        specs.append(WidgetSpec(
+            wid=3, kind="orbit", center=(1.2, 2.0, 0.0), radius=1.8, omega=0.35, yaw_rate=0.2,
+            move_period=20.0, move_duty=0.6, has_alt=False, has_aoa=False, start_delay=still,
+            sway=0.15, bob=0.03))
+    else:
+        specs.append(WidgetSpec(wid=3, kind="static", center=(-1.0, 4.0, 0.0), yaw_rate=0.0,
+                                has_alt=False, has_aoa=False))
+    return specs
+
+
+def room_sensors(**overrides):
+    """Bench-like sensors for the node backend: MPU6050-class IMU at the
+    firmware's 200 Hz with scale errors and bias drift, DW3000 ranging at the
+    firmware's TDMA rate (4 x 33 exchanges/s), adverts on every POLL."""
+    cfg = SensorConfig(
+        backend="node",
+        imu_rate=200.0,
+        accel_sigma=0.04,            # ~400 ug/sqrt(Hz) at 200 Hz
+        gyro_sigma=0.003,            # ~0.005 dps/sqrt(Hz) at 200 Hz, plus margin
+        accel_bias_sigma=0.04,
+        gyro_bias_sigma=0.02,
+        accel_scale_sigma=0.03,
+        accel_bias_rw=0.002,
+        gyro_bias_rw=0.0002,
+        still_start=4.0,
+        uwb_range_sigma=0.05,
+        uwb_multipath_prob=0.02,
+        uwb_multipath_scale=0.3,
+        uwb_device_bias_sigma=0.08,
+        uwb_slot_rate=133.0,
+        broadcast_rate=33.0,
+        node_settings={"planar.on": True},
+    )
+    for k, v in overrides.items():
+        setattr(cfg, k, v)
+    return cfg
 
 
 def default_swarm(n=6, n_gps=2, n_surveyed=0, arena=30.0,

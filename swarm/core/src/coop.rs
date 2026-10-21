@@ -81,6 +81,13 @@ pub struct PeerView {
     pub lock: f32,
     /// Seconds since the advertisement was made.
     pub age: f32,
+    /// The peer advertises itself as an anchor (surveyed, or auto-anchored
+    /// while still and locked): an absolute reference, so a measurement to
+    /// it is always downhill, however my own variance compares. (The
+    /// variance ratio alone failed here: an auto-anchor's honest ~5 cm sigma
+    /// is close to a tracking widget's, which then fell back to
+    /// position-only mean-only updates and never corrected its velocity.)
+    pub anchored: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -126,7 +133,7 @@ pub fn decide(
     // Variance ranks peers only when meaningfully small; anchorless variances
     // are honestly huge on both sides and diverge for the wrong reasons, so
     // the advertised lock gates both regimes.
-    let downhill = peer.var < cfg.downhill_ratio * my_var && peer.lock < cfg.lock_ratio_none;
+    let downhill = (peer.anchored || peer.var < cfg.downhill_ratio * my_var) && peer.lock < cfg.lock_ratio_none;
     if downhill {
         // Damp with the peer's variance, floored for cold start.
         let floor = 0.5 * my_var - range_sigma * range_sigma;
@@ -224,7 +231,7 @@ mod tests {
     }
 
     fn peer(var: f32, lock: f32, age: f32) -> PeerView {
-        PeerView { p: Vec3::new(5.0, 0.0, 0.0), var, lock, age }
+        PeerView { p: Vec3::new(5.0, 0.0, 0.0), var, lock, age, anchored: false }
     }
 
     #[test]

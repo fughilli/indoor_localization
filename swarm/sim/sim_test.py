@@ -19,7 +19,7 @@ def _rel_errors(w, wids=None):
     """Centroid-aligned position errors for the given widget ids (all if
     None) — the relative metric for anchorless swarms."""
     sel = [x for x in w.widgets if wids is None or x.spec.wid in wids]
-    est = np.array([x.est.state()["p"] for x in sel])
+    est = np.array([x.est_state(w.t)["p"] for x in sel])
     true = np.array([x.truth.pos(w.t) for x in sel])
     off = (est - true).mean(axis=0)
     return np.linalg.norm((est - off) - true, axis=1)
@@ -246,3 +246,41 @@ class JoinLeaveTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RoomScenarioTest(unittest.TestCase):
+    """The bench, through the firmware's node runtime (backend "node"):
+    three still widgets plus one carried around the room, MPU6050-class IMU
+    (scale errors, bias drift, walking sway and bob), per-device range bias.
+    Typical at seed 1: still widgets auto-anchor at 2-6 cm aligned error and
+    ~4 mm/frame jitter; the walker tracks at ~11 cm with ~1 cm/frame."""
+
+    def _run(self, scenario, seconds, seed=1, **settings):
+        report, _ = run_sim.run(4, 0, seconds, seed=seed, scenario=scenario,
+                                node_set={k: v for k, v in settings.items()})
+        by_kind = {}
+        for wg in report["widgets"]:
+            by_kind.setdefault(wg["kind"], []).append(wg)
+        return by_kind
+
+    def test_still_room_holds_still(self):
+        r = self._run("room_static", 90)
+        for wg in r["static"]:
+            self.assertTrue(wg["anchored"], wg)
+            self.assertLess(wg["tail_rot_rel_rmse_m"], 0.2, wg)
+            self.assertLess(wg["tail_rot_jitter_m"], 0.01, wg)
+
+    def test_walker_tracks_against_auto_anchors(self):
+        r = self._run("room", 120)
+        for wg in r["static"]:
+            self.assertTrue(wg["anchored"], wg)
+            self.assertLess(wg["tail_rot_rel_rmse_m"], 0.2, wg)
+        walker = r["orbit"][0]
+        self.assertLess(walker["tail_rot_rel_rmse_m"], 0.3, walker)
+        self.assertLess(walker["tail_rot_jitter_m"], 0.03, walker)
+
+    def test_auto_anchoring_beats_anchorless_for_the_walker(self):
+        on = [self._run("room", 120, seed=s)["orbit"][0]["tail_rot_rel_rmse_m"] for s in (1, 2)]
+        off = [self._run("room", 120, seed=s, **{"auto_anchor.on": False})["orbit"][0]["tail_rot_rel_rmse_m"]
+               for s in (1, 2)]
+        self.assertLess(sum(on), 0.8 * sum(off), (on, off))

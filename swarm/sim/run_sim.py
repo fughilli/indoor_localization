@@ -47,16 +47,23 @@ def apply_intrinsics(sensors, config):
 def run(n_widgets, n_gps, seconds, seed=1234, converged_m=1.0, aoa=True,
         frame_cb=None, trace=False, n_surveyed=0, downhill_ratio=0.5,
         sensor_overrides=None, static=False, intrinsics_path=None,
-        motion_rate=1.0, move_period=0.0, move_duty=1.0):
-    specs = world.default_swarm(n=n_widgets, n_gps=n_gps, n_surveyed=n_surveyed,
-                                motion_rate=motion_rate,
-                                move_period=move_period, move_duty=move_duty)
-    for s in specs:
-        s.has_aoa = aoa
-        if static and not s.surveyed:
-            s.kind = "static"
-    sensors = world.SensorConfig(downhill_ratio=downhill_ratio,
-                                 **(sensor_overrides or {}))
+        motion_rate=1.0, move_period=0.0, move_duty=1.0, scenario="ring",
+        node_set=None):
+    if scenario in ("room", "room_static"):
+        # The bench: firmware node runtime, bench-like sensors (world.py).
+        specs = world.room_swarm(walker=scenario == "room")
+        sensors = world.room_sensors(**(sensor_overrides or {}))
+        sensors.node_settings = dict(sensors.node_settings, **(node_set or {}))
+    else:
+        specs = world.default_swarm(n=n_widgets, n_gps=n_gps, n_surveyed=n_surveyed,
+                                    motion_rate=motion_rate,
+                                    move_period=move_period, move_duty=move_duty)
+        for s in specs:
+            s.has_aoa = aoa
+            if static and not s.surveyed:
+                s.kind = "static"
+        sensors = world.SensorConfig(downhill_ratio=downhill_ratio,
+                                     **(sensor_overrides or {}))
     if intrinsics_path:
         apply_intrinsics(sensors, widget_config.load(intrinsics_path))
     w = world.World(specs, sensors=sensors, seed=seed)
@@ -79,11 +86,12 @@ def run(n_widgets, n_gps, seconds, seed=1234, converged_m=1.0, aoa=True,
         u, _, vt = np.linalg.svd(ec.T @ tc)
         d = np.sign(np.linalg.det(u @ vt))
         rot = (u @ np.diag([1.0, 1.0, d]) @ vt).T
-        rot_rel = np.linalg.norm((rot @ ec.T).T - tc, axis=1)
+        rot_res = (rot @ ec.T).T - tc
+        rot_rel = np.linalg.norm(rot_res, axis=1)
         # est - true per widget: frame-to-frame changes of this deviation
         # are the visible "jitter" (truth motion subtracted out).
         history.append((frame["t"], [wg["err"] for wg in frame["widgets"]],
-                        list(rel), list(rot_rel), est - true))
+                        list(rel), list(rot_rel), est - true, rot_res))
         if trace and abs(frame["t"] % 1.0) < 0.05:
             verr = [np.linalg.norm(np.array(wg["est_v"]) - wg["true_v"])
                     for wg in frame["widgets"]]
@@ -107,6 +115,9 @@ def run(n_widgets, n_gps, seconds, seed=1234, converged_m=1.0, aoa=True,
     # Post-convergence jitter: mean per-frame step of (est - true).
     dev_tail = devs[int(len(devs) * 0.75):]
     jitter = np.linalg.norm(np.diff(dev_tail, axis=0), axis=2).mean(axis=0)
+    # The same after the best rigid fit: shape jitter, not frame drift.
+    rot_res_tail = np.array([h[5] for h in history])[int(len(history) * 0.75):]
+    rot_jitter = np.linalg.norm(np.diff(rot_res_tail, axis=0), axis=2).mean(axis=0)
     report = {"widgets": [], "seconds": seconds, "seed": seed}
     for i in range(n_widgets):
         # Convergence: last time the error crosses down below the threshold.
@@ -124,7 +135,10 @@ def run(n_widgets, n_gps, seconds, seed=1234, converged_m=1.0, aoa=True,
             "tail_rot_rel_rmse_m":
                 round(float(np.sqrt(np.mean(rot_tail[:, i] ** 2))), 3),
             "tail_jitter_m": round(float(jitter[i]), 4),
-            "lock": round(float(w.widgets[i].est.range_innov_ratio()), 2),
+            "tail_rot_jitter_m": round(float(rot_jitter[i]), 4),
+            "lock": round(float(w.widgets[i].est_state(w.t)["lock"]), 2),
+            "anchored": w.widgets[i].est_state(w.t)["anchored"],
+            "kind": specs[i].kind,
             "converge_s": conv_t,
             "accepted_ranges": w.widgets[i].accepted_ranges,
             "rejected_ranges": w.widgets[i].rejected_ranges,
@@ -174,6 +188,12 @@ def main():
                     help="override the zero-velocity gauge prior sigma, m/s")
     ap.add_argument("--zero-vel-rate", type=float, default=None,
                     help="override the zero-velocity prior rate, Hz")
+    ap.add_argument("--scenario", default="ring", choices=["ring", "room", "room_static"],
+                    help="ring: the design-study swarm (estimator backend); room: the "
+                         "bench (firmware node runtime, 3 still + 1 walking); "
+                         "room_static: the bench with all 4 still")
+    ap.add_argument("--set", action="append", default=[], metavar="NAME=VALUE",
+                    help="node setting (swarm/node settings registry), room scenarios")
     ap.add_argument("--json", action="store_true", help="emit the report as JSON")
     ap.add_argument("--trace", action="store_true",
                     help="print per-second err/sigma per widget")
@@ -183,7 +203,8 @@ def main():
                     n_surveyed=args.surveyed, downhill_ratio=args.downhill,
                     static=args.static, intrinsics_path=args.intrinsics,
                     motion_rate=args.motion_rate, move_period=args.move_period,
-                    move_duty=args.move_duty,
+                    move_duty=args.move_duty, scenario=args.scenario,
+                    node_set=dict(kv.split("=", 1) for kv in args.set),
                     sensor_overrides={k: v for k, v in {
                         "uwb_slot_rate": args.slot_rate,
                         "uwb_range_sigma": args.range_sigma,
@@ -199,6 +220,16 @@ def main():
                     }.items() if v is not None})
     if args.json:
         print(json.dumps(report, indent=2))
+        return
+    if args.scenario != "ring":
+        print("%s scenario, %.0f s, seed %d, settings %s" % (args.scenario, args.seconds, args.seed, args.set))
+        print("%3s %7s %10s %12s %12s %6s %8s %9s" %
+              ("id", "kind", "rot-rel m", "rot-jitter m", "raw jitter", "lock", "anchored", "rejects"))
+        for wg in report["widgets"]:
+            print("%3d %7s %10.3f %12.4f %12.4f %6.2f %8s %9d" %
+                  (wg["id"], wg["kind"], wg["tail_rot_rel_rmse_m"], wg["tail_rot_jitter_m"],
+                   wg["tail_jitter_m"], wg["lock"], "yes" if wg["anchored"] else "",
+                   wg["rejected_ranges"]))
         return
     print("%d widgets (%d GPS), %.0f s, seed %d" %
           (args.widgets, args.gps, args.seconds, args.seed))

@@ -4,12 +4,14 @@
 //! widget.v1 advertisement wire format. no_std, no allocation: the firmware
 //! (apps/node) links it as a static library through the C ABI in ffi.rs; the
 //! same crate is unit-tested on the host.
-#![cfg_attr(not(test), no_std)]
+#![cfg_attr(not(any(test, feature = "sim")), no_std)]
 
 pub mod advert;
 #[cfg(feature = "ffi")]
 pub mod ffi;
 pub mod node;
 pub mod settings;
+#[cfg(feature = "sim")]
+pub mod sim_ffi;
 
 pub use node::{Node, NodeConfig, RangeResult};

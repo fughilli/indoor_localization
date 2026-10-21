@@ -29,6 +29,10 @@ pub struct NodeConfig {
     pub gravity_every: u32,
     pub gravity_gate: f32,
     pub gravity_sigma: f32,
+    /// Gravity tilt aiding only while still (stationary detection): carried,
+    /// the specific force swings with every step even when its magnitude is
+    /// near g, and those "tilt fixes" leak gravity into velocity.
+    pub gravity_still_only: bool,
     /// Weak zero-velocity gauge prior (anchorless swarm frame pinning).
     pub zero_vel_sigma: f32,
     pub zero_vel_period_us: i64,
@@ -67,6 +71,21 @@ pub struct NodeConfig {
     pub still_hold_us: i64,
     pub still_sigma: f32,
     pub still_period_us: i64,
+    /// Auto-anchoring: a widget that has been still, well locked
+    /// (range-innovation ratio < `auto_anchor_lock`) and in a mesh of at
+    /// least `auto_anchor_min_peers` fresh peers for `auto_anchor_hold_us`
+    /// pins its position and advertises itself as an anchor with sigma
+    /// `auto_anchor_sigma`. Without anchors every widget's variance stays
+    /// huge (mean-only updates), so a moving widget never gets full
+    /// (downhill) updates and lags then snaps; against anchors it does,
+    /// velocity included. Moving releases the anchor at once, keeping the
+    /// position with sigma `auto_anchor_release_sigma`.
+    pub auto_anchor_on: bool,
+    pub auto_anchor_lock: f32,
+    pub auto_anchor_hold_us: i64,
+    pub auto_anchor_sigma: f32,
+    pub auto_anchor_min_peers: u32,
+    pub auto_anchor_release_sigma: f32,
     pub planar_on: bool,
     pub planar_z: f32,
     pub planar_sigma: f32,
@@ -113,6 +132,7 @@ impl Default for NodeConfig {
             gravity_every: 5,
             gravity_gate: 0.5,
             gravity_sigma: 0.1,
+            gravity_still_only: false,
             zero_vel_sigma: 3.0,
             zero_vel_period_us: 500_000,
             zero_vel_keep_position: false,
@@ -128,6 +148,16 @@ impl Default for NodeConfig {
             still_hold_us: 500_000,
             still_sigma: 0.01,
             still_period_us: 50_000,
+            auto_anchor_on: true,
+            // Tuned in the sim's room scenario (per-device range bias, carried
+            // walker): at 0.6 a still mesh never anchors (lock sits ~0.6-0.8
+            // with uncalibrated antenna delays); at 2.0 the walker's aligned
+            // error halves (22.8 -> 10.7 cm over 5 seeds) and jitter drops 3x.
+            auto_anchor_lock: 2.0,
+            auto_anchor_hold_us: 10_000_000,
+            auto_anchor_sigma: 0.05,
+            auto_anchor_min_peers: 2,
+            auto_anchor_release_sigma: 0.3,
             planar_on: false,
             planar_z: 0.0,
             planar_sigma: 0.05,
@@ -171,6 +201,7 @@ impl Peer {
             var: self.advert.quality,
             lock: self.advert.lock,
             age,
+            anchored: self.advert.flags & FLAG_ANCHORED != 0,
         }
     }
 }
@@ -226,6 +257,10 @@ pub struct Node {
     /// sample: x points to magnetic north (horizontal), z up.
     mag_world: Option<Vec3>,
     surveyed: Option<(Vec3, f32)>,
+    /// Auto-anchored here (see NodeConfig::auto_anchor_on).
+    auto_anchor: Option<Vec3>,
+    /// Since when the auto-anchor conditions have held.
+    calm_since_us: Option<i64>,
     seq: u32,
     initialized: bool,
     last_t_us: i64,
@@ -261,6 +296,8 @@ impl Node {
             mag_cal: None,
             mag_world: None,
             surveyed: None,
+            auto_anchor: None,
+            calm_since_us: None,
             seq: 0,
             initialized: false,
             last_t_us: 0,
@@ -416,12 +453,57 @@ impl Node {
         self.imu_count = self.imu_count.wrapping_add(1);
         self.stationary(t_us, accel, gyro, dt);
         // Quasi-static gravity tilt aiding.
-        if self.imu_count % self.cfg.gravity_every == 0
+        if self.cfg.gravity_every > 0
+            && self.imu_count % self.cfg.gravity_every == 0
             && libm::fabsf(accel.norm() - GRAVITY) < self.cfg.gravity_gate
+            && (!self.cfg.gravity_still_only || self.is_still(t_us))
         {
             self.est.update_gravity(accel, self.cfg.gravity_sigma);
         }
         self.periodic(t_us);
+    }
+
+    /// Where this widget is pinned, if anywhere: surveyed, or auto-anchored.
+    pub fn anchor(&self) -> Option<(Vec3, f32)> {
+        self.surveyed.or(self.auto_anchor.map(|p| (p, self.cfg.auto_anchor_sigma)))
+    }
+
+    pub fn auto_anchored(&self) -> bool {
+        self.auto_anchor.is_some()
+    }
+
+    fn auto_anchor_step(&mut self, t_us: i64) {
+        if !self.cfg.auto_anchor_on || self.surveyed.is_some() {
+            self.auto_anchor = None;
+            self.calm_since_us = None;
+            return;
+        }
+        let still = self.is_still(t_us);
+        if self.auto_anchor.is_some() {
+            if !still {
+                // Moving: back to a normal widget, keeping where it was.
+                self.auto_anchor = None;
+                self.calm_since_us = None;
+                let (p, q) = (self.est.p, self.est.q);
+                self.est.set_pose(p, Vec3::ZERO, q, self.cfg.auto_anchor_release_sigma, 0.1,
+                                  self.cfg.init_att_sigma);
+            }
+            return;
+        }
+        let max_age = self.cfg.coop.max_advert_age;
+        let peers = self.peers.iter().flatten().filter(|p| p.view(t_us).age <= max_age).count() as u32;
+        let calm = still && peers >= self.cfg.auto_anchor_min_peers
+            && self.est.range_innov_ratio() < self.cfg.auto_anchor_lock;
+        if !calm {
+            self.calm_since_us = None;
+            return;
+        }
+        let since = *self.calm_since_us.get_or_insert(t_us);
+        if t_us - since >= self.cfg.auto_anchor_hold_us {
+            let (p, q) = (self.est.p, self.est.q);
+            self.auto_anchor = Some(p);
+            self.est.set_pose(p, Vec3::ZERO, q, self.cfg.auto_anchor_sigma, 0.05, self.cfg.init_att_sigma);
+        }
     }
 
     /// Is the widget still (see NodeConfig::still_on)?
@@ -478,11 +560,12 @@ impl Node {
                 self.est.shift_position(c.scale(-k.min(1.0)));
             }
         }
-        if self.cfg.planar_on && self.surveyed.is_none() && t_us >= self.next_planar_us {
+        self.auto_anchor_step(t_us);
+        if self.cfg.planar_on && self.anchor().is_none() && t_us >= self.next_planar_us {
             self.next_planar_us = t_us + self.cfg.planar_period_us;
             self.est.update_alt(self.cfg.planar_z, self.cfg.planar_sigma);
         }
-        if let Some((p, sigma)) = self.surveyed {
+        if let Some((p, sigma)) = self.anchor() {
             if t_us >= self.next_survey_us {
                 self.next_survey_us = t_us + self.cfg.survey_period_us;
                 self.est.update_gps(p, sigma, sigma);
@@ -494,7 +577,7 @@ impl Node {
     /// advertised one, or None if I or any of them has an absolute source:
     /// then the frame is pinned and must not be re-centered.
     fn anchorless_centroid(&self, t_us: i64) -> Option<Vec3> {
-        if self.surveyed.is_some() {
+        if self.anchor().is_some() {
             return None;
         }
         let mut sum = self.est.p;
@@ -593,7 +676,7 @@ impl Node {
         if !self.initialized {
             return RangeResult::NotReady;
         }
-        if self.surveyed.is_some() {
+        if self.anchor().is_some() {
             return RangeResult::Surveyed;
         }
         let Some(i) = self.peer_index(peer_id) else { return RangeResult::UnknownPeer };
@@ -627,13 +710,13 @@ impl Node {
     /// position as an absolute source (var ~0, locked).
     pub fn advert(&mut self) -> Advert {
         self.seq = self.seq.wrapping_add(1);
-        match self.surveyed {
-            Some((p, _)) => Advert {
+        match self.anchor() {
+            Some((p, sigma)) => Advert {
                 widget_id: self.id,
                 seq: self.seq,
                 p,
                 v: Vec3::ZERO,
-                quality: 1e-4,
+                quality: if self.surveyed.is_some() { 1e-4 } else { sigma * sigma },
                 flags: FLAG_ANCHORED | FLAG_STATIC,
                 lock: 1.0,
             },
@@ -917,6 +1000,58 @@ mod tests {
             n.imu(t, Vec3::new(s, 0.0, GRAVITY), Vec3::new(0.0, 0.0, 0.3 * s));
         }
         assert!(!n.is_still(t));
+    }
+
+    /// Three still widgets ranging each other lock and auto-anchor; a fourth
+    /// started far off then converges onto the anchors through full
+    /// (downhill) updates, which mean-only updates alone never manage.
+    #[test]
+    fn still_mesh_auto_anchors_and_a_newcomer_converges() {
+        let truth = [Vec3::new(0.0, 0.0, 0.0), Vec3::new(3.0, 0.0, 0.0), Vec3::new(1.0, 2.5, 0.0),
+                     Vec3::new(1.5, 1.0, 0.0)];
+        let mut cfg = NodeConfig::default();
+        cfg.planar_on = true;
+        let mut nodes: Vec<Node> = (0..4).map(|i| Node::new(10 + i as u32, false, cfg)).collect();
+        for (n, p) in nodes.iter_mut().zip(truth) {
+            n.tick(0);
+            n.est.p = p;
+        }
+        nodes[3].est.p = Vec3::new(-4.0, 3.0, 0.0); // the newcomer, way off
+        let mut t = 0;
+        let mut step = 0usize;
+        let mut anchored_at = None;
+        for _ in 0..6000 {
+            t += 10_000;
+            step += 1;
+            let adverts: Vec<Advert> = nodes.iter_mut().map(|n| n.advert()).collect();
+            for (i, n) in nodes.iter_mut().enumerate() {
+                for (j, a) in adverts.iter().enumerate() {
+                    if i != j {
+                        n.heard(t, *a);
+                    }
+                }
+                n.tick(t);
+                // One range per tick, round-robin (both ends measure it).
+                let j = (i + 1 + step % 3) % 4;
+                n.range(t, 10 + j as u32, truth[i].sub(truth[j]).norm());
+            }
+            if anchored_at.is_none() && nodes[..3].iter().all(|n| n.auto_anchored()) {
+                anchored_at = Some(t);
+            }
+        }
+        assert!(anchored_at.is_some(), "the still mesh anchored itself");
+        for n in &nodes[..3] {
+            assert!(n.auto_anchored());
+        }
+        // Anchorless: the frame is wherever the mesh settled, so check the
+        // shape (every distance) rather than absolute coordinates.
+        for i in 0..4 {
+            for j in i + 1..4 {
+                let est = nodes[i].est.p.sub(nodes[j].est.p).norm();
+                let tru = truth[i].sub(truth[j]).norm();
+                assert!((est - tru).abs() < 0.1, "{}-{}: {} vs {} m", i, j, est, tru);
+            }
+        }
     }
 
     #[test]

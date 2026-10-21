@@ -231,7 +231,7 @@ fn coop_config(cfg: *const f32) -> CoopConfig {
 }
 
 fn peer_view(p: *const f32, var: f32, lock: f32, age: f32) -> PeerView {
-    PeerView { p: vec3(p), var, lock, age }
+    PeerView { p: vec3(p), var, lock, age, anchored: false }
 }
 
 /// Cooperative range update ([`coop::range_update`]). `cfg` is a flattened

@@ -225,7 +225,31 @@ All tuned live through swarm settings and deployed over the air.
   off that line, log all six ranges (rotate USB), calibrate antenna
   delays.
 
-## Planned: AirTags as localizers
+### Sim now runs the firmware's node runtime (2026-10-21)
+
+`run_sim --scenario room|room_static` drives one swarm/node `Node` per widget
+(host cdylib, swarm/node/src/sim_ffi.rs) with:
+- an MPU6050-class IMU at 200 Hz: scale errors, bias random walk, a still
+  boot period for calibration, and roll/pitch sway plus bob while carried;
+- per-device range bias (uncalibrated antenna delay);
+- TDMA-rate ranging, and adverts through the real wire format;
+- metrics after best-fit (Kabsch) alignment, since the anchorless frame
+  floats.
+
+The ring scenarios (estimator backend) stay byte-identical. Findings that
+went into v21, from 5-seed comparisons:
+- Auto-anchoring at the old lock < 0.6 never triggers with range bias.
+  At lock < 2.0, the walker's aligned error goes 22.8 -> 10.7 cm and its
+  jitter 3x lower.
+- An auto-anchor's ~5 cm sigma failed the variance-ratio downhill test, so
+  a tracking widget fell back to position-only updates and never corrected
+  its velocity. Anchored peers are now always downhill (PeerView.anchored).
+- Gravity aiding only while still made walking worse (`gravity_still_only`
+  setting kept, off).
+
+Regression tests: sim_test RoomScenarioTest.
+
+
 
 User direction (2026-10-20): reverse-engineer Apple AirTags as
 localizers / anchors for this system, starting from seemoo-lab's work:
