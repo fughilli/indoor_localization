@@ -49,6 +49,10 @@ pub struct Params {
     pub init_range_bias_sigma: f32,
     /// Range bias random walk, m/sqrt(s) (temperature drift).
     pub range_bias_rw: f32,
+    /// |rb| limit, m; 0 = none. Antenna-delay error is a few cm: rb far
+    /// past that is the filter using it to absorb geometry (4 widgets
+    /// still: more unknowns than links, so rb + pose has a null space).
+    pub range_bias_max: f32,
 }
 
 /// Initial / saturated value of the range-innovation ratio: "no lock".
@@ -70,6 +74,7 @@ impl Default for Params {
             innov_alpha: 0.02,
             init_range_bias_sigma: 0.0,
             range_bias_rw: 0.0,
+            range_bias_max: 0.0,
         }
     }
 }
@@ -313,8 +318,16 @@ impl Estimator {
             self.ba = self.ba.add(dx(DBA));
             self.bg = self.bg.add(dx(DBG));
         }
-        if inject != Inject::Position {
+        // Not from a mean-only update either: P never shrinks there, so the
+        // rb gain would stay at its prior level and integrate any persistent
+        // innovation without bound (bench: a bumped widget's rb ran to
+        // +0.31 m in 8 s).
+        if inject != Inject::Position && update_cov {
             self.rb += k[DRB] * y;
+            let m = self.params.range_bias_max;
+            if m > 0.0 {
+                self.rb = self.rb.clamp(-m, m);
+            }
         }
         if update_cov {
             // P <- P - K (P H^T)^T
@@ -632,6 +645,29 @@ mod tests {
         }
         assert!((a.rb + 0.07).abs() < 0.01, "rb {}", a.rb);
         assert_eq!(a.p, truth);
+    }
+
+    /// rb never integrates mean-only innovations (P doesn't shrink there,
+    /// so it would run away), and is held to `range_bias_max`.
+    #[test]
+    fn range_bias_is_bounded() {
+        let peer = Vec3::new(2.0, 0.0, 0.0);
+        let mut e = Estimator::new(Params { init_range_bias_sigma: 0.1, ..quiet_params() });
+        e.set_pose(Vec3::ZERO, Vec3::ZERO, Quat::IDENTITY, 1.0, 0.1, 0.1);
+        for _ in 0..500 {
+            e.update_range(peer, 0.5, 2.6, 0.05, true);
+        }
+        assert_eq!(e.rb, 0.0);
+        let mut c = Estimator::new(Params {
+            init_range_bias_sigma: 1.0,
+            range_bias_max: 0.15,
+            ..quiet_params()
+        });
+        c.set_pose(Vec3::ZERO, Vec3::ZERO, Quat::IDENTITY, 0.05, 0.05, 0.1);
+        for _ in 0..100 {
+            c.update_range_bias(peer, 0.0, 2.6, 0.05);
+        }
+        assert_eq!(c.rb, 0.15);
     }
 
     /// GPS fixes alone must converge position and shrink covariance.

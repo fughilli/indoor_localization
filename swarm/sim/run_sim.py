@@ -49,10 +49,10 @@ def run(n_widgets, n_gps, seconds, seed=1234, converged_m=1.0, aoa=True,
         frame_cb=None, trace=False, n_surveyed=0, downhill_ratio=0.5,
         sensor_overrides=None, static=False, intrinsics_path=None,
         motion_rate=1.0, move_period=0.0, move_duty=1.0, scenario="ring",
-        node_set=None):
+        node_set=None, bump=None):
     if scenario in ("room", "room_static"):
         # The bench: firmware node runtime, bench-like sensors (world.py).
-        specs = world.room_swarm(walker=scenario == "room")
+        specs = world.room_swarm(walker=scenario == "room", bump=bump)
         sensors = world.room_sensors(**(sensor_overrides or {}))
         sensors.node_settings = dict(sensors.node_settings, **(node_set or {}))
     else:
@@ -233,6 +233,9 @@ def main():
                     help="node setting (swarm/node settings registry), room scenarios")
     ap.add_argument("--sensor", action="append", default=[], metavar="NAME=VALUE",
                     help="SensorConfig field override (Python literal), e.g. uwb_channel=False")
+    ap.add_argument("--bump", default=None, metavar="WID,T,DX,DY[,YAW]",
+                    help="room scenarios: slide still widget WID by (DX, DY) m, turning it YAW rad "
+                         "(default 0.3), at T s")
     ap.add_argument("--json", action="store_true", help="emit the report as JSON")
     ap.add_argument("--trace", action="store_true",
                     help="print per-second err/sigma per widget")
@@ -244,6 +247,7 @@ def main():
                     motion_rate=args.motion_rate, move_period=args.move_period,
                     move_duty=args.move_duty, scenario=args.scenario,
                     node_set=dict(kv.split("=", 1) for kv in args.set),
+                    bump=[float(x) for x in args.bump.split(",")] if args.bump else None,
                     sensor_overrides={k: v for k, v in {
                         "uwb_slot_rate": args.slot_rate,
                         "uwb_range_sigma": args.range_sigma,

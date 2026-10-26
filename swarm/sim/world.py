@@ -191,6 +191,12 @@ class WidgetSpec:
     # amplitude) and a lift (m) from where it rested.
     handling: float = 0.0
     lift: float = 0.0
+    # A static widget bumped: slid by `bump` (m, world) over bump_dur s
+    # starting at bump_at (0 = never), as on the bench when a cable tugs it.
+    bump_at: float = 0.0
+    bump: tuple = (0.0, 0.0, 0.0)
+    bump_yaw: float = 0.0            # rad, turned over the same profile
+    bump_dur: float = 0.5
 
 
 # Each move/pause transition ramps the speed linearly over this fraction of
@@ -237,10 +243,19 @@ def _motion_time(spec, t):
     return rate * spec.move_period * phase_area
 
 
+def _bump_profile(spec, t):
+    """0..1 progress of a still widget's bump (quintic smootherstep, so the
+    IMU sees continuous acceleration)."""
+    if spec.bump_at <= 0.0 or t <= spec.bump_at:
+        return 0.0
+    u = min(1.0, (t - spec.bump_at) / spec.bump_dur)
+    return u * u * u * (u * (6 * u - 15) + 10)
+
+
 def _true_pos(spec, t):
     cx, cy, cz = spec.center
     if spec.kind == "static":
-        return np.array([cx, cy, cz])
+        return np.array([cx, cy, cz]) + np.array(spec.bump) * _bump_profile(spec, t)
     a = spec.omega * _motion_time(spec, t) + spec.phase
     return np.array([
         cx + spec.radius * math.cos(a),
@@ -355,7 +370,7 @@ class TruthWidget:
 
     def body_rate(self, t, h=1e-3):
         """Gyro truth: body angular rate from the rotation's derivative."""
-        if not (self.spec.sway or self.spec.handling):
+        if not (self.spec.sway or self.spec.handling or self.spec.bump_yaw):
             return np.array([0.0, 0.0, self.spec.yaw_rate if t >= self.spec.start_delay else 0.0])
         r0, r1 = self.rot(t - h), self.rot(t + h)
         rd = (r1 - r0) / (2 * h)
@@ -379,7 +394,8 @@ class TruthWidget:
             # Carried: facing along the path, turning only while moving.
             te = max(0.0, t - self.spec.start_delay)
             return self.spec.omega * _motion_time(self.spec, te) + self.spec.phase + math.pi / 2
-        return self.spec.yaw_rate * max(0.0, t - self.spec.start_delay) + 0.7 * self.spec.wid
+        return (self.spec.yaw_rate * max(0.0, t - self.spec.start_delay) + 0.7 * self.spec.wid
+                + self.spec.bump_yaw * _bump_profile(self.spec, t))
 
     def quat(self, t):
         return _yaw_quat(self.yaw(t))
@@ -762,11 +778,13 @@ def _quat_yaw(q):
     return math.atan2(fy, fx) % (2 * math.pi)
 
 
-def room_swarm(walker=True, still=4.0):
+def room_swarm(walker=True, still=4.0, bump=None):
     """The bench setup: four widgets in a room at one height. Widget 1 sits
     roughly mid-triangle but nearly on the 0-2 edge (as on the bench, where
     three widgets came out within ~5 deg of collinear); widget 3, if
-    `walker`, is carried around the room with stops."""
+    `walker`, is carried around the room with stops. `bump` = (wid, t, dx,
+    dy[, yaw]) slides that still widget by (dx, dy) m, turning it yaw rad
+    (default 0.3), at time t."""
     specs = [
         WidgetSpec(wid=0, kind="static", center=(0.0, 0.0, 0.0), yaw_rate=0.0, has_alt=False, has_aoa=False),
         WidgetSpec(wid=1, kind="static", center=(0.85, 0.12, 0.0), yaw_rate=0.0, has_alt=False, has_aoa=False),
@@ -780,6 +798,11 @@ def room_swarm(walker=True, still=4.0):
     else:
         specs.append(WidgetSpec(wid=3, kind="static", center=(-1.0, 4.0, 0.0), yaw_rate=0.0,
                                 has_alt=False, has_aoa=False))
+    if bump:
+        wid, t, dx, dy, yaw = (list(bump) + [0.3])[:5]
+        s = specs[int(wid)]
+        assert s.kind == "static", "only a still widget can be bumped"
+        s.bump_at, s.bump, s.bump_yaw = float(t), (float(dx), float(dy), 0.0), float(yaw)
     return specs
 
 

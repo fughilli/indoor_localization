@@ -76,6 +76,10 @@ pub struct NodeConfig {
     /// consistency term more than an antenna-delay estimate. That still
     /// helps: sim, learning only while moving, walker 19.1 -> 26.6 cm.
     pub bias_learn_still: bool,
+    /// Learn rb from flagged (probably blocked) ranges too. Off: they read
+    /// long, and rb learned the excess (bench walk: still widgets' rb went
+    /// +0.2..+0.46 m, re-anchoring shrank the mesh, one moved 1.1 m).
+    pub bias_learn_flagged: bool,
     pub bias_learn_anchored: bool,
     pub bias_learn_lock: f32,
     pub bias_learn_nvar_scale: f32,
@@ -196,7 +200,12 @@ impl Default for NodeConfig {
         NodeConfig {
             // Antenna delays are uncalibrated out of the box: a few cm to
             // ~0.1 m per device.
-            params: Params { init_range_bias_sigma: 0.1, range_bias_rw: 1e-4, ..Params::default() },
+            params: Params {
+                init_range_bias_sigma: 0.1,
+                range_bias_rw: 1e-4,
+                range_bias_max: 0.15,
+                ..Params::default()
+            },
             // No GPS indoors: a swarm can be entirely anchorless.
             coop: CoopConfig { mean_only_pos_only: true, ..CoopConfig::default() },
             range_sigma: 0.10,
@@ -209,6 +218,7 @@ impl Default for NodeConfig {
             nlos_clip_still_only: true,
             nlos_asymmetric: true,
             bias_learn_still: true,
+            bias_learn_flagged: false,
             bias_learn_anchored: true,
             bias_learn_lock: 2.0,
             bias_learn_nvar_scale: 4.0,
@@ -826,7 +836,9 @@ impl Node {
             sigma = self.cfg.range_sigma;
         }
         if self.anchor().is_some() {
-            let r = if self.cfg.bias_learn_anchored && !view.still && !view.anchored
+            let flagged = fp_gap_db > self.cfg.nlos_gap_db;
+            let r = if self.cfg.bias_learn_anchored && (!flagged || self.cfg.bias_learn_flagged)
+                && !view.still && !view.anchored
                 && view.age <= self.cfg.coop.max_advert_age && view.lock < self.cfg.bias_learn_lock
             {
                 let rel = view.lock * self.cfg.range_sigma;
@@ -857,7 +869,8 @@ impl Node {
         if flagged && self.cfg.nlos_gate > 0.0 {
             self.est.params.gate = self.cfg.nlos_gate;
         }
-        self.est.learn_range_bias = !me_still || self.cfg.bias_learn_still;
+        self.est.learn_range_bias = (!me_still || self.cfg.bias_learn_still)
+            && (!flagged || self.cfg.bias_learn_flagged);
         let (outcome, _decision): (Outcome, Decision) = coop::range_update_weighted(
             &self.cfg.coop,
             &mut self.est,
