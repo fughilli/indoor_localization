@@ -200,8 +200,12 @@ impl Default for NodeConfig {
         NodeConfig {
             // Antenna delays are uncalibrated out of the box: a few cm to
             // ~0.1 m per device.
+            // Range bias off: on the bench the raw ranges already match a
+            // tape to ~1.5 cm, and rb absorbed geometry error instead (a
+            // 0.46 m pair solved 0.27 m apart, +0.19 m of rb between them).
+            // 0.1 turns it back on.
             params: Params {
-                init_range_bias_sigma: 0.1,
+                init_range_bias_sigma: 0.0,
                 range_bias_rw: 1e-4,
                 range_bias_max: 0.15,
                 ..Params::default()
@@ -497,6 +501,9 @@ impl Node {
         }
         self.cfg = t.node;
         self.est.params = params;
+        if params.init_range_bias_sigma <= 0.0 {
+            self.est.clear_range_bias();
+        }
         if t.survey_on {
             if self.surveyed != Some((t.survey_p, t.survey_sigma)) {
                 self.set_surveyed(t.survey_p, t.survey_sigma);

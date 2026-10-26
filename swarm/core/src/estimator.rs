@@ -398,6 +398,16 @@ impl Estimator {
         self.scalar_update_masked(&h, measured - r_pred, sigma * sigma + nvar, !mean_only, inject)
     }
 
+    /// Forget the range bias (it's being turned off): rb back to zero, out
+    /// of the covariance.
+    pub fn clear_range_bias(&mut self) {
+        self.rb = 0.0;
+        for i in 0..STATE_DIM {
+            self.cov[DRB][i] = 0.0;
+            self.cov[i][DRB] = 0.0;
+        }
+    }
+
     /// A range used only to calibrate the own range bias: a widget pinned
     /// where it is (anchored) learns rb from ranges to peers whose positions
     /// it trusts to `nvar` (m^2), without its position moving. Returns
@@ -668,6 +678,8 @@ mod tests {
             c.update_range_bias(peer, 0.0, 2.6, 0.05);
         }
         assert_eq!(c.rb, 0.15);
+        c.clear_range_bias();
+        assert_eq!((c.rb, c.cov[DRB][DRB]), (0.0, 0.0));
     }
 
     /// GPS fixes alone must converge position and shrink covariance.
