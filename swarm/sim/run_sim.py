@@ -233,9 +233,9 @@ def main():
                     help="node setting (swarm/node settings registry), room scenarios")
     ap.add_argument("--sensor", action="append", default=[], metavar="NAME=VALUE",
                     help="SensorConfig field override (Python literal), e.g. uwb_channel=False")
-    ap.add_argument("--bump", default=None, metavar="WID,T,DX,DY[,YAW]",
+    ap.add_argument("--bump", default=None, metavar="WID,T,DX,DY[,YAW[,DUR]]",
                     help="room scenarios: slide still widget WID by (DX, DY) m, turning it YAW rad "
-                         "(default 0.3), at T s")
+                         "(default 0.3), over DUR s (default 0.5), at T s")
     ap.add_argument("--json", action="store_true", help="emit the report as JSON")
     ap.add_argument("--trace", action="store_true",
                     help="print per-second err/sigma per widget")

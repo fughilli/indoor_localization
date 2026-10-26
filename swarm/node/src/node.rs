@@ -8,7 +8,7 @@
 //! the design doc reports; cooperative rules are swarm_core::coop itself.
 
 use swarm_core::coop::{self, CoopConfig, Decision, Outcome, PeerView, SkipReason};
-use swarm_core::estimator::{Estimator, Params, GRAVITY};
+use swarm_core::estimator::{Estimator, Params, GRAVITY, INNOV_RATIO_MAX};
 use swarm_core::math::{Mat3, Quat, Vec3, MAT3_IDENTITY};
 
 use crate::advert::{self, Advert, FLAG_ANCHORED, FLAG_GPS, FLAG_STATIC};
@@ -159,6 +159,19 @@ pub struct NodeConfig {
     pub auto_anchor_sigma: f32,
     pub auto_anchor_min_peers: u32,
     pub auto_anchor_release_sigma: f32,
+    /// Anchor check: an anchored widget scores its ranges to still, locked
+    /// peers (EWMA, coefficient `anchor_check_alpha`, of |innovation| /
+    /// sigma) and lets go to re-solve when the score passes
+    /// `anchor_check_ratio` (0 = off) after `anchor_check_min` ranges. It
+    /// catches a widget moved too gently for the stationary detector (sim:
+    /// a slow 0.36 m push left it pinned at the old spot for good, since
+    /// an anchor ignores ranges). A consistent anchor scores ~0.8 (mean
+    /// |z| of noise); 0.4 m off on 2 of 3 links scored 2.75. Not a widget
+    /// anchored where blocked
+    /// links agree with each other: that one scores as consistent.
+    pub anchor_check_ratio: f32,
+    pub anchor_check_alpha: f32,
+    pub anchor_check_min: u32,
     pub planar_on: bool,
     pub planar_z: f32,
     pub planar_sigma: f32,
@@ -259,6 +272,9 @@ impl Default for NodeConfig {
             auto_anchor_sigma: 0.05,
             auto_anchor_min_peers: 2,
             auto_anchor_release_sigma: 0.3,
+            anchor_check_ratio: 2.0,
+            anchor_check_alpha: 0.02,
+            anchor_check_min: 50,
             planar_on: false,
             planar_z: 0.0,
             planar_sigma: 0.05,
@@ -371,6 +387,11 @@ pub struct Node {
     anchor_rb: f32,
     /// Since when the auto-anchor conditions have held.
     calm_since_us: Option<i64>,
+    /// Anchor check score and how many ranges it has seen since anchoring;
+    /// how often it let go.
+    anchor_check: f32,
+    anchor_check_n: u32,
+    pub anchor_releases: u32,
     /// Recent ranges' outcomes (bit set = gated; newest in bit 0, `gated_n`
     /// of them valid), and how often we re-acquired.
     gated_bits: u32,
@@ -414,6 +435,9 @@ impl Node {
             auto_anchor: None,
             anchor_rb: 0.0,
             calm_since_us: None,
+            anchor_check: 1.0,
+            anchor_check_n: 0,
+            anchor_releases: 0,
             gated_bits: 0,
             gated_n: 0,
             regains: 0,
@@ -637,6 +661,8 @@ impl Node {
             let (p, q) = (self.est.p, self.est.q);
             self.auto_anchor = Some(p);
             self.anchor_rb = self.est.rb;
+            self.anchor_check = 1.0;
+            self.anchor_check_n = 0;
             self.est.set_pose(p, Vec3::ZERO, q, self.cfg.auto_anchor_sigma, 0.05, self.cfg.init_att_sigma);
         }
     }
@@ -853,11 +879,34 @@ impl Node {
         if self.cfg.nlos_asymmetric && range_m <= predicted {
             sigma = self.cfg.range_sigma;
         }
+        let max_age = self.cfg.coop.max_advert_age;
+        if self.auto_anchor.is_some() && self.cfg.anchor_check_ratio > 0.0 && sigma > 0.0
+            && (view.still || view.anchored) && view.age <= max_age
+            && view.lock < self.cfg.coop.lock_ratio_none
+        {
+            let sample = (libm::fabsf(range_m - predicted) / sigma).min(INNOV_RATIO_MAX);
+            self.anchor_check += self.cfg.anchor_check_alpha * (sample - self.anchor_check);
+            self.anchor_check_n += 1;
+            if self.anchor_check_n >= self.cfg.anchor_check_min
+                && self.anchor_check > self.cfg.anchor_check_ratio
+            {
+                // Not where it was anchored: back to a normal widget, to
+                // re-solve (and re-anchor once calm).
+                self.auto_anchor = None;
+                self.calm_since_us = None;
+                self.anchor_releases += 1;
+                let (p, q) = (self.est.p, self.est.q);
+                self.est.set_pose(p, Vec3::ZERO, q, self.cfg.auto_anchor_release_sigma, 0.1,
+                                  self.cfg.init_att_sigma);
+                self.peers[i] = Some(peer);
+                return RangeResult::Surveyed;
+            }
+        }
         if self.anchor().is_some() {
             let flagged = fp_gap_db > self.cfg.nlos_gap_db;
             let r = if self.cfg.bias_learn_anchored && (!flagged || self.cfg.bias_learn_flagged)
                 && !view.still && !view.anchored
-                && view.age <= self.cfg.coop.max_advert_age && view.lock < self.cfg.bias_learn_lock
+                && view.age <= max_age && view.lock < self.cfg.bias_learn_lock
             {
                 let rel = view.lock * self.cfg.range_sigma;
                 let nvar = self.cfg.bias_learn_nvar_scale * rel * rel;
@@ -1236,6 +1285,58 @@ mod tests {
             n.imu(t, Vec3::new(s, 0.0, GRAVITY), Vec3::new(0.0, 0.0, 0.3 * s));
         }
         assert!(!n.is_still(t));
+    }
+
+    /// A still, anchored mesh; one widget is then moved 0.4 m without the
+    /// stationary detector noticing. Its ranges stop fitting its anchor, so
+    /// it lets go and re-solves to where it is now; with the check off it
+    /// stays pinned at the old spot.
+    #[test]
+    fn anchored_widget_moved_unnoticed_lets_go() {
+        fn run(check: bool) -> (u32, f32) {
+            let mut truth = [Vec3::new(0.0, 0.0, 0.0), Vec3::new(3.0, 0.0, 0.0),
+                             Vec3::new(1.0, 2.5, 0.0), Vec3::new(1.5, 1.0, 0.0)];
+            let mut cfg = NodeConfig::default();
+            cfg.planar_on = true;
+            if !check {
+                cfg.anchor_check_ratio = 0.0;
+            }
+            let mut nodes: Vec<Node> = (0..4).map(|i| Node::new(10 + i as u32, false, cfg)).collect();
+            for (n, p) in nodes.iter_mut().zip(truth) {
+                n.tick(0);
+                n.est.p = p;
+            }
+            let mut t = 0;
+            for step in 0..9000usize {
+                t += 10_000;
+                if step == 3000 {
+                    assert!(nodes.iter().all(|n| n.auto_anchored()), "the mesh anchored");
+                    truth[3] = truth[3].add(Vec3::new(0.4, 0.0, 0.0));
+                }
+                let adverts: Vec<Advert> = nodes.iter_mut().map(|n| n.advert()).collect();
+                for (i, n) in nodes.iter_mut().enumerate() {
+                    for (j, a) in adverts.iter().enumerate() {
+                        if i != j {
+                            n.heard(t, *a);
+                        }
+                    }
+                    n.tick(t);
+                    let j = (i + 1 + step % 3) % 4;
+                    n.range(t, 10 + j as u32, truth[i].sub(truth[j]).norm(), f32::NAN);
+                }
+            }
+            // Relative to the others' estimates (the mesh frame is its own).
+            let err = (0..3)
+                .map(|j| libm::fabsf(nodes[3].est.p.sub(nodes[j].est.p).norm() - truth[3].sub(truth[j]).norm()))
+                .fold(0.0f32, f32::max);
+            (nodes[3].anchor_releases, err)
+        }
+        let (releases, err) = run(true);
+        assert!(releases >= 1, "the moved widget let go");
+        assert!(err < 0.05, "re-solved: distances within {} m", err);
+        let (releases, err) = run(false);
+        assert_eq!(releases, 0);
+        assert!(err > 0.3, "check off: still pinned, distances {} m off", err);
     }
 
     /// Three still widgets ranging each other lock and auto-anchor; a fourth

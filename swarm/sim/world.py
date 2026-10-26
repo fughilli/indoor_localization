@@ -783,8 +783,9 @@ def room_swarm(walker=True, still=4.0, bump=None):
     roughly mid-triangle but nearly on the 0-2 edge (as on the bench, where
     three widgets came out within ~5 deg of collinear); widget 3, if
     `walker`, is carried around the room with stops. `bump` = (wid, t, dx,
-    dy[, yaw]) slides that still widget by (dx, dy) m, turning it yaw rad
-    (default 0.3), at time t."""
+    dy[, yaw[, dur]]) slides that still widget by (dx, dy) m, turning it yaw
+    rad (default 0.3), over dur s (default 0.5), at time t. A slow push (e.g.
+    3 s, no yaw) stays under the stationary detector."""
     specs = [
         WidgetSpec(wid=0, kind="static", center=(0.0, 0.0, 0.0), yaw_rate=0.0, has_alt=False, has_aoa=False),
         WidgetSpec(wid=1, kind="static", center=(0.85, 0.12, 0.0), yaw_rate=0.0, has_alt=False, has_aoa=False),
@@ -799,10 +800,11 @@ def room_swarm(walker=True, still=4.0, bump=None):
         specs.append(WidgetSpec(wid=3, kind="static", center=(-1.0, 4.0, 0.0), yaw_rate=0.0,
                                 has_alt=False, has_aoa=False))
     if bump:
-        wid, t, dx, dy, yaw = (list(bump) + [0.3])[:5]
+        wid, t, dx, dy, yaw, dur = (list(bump) + [0.3, 0.5][len(bump) - 4:])[:6]
         s = specs[int(wid)]
         assert s.kind == "static", "only a still widget can be bumped"
         s.bump_at, s.bump, s.bump_yaw = float(t), (float(dx), float(dy), 0.0), float(yaw)
+        s.bump_dur = float(dur)
     return specs
 
 
