@@ -12,7 +12,9 @@ position, magnetometer calibration, raw capture).
 
 Runs on the machine the node is plugged into (pyserial), like capture.py and
 range_view.py, and never resets the board on open. --capture appends every
-record to a JSONL file (the records.py capture schema).
+record to a JSONL file (the records.py capture schema), each stamped with
+"ht", host wall-clock seconds at receipt: the clock vive_truth.py stamps
+tracker poses with, so truth_eval.py can line the two up.
 """
 
 import argparse
@@ -84,6 +86,7 @@ def run_serial(hub, port, baud):
                 s.write((hub.commands.get() + "\n").encode())
             rec = capture.parse_line(s.readline())
             if rec is not None:
+                rec["ht"] = round(time.time(), 4)
                 hub.ingest(rec)
 
 

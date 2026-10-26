@@ -185,3 +185,33 @@ py_test(
     srcs = ["swarm_wire_test.py"],
     deps = [":swarm_wire_lib"],
 )
+
+# Vive Tracker ground truth (host-run: `python3 swarm/tools/vive_truth.py`,
+# needs libsurvive) and its scoring against a swarm capture.
+py_library(
+    name = "vive_truth_lib",
+    srcs = ["vive_truth.py"],
+)
+
+py_library(
+    name = "truth_eval_lib",
+    srcs = ["truth_eval.py"],
+    deps = ["@pypi//numpy"],
+)
+
+py_binary(
+    name = "truth_eval",
+    srcs = ["truth_eval.py"],
+    main = "truth_eval.py",
+    deps = ["@pypi//numpy"],
+)
+
+py_test(
+    name = "truth_eval_test",
+    srcs = ["truth_eval_test.py"],
+    deps = [
+        ":truth_eval_lib",
+        ":vive_truth_lib",
+        "@pypi//numpy",
+    ],
+)

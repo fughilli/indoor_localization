@@ -362,43 +362,101 @@ moved.**
   showed the 12-15 dB bin was still clean; jumps start around 15 dB. Try
   13-15 dB.
 
-**Uncommitted and untested (working tree, swarm/node node.rs and
-settings.rs):**
-- New setting `bias.learn_flagged` (id 352, default off): neither free
-  nor anchored widgets learn rb from flagged ranges.
-- It was written but not built or simulated (interrupted).
+### v25-v27 on the bench, tape-measured (2026-10-25)
 
-**Next, in order:**
-1. Build and run the sim A/B already scripted in the scratchpad `ab.py`.
-   Compare:
-   - v24 (`bias.learn_flagged=true`);
-   - unflagged only;
-   - unflagged with `bias.learn_anchored=false`;
-   - unflagged with `bias.reanchor_m=0`;
-   - no bias (`est.init_range_bias_sigma=0`).
+**Why rb ran away (v24).** The walk didn't start it. At t≈313 s, 53876
+was nudged, re-converged in ~8 s looking healthy (lock ~0.3), and came out
+with rb +0.31 m and its position 0.35 m off. Two causes:
+- A mean-only range update injected rb but never shrank its covariance, so
+  rb's gain stayed at the prior level and integrated persistent innovation
+  without bound.
+- With 4 widgets there are more unknowns (4 rb + 5 pose DoF) than links
+  (6), so rb + geometry has a null space anyway.
 
-   Use 24 seeds of room. Also run longer runs (600 s) to look for rb
-   drift, and check that the static boards' positions don't wander. Add a
-   metric for anchor drift and mesh scale.
-2. Make the sim's walker blocked more often (a person plus a laptop) and
-   persistently-flagged-but-clean links (high gap, no jumps) like the
-   bench's. Re-fit the gap thresholds.
-3. Likely default change: no anchored rb learning and no re-anchoring
-   (or a much larger threshold), and no learning from flagged ranges.
-   Consider pinning the rb gauge, e.g. zero-mean rb across the swarm via
-   adverts, like the centroid bleed.
-4. Live mitigation without firmware is possible through settings:
-   `bias.learn_anchored=false`, `bias.reanchor_m=0`, or
-   `est.init_range_bias_sigma=0`. But rb isn't persisted and settings
-   don't reset it, so a reboot clears the learned values (rb → 0 on
-   boot).
-5. Proper delay calibration remains a batch solve over a recorded walk,
-   pushed as `antenna_delay`.
-6. Then deploy v25, and have the user walk again. Plug board 3 back in on
-   USB; the viewer runs with
-   `swarm_view.py --port /dev/cu.usbserial-10 --capture captures/swarm_v25.jsonl`.
+The sim never reproduced it, not even with a realistic bump.
 
+**v25 (be2bd9c):**
+- rb changes only in covariance-updating updates.
+- |rb| is capped at `est.range_bias_max` (0.15 m, setting 110).
+- `bias.learn_flagged` (352, default off).
+- Sim: `--bump=WID,T,DX,DY[,YAW]` nudges a still widget over 0.5 s with a
+  yaw twist. A smooth horizontal push alone doesn't trip the still
+  detector: |accel| only changes by ~0.2 m/s^2.
 
+**v26 (a57aa08): coincident widgets step apart.** All boards rebooted
+together by OTA started at the origin, where ranges can't be linearized.
+They stayed stuck indefinitely on hardware, and for ~30 s in sim
+room_static (~2000 gated ranges per widget). Each end now steps half the
+range apart along an id-derived axis.
+
+**v27 (dfcddad): range-bias learning off by default**
+(`est.init_range_bias_sigma` 0; turning it off live clears rb). Tape check
+on v26:
+- Board 3 ↔ F694 was 0.46 m by tape and 0.446 m by raw range, but solved
+  0.27 m apart, with +0.19 m of rb between them.
+- So the antenna delays are fine. rb was absorbing geometry error.
+
+**Tape measurements, v27** (hex ids as the viewer prints them: 1CF0 = 7408
+on USB, F694 = 63124, C248 = 49736, D274 = 53876):
+
+| Link | Tape | Raw range | Gap | Solved |
+|---|---|---|---|---|
+| F694-1CF0 | 0.45 | 0.404 | 1.5 dB | 0.398 |
+| F694-C248 | 3.13 | n/a | n/a | 3.081 |
+| F694-D274 | 3.56 | n/a | n/a | 3.697 |
+| 1CF0-C248 | 3.43 | 3.411 (sd 2 cm) | 17.9 dB | 3.363 |
+| 1CF0-D274 | 3.18 | 3.977 (sd 57 cm) | 23.7 dB | 3.937 |
+| C248-D274 | 5.03 | n/a | n/a | 5.299 |
+
+All distances are in m. Raw ranges exist only for links that include the
+USB node (1CF0).
+
+What the table shows:
+- A link with a 17.9 dB gap can be accurate (2 cm). The `nlos.gap_db` = 10
+  threshold is too low here; try ~20.
+- The 23.7 dB link reads 80 cm long, and D274 is solved 76 cm too far out
+  on it. During cold start the NLOS clip is off (lock is 10), so the long
+  ranges pushed D274 out; it then anchored there, and an anchored widget
+  ignores ranges.
+- Per-node rb can't fix per-link NLOS excess.
+
+**Other bench notes:**
+- Docker builds in the mounted workspace repoint `bazel-bin` to container
+  paths. Rebuild on the host (`bazel build //swarm/sim:run_sim`) after
+  every container build, and don't run sims during one.
+- The container's bazel server can turn into a zombie (PID 1 doesn't
+  reap). Remove `server/server.pid.txt` under the output base.
+- Boards dropped off the air after hours of uptime: 49736 and 63124
+  ~20:20, and 53876 overnight while it was still running. A power cycle
+  fixed them. Cause unknown; watch for it.
+
+**Ground truth (user getting 3 Vive Tracker 3.0s, 2026-10-26).**
+docs/vive-truth.md covers the setup:
+- `vive_truth.py` logs tracker poses via libsurvive, no SteamVR. Sources:
+  pysurvive, a `survive-cli --record-stdout` subprocess, or UDP from a
+  Linux box.
+- `swarm_view` captures now stamp `ht` (host time).
+- `truth_eval.py` scores a capture by pair distance, global and
+  per-snapshot rigid fits, and range error by gap. `--fit-dt` fits the
+  clock offset from the ranges, so filter lag isn't fitted away.
+
+Still to do:
+- Building libsurvive here was blocked: it runs fetched code, so the
+  user has to approve it.
+- Base stations are required; it's unconfirmed whether the user has them.
+- Dongle pairing without SteamVR is unverified.
+
+**Next:**
+1. With the trackers, record a still session and a walk (track 1CF0, the
+   carried node and one more). Fit `nlos.gap_db` and the sigma slope/cap
+   to the range-error-by-gap table.
+2. Anchor sanity check: release an anchor whose ranges to still peers
+   disagree well beyond their sigma (catches D274-style cold-start NLOS
+   anchors and undetected bumps).
+3. Keep the NLOS clip on during cold start, or at least before anchoring.
+4. Make the sim's channel per-link: persistent excess on high-gap links
+   for some pairs, accurate high-gap links for others, fitted to the
+   truth data.
 
 User direction (2026-10-20): reverse-engineer Apple AirTags as
 localizers / anchors for this system, starting from seemoo-lab's work:
