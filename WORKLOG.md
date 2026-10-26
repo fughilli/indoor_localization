@@ -443,7 +443,7 @@ docs/vive-truth.md covers the setup:
 Still to do:
 - Building libsurvive here was blocked: it runs fetched code, so the
   user has to approve it.
-- Base stations are required; it's unconfirmed whether the user has them.
+- Base stations: the user has two SteamVR 1.0 (sync them optically on channels b + c, or by cable on A + b).
 - Dongle pairing without SteamVR is unverified.
 
 **Next:**

@@ -16,6 +16,16 @@ to the trackers directly. SteamVR doesn't need to be installed.
 - **Base stations, SteamVR 1.0 or 2.0.** At least one is required, and two
   is better. Mount them high in opposite corners, angled down over the
   area. The trackers can't localize without them.
+- **This bench's base stations: two SteamVR 1.0.** Two 1.0 stations have
+  to sync with each other:
+  - **Optical (no cable):** use the button on the back to set one to
+    channel **b** and the other to **c**. They need a clear view of each
+    other.
+  - **Sync cable:** set them to **A** and **b**.
+
+  The stations never connect to a computer. If libsurvive misidentifies
+  their generation, pass `--lighthouse-gen 1` after `--` to
+  `vive_truth.py`.
 - **Trackers connected by USB-C cable or by a paired dongle.**
   - USB works with no pairing at all, so start with it.
   - A dongle has to be paired to its tracker first. SteamVR normally does
