@@ -831,6 +831,17 @@ impl Node {
             self.peers[i] = Some(peer);
             return RangeResult::Blocked;
         };
+        // Coincident with the peer (a swarm that boots together all starts
+        // at the origin): no range can be linearized, and still widgets may
+        // never drift apart on their own. Both ends get this range, so each
+        // steps half of it apart, opposite ways along an axis from the pair.
+        if self.anchor().is_none() && self.est.p.sub(view.p).norm() < 0.05 && range_m > 0.1 {
+            let (lo, hi) = (self.id.min(peer_id), self.id.max(peer_id));
+            let a = (lo.wrapping_mul(2_654_435_761) ^ hi) % 6283;
+            let a = a as f32 / 1000.0;
+            let s = if self.id > peer_id { 0.5 } else { -0.5 };
+            self.est.shift_position(Vec3::new(libm::cosf(a), libm::sinf(a), 0.0).scale(s * range_m));
+        }
         let predicted = self.est.p.sub(view.p).norm() + self.est.rb;
         if self.cfg.nlos_asymmetric && range_m <= predicted {
             sigma = self.cfg.range_sigma;
