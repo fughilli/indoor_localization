@@ -1,0 +1,15 @@
+diff --git a/src/survive_kalman_lighthouses.c b/src/survive_kalman_lighthouses.c
+index f18daa4..530218a 100644
+--- a/src/survive_kalman_lighthouses.c
++++ b/src/survive_kalman_lighthouses.c
+@@ -218,6 +218,10 @@ void error_fn(void *user, const struct CnMat *x0, const struct CnMat *x1, struct
+ 	}
+ }
+ void survive_kalman_lighthouse_ootx(SurviveKalmanLighthouse *tracker) {
++	// Saved OOTX is replayed at startup, before the lighthouse trackers exist
++	// (from collabora/libsurvive#345, dropped in #363).
++	if (tracker == NULL)
++		return;
+ 	tracker->state.BSD0 = tracker->ctx->bsd[tracker->lh].fcal[0];
+ 	tracker->state.BSD1 = tracker->ctx->bsd[tracker->lh].fcal[1];
+ }

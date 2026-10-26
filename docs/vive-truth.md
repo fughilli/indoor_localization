@@ -34,20 +34,44 @@ to the trackers directly. SteamVR doesn't need to be installed.
     checked here.
   - The carried node needs the dongle, or a long cable.
 - **libsurvive.** Its macOS support is recent: hidapi and plugin-loading
-  fixes were merged in May 2026 (collabora/libsurvive#363). It is not yet
-  tested on this Mac. If it won't run here, use a Linux machine for the
+  fixes were merged in May 2026 (collabora/libsurvive#363). It builds and
+  runs on this Mac with one patch (below), but hasn't been used with real
+  trackers yet. If they won't work here, use a Linux machine for the
   trackers and send the poses over UDP (see below).
 
 ## Building libsurvive (macOS)
 
+Built and checked on this Mac on 2026-10-25, at upstream commit 44e9a29.
+Upstream crashes at startup on a null pointer (`survive_kalman_lighthouse_ootx`):
+saved base-station calibration (OOTX) is replayed before the lighthouse
+trackers exist. That would hit every run after the first calibration is
+saved. `third_party/libsurvive/ootx-null-check.patch` restores the check
+that collabora/libsurvive#345 had added and #363 dropped.
+
 ```sh
 brew install cmake hidapi libusb zlib
 git clone https://github.com/collabora/libsurvive.git
-cd libsurvive && mkdir build && cd build
+cd libsurvive && git checkout 44e9a29
+git apply <this repo>/third_party/libsurvive/ootx-null-check.patch
+mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 make -j8
-./survive-cli   # trackers + base stations visible: should start tracking
+mkdir -p ~/.config/libsurvive   # else calibration isn't saved
+./survive-cli --simulator --simulator-time 10 --record-stdout | grep POSE   # no hardware needed
 ```
+
+End-to-end check with no hardware: libsurvive's simulator, through the
+logger.
+
+```sh
+python3 swarm/tools/vive_truth.py --source cli --survive-cli <build>/survive-cli \
+    --out /tmp/sim_truth.jsonl --map SM0=F694 -- --simulator --simulator-time 10
+```
+
+This wrote ~47 records/s for the simulated tracker `SM0`.
+
+`survive-cli --pair-device` turns on pairing mode, which may pair a
+wireless dongle without SteamVR. This is untested.
 
 The pip wheels for the Python bindings cover Windows and Linux only. On
 macOS, either:
