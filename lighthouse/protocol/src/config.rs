@@ -5,11 +5,12 @@
 //! stream of JSON (the announced length excludes the 2-byte zlib header).
 
 use crate::imu::ImuCalibration;
-use flate2::read::ZlibDecoder;
+use alloc::string::{String, ToString};
+use alloc::vec;
+use alloc::vec::Vec;
 use lh_kernel::math::{Pose, Vec3};
 use lh_kernel::model::TrackerModel;
 use serde_json::Value;
-use std::io::Read;
 
 /// Collects the config chunks.
 #[derive(Clone, Debug, Default)]
@@ -59,9 +60,8 @@ impl ConfigReader {
         if self.data.len() < self.expected.unwrap_or(0) {
             return ReadStep::Short { got: self.data.len(), expected: self.expected.unwrap_or(0) };
         }
-        let mut json = Vec::new();
-        match ZlibDecoder::new(&self.data[..]).read_to_end(&mut json) {
-            Ok(_) => ReadStep::Done(json),
+        match miniz_oxide::inflate::decompress_to_vec_zlib(&self.data) {
+            Ok(json) => ReadStep::Done(json),
             Err(_) => ReadStep::Restart("config doesn't inflate"),
         }
     }

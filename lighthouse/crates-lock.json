@@ -1,5 +1,5 @@
 {
-  "checksum": "0ac1532a40e377cb7946d047832f3ee1e5bb24deb8a0c00a24f36a77fb229a1d",
+  "checksum": "4f7f06ce44e276d7959b8cca3337c34aad91b7bbdf150b883c97a0a638f6fee0",
   "crates": {
     "adler2 2.0.1": {
       "name": "adler2",
@@ -693,6 +693,10 @@
             {
               "id": "libm 0.2.16",
               "target": "libm"
+            },
+            {
+              "id": "miniz_oxide 0.9.1",
+              "target": "miniz_oxide"
             },
             {
               "id": "p256 0.13.2",
@@ -1563,13 +1567,6 @@
         "compile_data_glob": [
           "**"
         ],
-        "crate_features": {
-          "common": [
-            "alloc",
-            "std"
-          ],
-          "selects": {}
-        },
         "edition": "2021",
         "version": "2.8.3"
       },
@@ -2246,7 +2243,7 @@
         ],
         "crate_features": {
           "common": [
-            "std"
+            "alloc"
           ],
           "selects": {}
         },
@@ -2390,8 +2387,7 @@
         ],
         "crate_features": {
           "common": [
-            "default",
-            "std"
+            "alloc"
           ],
           "selects": {}
         },
@@ -3114,6 +3110,7 @@
     "hidapi 2.6.7",
     "hmac 0.12.1",
     "libm 0.2.16",
+    "miniz_oxide 0.9.1",
     "p256 0.13.2",
     "serde_json 1.0.154",
     "sha2 0.10.9"

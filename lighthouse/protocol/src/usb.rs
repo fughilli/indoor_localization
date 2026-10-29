@@ -1,5 +1,7 @@
 //! Wired tracker input reports (docs/lighthouse-protocol.md §4.1, §5.1, §6.1).
 
+use alloc::vec::Vec;
+
 use crate::{Lightcap, RawImu, Sample};
 
 /// IMU interface, report 0x20: a ring of three samples

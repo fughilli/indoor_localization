@@ -105,10 +105,22 @@ use_repo(swarm_crate, "swarm_crates")
 # the unscoped //swarm specs above also land here, unused.
 # Repin: CARGO_BAZEL_REPIN=1 bazelisk query @lighthouse_crates//:all
 lh_crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
+# lh_protocol is no_std + alloc (it also runs on a microcontroller): serde_json's
+# alloc build and miniz_oxide for the config's zlib stream. The host tools turn
+# serde_json's std back on through their own deps (features unify).
 lh_crate.spec(
+    default_features = False,
+    features = ["alloc"],
     package = "serde_json",
     repositories = ["lighthouse_crates"],
     version = "1.0.128",
+)
+lh_crate.spec(
+    default_features = False,
+    features = ["with-alloc"],
+    package = "miniz_oxide",
+    repositories = ["lighthouse_crates"],
+    version = "0.9.1",
 )
 lh_crate.spec(
     default_features = False,

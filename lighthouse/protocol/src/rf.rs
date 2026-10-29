@@ -6,6 +6,9 @@
 //! Blocks, in order, as flagged: IMU (0x80, 13 B), metadata (0x40), input
 //! (0x20), light (0x10, the rest). Bytes past the payload are stale.
 
+use alloc::vec;
+use alloc::vec::Vec;
+
 use crate::{Lightcap, RawImu, Sample};
 
 #[derive(Clone, Debug, Default)]

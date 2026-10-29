@@ -115,6 +115,7 @@ dependencies = [
  "hidapi",
  "hmac",
  "libm",
+ "miniz_oxide",
  "p256",
  "serde_json",
  "sha2",

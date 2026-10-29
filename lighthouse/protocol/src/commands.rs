@@ -1,6 +1,9 @@
 //! Feature reports to send. Command reports are `ff <cmd> <len> <data…>`,
 //! padded to 64 bytes for the dongle.
 
+use alloc::vec;
+use alloc::vec::Vec;
+
 use crate::devices::DeviceKind;
 
 pub const REPORT_LEN: usize = 64;

@@ -4,6 +4,12 @@
 //! The byte formats follow libsurvive (see docs/lighthouse-protocol.md, which
 //! cites the C for every layout); decoding was validated against libsurvive's
 //! output on the recorded sessions (tools/lh_protocheck).
+//!
+//! `no_std` + `alloc` (the config readout inflates with miniz_oxide and parses
+//! with serde_json's alloc build), so it runs on a microcontroller host too.
+#![cfg_attr(not(test), no_std)]
+
+extern crate alloc;
 
 pub mod commands;
 pub mod config;
