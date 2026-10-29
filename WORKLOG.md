@@ -469,6 +469,52 @@ answer first:
   (BLE for the advert/mesh side, UWB for ranging)?
 - Power/size: AirTags as cheap surveyed anchors in place of 3 survey nodes.
 
+## Lighthouse (Vive Tracker 3.0) ground truth & Rust tracker (2026-10-27)
+
+State at end of session (nothing committed yet; all on disk):
+
+- **Live viewer**: `python3 swarm/tools/vive_web/server.py --source lhd`
+  (http://127.0.0.1:8765; Pair tracker / Recalibrate / Record buttons;
+  buttons shown per tracker). Without `--source lhd` it runs patched
+  libsurvive instead. lhd binary: `bazel build -c opt //lighthouse/daemon:lhd`
+  (note: a non-opt `bazel test` repoints bazel-bin; rebuild -c opt before
+  using bazel-bin/lighthouse/...).
+- **Rust stack** under `lighthouse/`: `kernel` (no_std: LH1 timing/OOTX,
+  measurement model, batch calibration with gravity + priors, EKF with IMU
+  and per-station/axis angle biases, orchestrator + events), `protocol`
+  (Vive/Watchman HID bytes, validated bit-exact vs libsurvive: lh_protocheck),
+  `transport` (hidapi live + .rec.gz replay), `daemon` (lhd), `tools`
+  (lh_replay [--raw], lh_protocheck, lh_angles). Host crates in the
+  `lighthouse_crates` hub (MODULE.bazel, scoped by `repositories`).
+- **Calibration** (lhd): `~/.config/lighthouse/calibration.json` (loaded as
+  priors, refined + rewritten on new still scenes). Stations 699579721 (b) and
+  1416427640 (c), 1.135 m apart. libsurvive's: `~/.config/libsurvive/config.json`
+  = `captures/vive/calibration-20261027.config.json` (offline multi-scene fit,
+  swarm/tools/vive_calib.py).
+- **Recordings** `captures/vive/*.rec.gz` (raw HID + decoded lines): turntable-
+  center, turntable-r, slider (stroke 342.9 mm by tape), near, button-test,
+  jitter. `bad/` = broken takes. Replay: `lh_replay X.rec.gz --raw --out f
+  --stations CAL`; score: swarm/tools/vive_diag.py functions.
+- **Findings**: libsurvive took reflections (longest pulse) as sweep hits ->
+  jumps/jiggle; fixed (prediction-gated hit choice; our kernel picks the
+  candidate nearest prediction). Wireless syncs arrive on ~1 sensor and widths
+  are ~300 ticks long vs wired (width grid learned). Per-station/axis angle
+  biases (~±1.3 mrad on axis 1) caused a 30 Hz ripple in a sequential EKF;
+  bias states fixed it (0.95 -> 0.007 mm live). Tracker 3.0 system button
+  comes through RF input block (byte 0x08), libsurvive drops it, lhd emits it.
+  macOS: first 0x04 to an idle wired tracker resets it; dongle feature GETs
+  NAK once; empty 0x11 chunk mid-config = "not ready".
+- **Results** (Rust, raw bytes, multi-scene cal): turntable circle RMS ~1.0-1.3
+  mm, slider straightness 0.55 mm, still noise 0.02-0.05 mm.
+- **Patches** for libsurvive (still used by the non-lhd viewer):
+  `third_party/libsurvive/{ootx-null-check,disambiguator-robust,rawhid-tap}.patch`.
+- **Splanc demo**: `lighthouse/demos/splanc/` (see its README); synthetic tests
+  pass; needs Splanc MCP (list_players, export_map, deploy_effect) + physical
+  calibration.
+- **Open**: world anchoring command; calibration uncertainty into pose
+  covariance; calibration from more than one tracker; LH2 support; docs page
+  for lhd; commit.
+
 ## Open questions / blockers
 
 - Hardware still not attached (blocks RTLS bring-up and swarm port testing).

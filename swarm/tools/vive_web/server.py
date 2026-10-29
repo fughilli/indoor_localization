@@ -1,0 +1,652 @@
+"""Live 3D web viewer for libsurvive: tracker and base-station poses.
+
+  python3 swarm/tools/vive_web/server.py [--port 8765] [-- survive-cli args]
+
+Runs survive-cli, parses its recording stream and serves a three.js page at
+http://127.0.0.1:PORT that streams state over server-sent events (/events).
+Bound to localhost only.
+
+Forwarded from libsurvive's stream:
+  POSE      tracker pose (world frame: gravity-aligned, z up), every one
+  VELOCITY  tracker linear/angular velocity
+  I         calibrated IMU (accel in g, gyro in rad/s), --record-cal-imu;
+            rotated from the IMU frame into the tracker (head) frame POSE uses
+  LH_POSE   base-station poses as libsurvive solves them
+  A         sweep angles: per base station and axis, which sensors are lit
+  CONFIG    tracker JSON config: sensor positions and normals, moved from the
+            config's "trackref" frame into the head frame, and the IMU's rotation
+  INFO LOG  libsurvive's log lines
+
+Recording (from the page, or POST /record/start {"name", "notes"} and
+/record/stop): survive-cli's full stream, raw light and raw IMU included, goes
+to captures/vive/<time>_<name>.rec.gz (its CONFIG lines first), next to a copy
+of libsurvive's config.json (the base-station calibration playback needs) and
+a .json with the notes and timing. Replay with
+  survive-cli --playback X.rec.gz --configfile X.config.json --playback-factor 0
+
+Also survive-cli doesn't recover when the tracker resets as it's switched
+into light mode (macOS), so it's restarted after --restart-after seconds
+without a single HID report (the device is gone, not merely untracked), or
+from the page. Never while recording: a restart resets libsurvive's clock
+and drops ~1 s of data, and a recording must be one unbroken stream.
+"""
+
+import argparse
+import gzip
+import json
+import re
+import shutil
+import os
+import queue
+import signal
+import subprocess
+import sys
+import threading
+import time
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_CLI = os.path.expanduser("~/Projects/git_checkouts/libsurvive/build-hid/survive-cli")
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
+CAPTURE_DIR = os.path.join(REPO, "captures", "vive")
+LIBSURVIVE_CONFIG = os.path.expanduser("~/.config/libsurvive/config.json")
+HEADER_OPS = ("CONFIG", "IMU_SCALES")
+# libsurvive's SurviveButton ids; a wireless tracker's button bitmask uses the
+# same numbering (bit index = id).
+BUTTON_NAMES = {0: "trigger", 1: "trackpad", 2: "thumbstick", 3: "system", 4: "A", 5: "B", 6: "menu", 7: "grip"}
+# Feature-report traffic (device config reads, mode switches) happens at startup, before any
+# recording; every exchange is kept and replayed at the top of each recording, in order.
+HIDFEAT_KEEP = 20000
+BATCH_S = 1 / 60.0
+LIT_WINDOW_S = 0.25
+
+
+def frame_from_config(entry):
+    """(R, t) of trackref_from_frame for a config "head"/"imu" entry, built the
+    way libsurvive's solve_vive_pose does: columns plus_x, plus_z x plus_x,
+    plus_z (R maps frame coordinates to trackref)."""
+    x, z = entry.get("plus_x"), entry.get("plus_z")
+    if not x or not z:
+        return None
+    y = [z[1] * x[2] - z[2] * x[1], z[2] * x[0] - z[0] * x[2], z[0] * x[1] - z[1] * x[0]]
+    cols = []
+    for v in (x, y, z):
+        n = sum(c * c for c in v) ** 0.5 or 1.0
+        cols.append([c / n for c in v])
+    R = [[cols[c][r] for c in range(3)] for r in range(3)]
+    return R, entry.get("position", [0.0, 0.0, 0.0])
+
+
+def mat_t_vec(R, v):
+    """R^T v."""
+    return [sum(R[r][c] * v[r] for r in range(3)) for c in range(3)]
+
+
+def mat_vec(R, v):
+    return [sum(R[r][c] * v[c] for c in range(3)) for r in range(3)]
+
+
+def head_frames(cfg):
+    """From a tracker's JSON config: a function taking trackref points to the
+    head frame (what POSE is), and the rotation taking IMU vectors to it."""
+    head = frame_from_config(cfg.get("head", {})) or ([[1, 0, 0], [0, 1, 0], [0, 0, 1]], [0, 0, 0])
+    imu = frame_from_config(cfg.get("imu", {})) or head
+    Rh, th = head
+    Ri, _ = imu
+
+    def point(p):
+        return mat_t_vec(Rh, [p[i] - th[i] for i in range(3)])
+
+    def imu_vec(v):
+        return mat_t_vec(Rh, mat_vec(Ri, v))
+
+    return point, imu_vec, (lambda n: mat_t_vec(Rh, n))
+
+
+class Hub:
+    """Shared state plus a queue per connected page."""
+
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.clients = []
+        self.lighthouses = {}  # id -> {"id", "mode", "p", "q", "t"}
+        self.configs = {}  # dev -> {"points", "normals"} in the head frame
+        self.imu_to_head = {}  # dev -> function rotating IMU-frame vectors into the head frame
+        self.log = []  # recent log lines
+        self.status = {"survive": "starting", "restarts": 0}
+        self.pending = {"poses": [], "imu": [], "vel": {}, "log": []}
+        self.lit = {}  # (dev, lh, axis, sensor) -> host time last hit
+        self.counts = {"pose": 0, "imu": 0, "angle": 0, "hid": 0}
+        self.rates = {"pose": 0.0, "imu": 0.0, "angle": 0.0, "hid": 0.0}
+        self.last_pose = 0.0
+        self.last_hid = 0.0
+        self.buttons = {}  # dev -> {"held": set of ids, "presses": n}
+
+    def subscribe(self):
+        q = queue.Queue(maxsize=600)
+        with self.lock:
+            self.clients.append(q)
+            snap = {"type": "snapshot", "lighthouses": list(self.lighthouses.values()),
+                    "configs": self.configs, "log": self.log[-50:], "status": self.status}
+        q.put(snap)
+        return q
+
+    def unsubscribe(self, q):
+        with self.lock:
+            if q in self.clients:
+                self.clients.remove(q)
+
+    def broadcast(self, msg):
+        with self.lock:
+            clients = list(self.clients)
+        for q in clients:
+            try:
+                q.put_nowait(msg)
+            except queue.Full:
+                pass  # a stalled page drops frames rather than holding us up
+
+    def add_log(self, line):
+        with self.lock:
+            self.log.append(line)
+            self.log = self.log[-200:]
+            self.pending["log"].append(line)
+
+    def line(self, raw):
+        parts = raw.split()
+        if len(parts) < 3:
+            return
+        now = time.time()
+        kind = parts[2]
+        try:
+            if kind == "POSE" and len(parts) >= 10:
+                v = [float(x) for x in parts[3:10]]
+                with self.lock:
+                    self.pending["poses"].append({"dev": parts[1], "t": float(parts[0]), "ht": now,
+                                                  "p": v[0:3], "q": v[3:7]})
+                    self.counts["pose"] += 1
+                self.last_pose = now
+            elif kind == "I" and len(parts) >= 14:
+                v = [float(x) for x in parts[5:14]]
+                rot = self.imu_to_head.get(parts[1])
+                acc, gyro = (rot(v[0:3]), rot(v[3:6])) if rot else (v[0:3], v[3:6])
+                with self.lock:
+                    self.pending["imu"].append({"dev": parts[1], "t": float(parts[0]), "acc": acc, "gyro": gyro,
+                                                "acc_imu": v[0:3], "frame": "head" if rot else "imu"})
+                    self.counts["imu"] += 1
+            elif kind == "BUTTON" and len(parts) >= 5:
+                # "<t> <dev> BUTTON <event> <id>": event 3 = down, 2 = up (4/5 touch).
+                ev, bid = int(parts[3]), int(parts[4])
+                if ev in (2, 3):
+                    held = set(self.buttons.get(parts[1], {}).get("held", set()))
+                    (held.add if ev == 3 else held.discard)(bid)
+                    self.set_buttons(parts[1], held)
+            elif kind == "HIDIN":
+                self.counts["hid"] += 1
+                self.last_hid = now
+            elif kind == "VELOCITY" and len(parts) >= 9:
+                v = [float(x) for x in parts[3:9]]
+                with self.lock:
+                    self.pending["vel"][parts[1]] = {"v": v[0:3], "w": v[3:6]}
+            elif kind == "A" and len(parts) >= 9:
+                sensor, acode, lh = int(parts[3]), int(parts[4]), int(parts[8])
+                with self.lock:
+                    self.lit[(parts[1], lh, acode & 1, sensor)] = now
+                    self.counts["angle"] += 1
+            elif kind == "LH_POSE" and len(parts) >= 11:
+                v = [float(x) for x in parts[3:10]]
+                lh_id = parts[10]
+                rec = {"id": lh_id, "mode": int(parts[1]), "p": v[0:3], "q": v[3:7], "t": float(parts[0])}
+                with self.lock:
+                    self.lighthouses[lh_id] = rec
+                self.broadcast({"type": "lighthouse", **rec})
+            elif kind == "CONFIG":
+                cfg = json.loads(raw.split("CONFIG", 1)[1])
+                lc = cfg.get("lighthouse_config", {})
+                point, imu_vec, normal = head_frames(cfg)
+                rec = {"points": [point(p) for p in lc.get("modelPoints", [])],
+                       "normals": [normal(n) for n in lc.get("modelNormals", [])],
+                       "serial": cfg.get("device_serial_number"),
+                       "imu_position": point(cfg.get("imu", {}).get("position", [0, 0, 0]))}
+                with self.lock:
+                    self.configs[parts[1]] = rec
+                    self.imu_to_head[parts[1]] = imu_vec
+                self.broadcast({"type": "config", "dev": parts[1], **rec})
+            elif parts[1] == "INFO" and kind == "LOG":
+                self.add_log("%8.3f %s" % (float(parts[0]), raw.split("LOG", 1)[1].strip()))
+            elif kind == "DISCONNECT":
+                self.add_log("%8.3f %s disconnected" % (float(parts[0]), parts[1]))
+        except (ValueError, IndexError):
+            pass
+
+    def lhd_event(self, e):
+        """One lhd event (lighthouse/daemon) into the page's state."""
+        now = time.time()
+        kind = e.get("type")
+        if kind == "pose":
+            with self.lock:
+                self.pending["poses"].append({"dev": e["serial"], "t": e["t"], "ht": now, "p": e["p"], "q": e["q"]})
+                self.counts["pose"] += 1
+            self.last_pose = now
+        elif kind == "imu":
+            with self.lock:
+                self.pending["imu"].append({"dev": e["serial"], "t": now, "acc": e["acc"], "gyro": e["gyro"],
+                                            "acc_imu": e["acc"], "frame": "head"})
+                self.counts["imu"] += 1
+        elif kind == "calibrated":
+            for st in e.get("stations", []):
+                rec = {"id": str(st["id"]), "mode": st.get("mode") or 0, "p": st["p"], "q": st["q"], "t": now}
+                with self.lock:
+                    self.lighthouses[rec["id"]] = rec
+                self.broadcast({"type": "lighthouse", **rec})
+            self.add_log("calibrated (%s): %s" % (e.get("reason"), ", ".join(
+                "%s rms %.0f urad" % (s["id"], s["rms"] * 1e6) for s in e.get("stations", []))))
+        elif kind == "buttons":
+            mask = int(e.get("buttons", 0))
+            self.set_buttons(e["serial"], {i for i in range(32) if mask >> i & 1})
+        elif kind == "device" and e.get("sensors_head"):
+            rec = {"points": e["sensors_head"], "normals": e.get("normals_head", []), "serial": e["serial"],
+                   "imu_position": [0, 0, 0]}
+            with self.lock:
+                self.configs[e["serial"]] = rec
+            self.broadcast({"type": "config", "dev": e["serial"], **rec})
+            self.add_log("%s %s %s" % (e.get("name"), e["serial"], e.get("state")))
+        else:
+            # Everything else is a log line on the page.
+            self.add_log(" ".join("%s=%s" % (k, v) for k, v in e.items()
+                                  if k not in ("cov",) and not isinstance(v, list) or k in ("accel",)))
+
+    def set_buttons(self, dev, held):
+        """New set of held button ids for a device: logs presses and releases."""
+        with self.lock:
+            b = self.buttons.setdefault(dev, {"held": set(), "presses": 0})
+            down, up = held - b["held"], b["held"] - held
+            b["held"] = set(held)
+            b["presses"] += len(down)
+        for i in sorted(down):
+            self.add_log("%s button %s pressed" % (dev, BUTTON_NAMES.get(i, "bit %d" % i)))
+        for i in sorted(up):
+            self.add_log("%s button %s released" % (dev, BUTTON_NAMES.get(i, "bit %d" % i)))
+
+    def flush(self):
+        """One batch to every page: new poses and IMU samples, latest velocity,
+        which sensors each base station lit recently, and rates."""
+        now = time.time()
+        with self.lock:
+            batch, self.pending = self.pending, {"poses": [], "imu": [], "vel": {}, "log": []}
+            cut = now - LIT_WINDOW_S
+            lit = {}
+            for (dev, lh, axis, sensor), t in list(self.lit.items()):
+                if t < cut:
+                    del self.lit[(dev, lh, axis, sensor)]
+                    continue
+                lit.setdefault(dev, {}).setdefault("%d" % lh, [[], []])[axis].append(sensor)
+            status = dict(self.status)
+            buttons = {d: {"held": sorted(b["held"]), "names": [BUTTON_NAMES.get(i, "bit %d" % i) for i in sorted(b["held"])],
+                           "presses": b["presses"]} for d, b in self.buttons.items()}
+        if batch["imu"]:
+            # The page only draws the newest accel; keep a few for smoothing.
+            batch["imu"] = batch["imu"][-4:]
+        msg = {"type": "batch", "now": now, "lit": lit, "rates": self.rates, "status": status, "buttons": buttons,
+               "last_pose_age": now - self.last_pose if self.last_pose else None, **batch}
+        self.broadcast(msg)
+
+    def tick_rates(self, dt):
+        with self.lock:
+            self.rates = {k: v / dt for k, v in self.counts.items()}
+            self.counts = {k: 0 for k in self.counts}
+
+
+class Recorder:
+    """Tees survive-cli's stream into a playback-ready recording."""
+
+    def __init__(self, hub, args):
+        self.hub, self.args = hub, args
+        self.lock = threading.Lock()
+        self.header = {}  # (dev, op) -> line, replayed at the top of each recording
+        self.hidfeat = []  # every HIDFEAT line so far, in order
+        self.f = None
+        self.meta = None
+        self.base = None
+        self.lines = 0
+
+    def feed(self, raw):
+        parts = raw.split(None, 3)
+        if parts and parts[0] == "OPTION" or len(parts) >= 3 and parts[2] in HEADER_OPS:
+            self.header[(parts[1], parts[2] if len(parts) > 2 else "")] = raw
+        elif len(parts) >= 3 and parts[2] == "HIDFEAT" and len(self.hidfeat) < HIDFEAT_KEEP:
+            self.hidfeat.append(raw)
+        if self.f:
+            with self.lock:
+                if self.f:
+                    self.f.write(raw if raw.endswith("\n") else raw + "\n")
+                    self.lines += 1
+
+    def start(self, name, notes):
+        self.stop()
+        slug = re.sub(r"[^A-Za-z0-9_.-]+", "-", name.strip()) or "session"
+        os.makedirs(CAPTURE_DIR, exist_ok=True)
+        base = os.path.join(CAPTURE_DIR, time.strftime("%Y%m%d-%H%M%S") + "_" + slug)
+        if os.path.exists(LIBSURVIVE_CONFIG):
+            shutil.copyfile(LIBSURVIVE_CONFIG, base + ".config.json")
+        with self.hub.lock:
+            lighthouses = list(self.hub.lighthouses.values())
+        self.meta = {"name": name, "notes": notes, "start_ht": time.time(), "survive_args": self.args,
+                     "lighthouses_at_start": lighthouses, "files": {"recording": os.path.basename(base) + ".rec.gz",
+                                                                    "config": os.path.basename(base) + ".config.json"}}
+        f = gzip.open(base + ".rec.gz", "wt", compresslevel=3)
+        for line in list(self.header.values()) + list(self.hidfeat):
+            f.write(line if line.endswith("\n") else line + "\n")
+        with self.lock:
+            self.f, self.base, self.lines = f, base, 0
+        self.write_meta()
+        self.hub.add_log("--- recording %s" % os.path.relpath(base, REPO))
+
+    def stop(self):
+        with self.lock:
+            f, self.f = self.f, None
+        if not f:
+            return
+        f.close()
+        self.meta["stop_ht"] = time.time()
+        self.meta["seconds"] = round(self.meta["stop_ht"] - self.meta["start_ht"], 2)
+        self.meta["lines"] = self.lines
+        self.write_meta()
+        self.hub.add_log("--- saved %s (%d lines, %.0f s)" % (os.path.relpath(self.base, REPO) + ".rec.gz",
+                                                              self.lines, self.meta["seconds"]))
+
+    def write_meta(self):
+        with open(self.base + ".json", "w") as m:
+            json.dump(self.meta, m, indent=1)
+
+    def status(self):
+        if not self.f:
+            return None
+        return {"name": self.meta["name"], "file": os.path.relpath(self.base, REPO) + ".rec.gz",
+                "seconds": round(time.time() - self.meta["start_ht"], 1), "lines": self.lines}
+
+
+class Survive:
+    def __init__(self, hub, cli, args, recorder):
+        self.hub, self.cli, self.args, self.recorder = hub, cli, args, recorder
+        self.proc = None
+        self.started = 0.0
+        self.lock = threading.Lock()
+
+    def start(self):
+        with self.lock:
+            self._stop()
+            # Raw light and raw IMU are what playback needs; the page itself uses
+            # the calibrated IMU and the angles.
+            # --record-rawhid (our libsurvive patch) adds every HID report byte for byte.
+            cmd = [self.cli, "--record-stdout", "--record-rawhid", "1", "--record-rawlight", "1", "--record-imu", "1",
+                   "--record-cal-imu", "1", "--record-angle", "1"] + self.args
+            self.proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                                         bufsize=1, errors="replace", start_new_session=True)
+            self.started = time.time()
+            self.hub.status["survive"] = "running"
+            self.hub.add_log("--- started survive-cli %s" % " ".join(self.args))
+            threading.Thread(target=self.read, args=(self.proc,), daemon=True).start()
+
+    def read(self, proc):
+        for raw in proc.stdout:
+            self.recorder.feed(raw)
+            self.hub.line(raw)
+        if proc is self.proc:
+            self.hub.status["survive"] = "exited (%s)" % proc.wait()
+            self.hub.add_log("--- survive-cli exited")
+
+    def _stop(self):
+        if self.proc and self.proc.poll() is None:
+            try:
+                os.killpg(self.proc.pid, signal.SIGTERM)
+                self.proc.wait(5)
+            except (ProcessLookupError, subprocess.TimeoutExpired):
+                try:
+                    os.killpg(self.proc.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+        self.proc = None
+
+    def stop(self):
+        with self.lock:
+            self._stop()
+
+    def restart(self, why):
+        self.hub.add_log("--- restarting survive-cli: %s" % why)
+        self.hub.status["restarts"] += 1
+        self.start()
+
+
+class Lhd:
+    """The Rust pipeline (lighthouse/daemon, lhd) as the source instead of
+    survive-cli: its JSON-line events are translated into the page's messages,
+    and recording, pairing and recalibration are commands on its stdin. lhd
+    handles device reconnects itself, so there's no watchdog restart."""
+
+    def __init__(self, hub, binary, args):
+        self.hub, self.binary, self.args = hub, binary, args
+        self.proc = None
+        self.started = time.time()
+        self.lock = threading.Lock()
+
+    def start(self):
+        with self.lock:
+            self._stop()
+            self.proc = subprocess.Popen([self.binary] + self.args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                         stderr=subprocess.STDOUT, text=True, bufsize=1, errors="replace",
+                                         start_new_session=True)
+            self.started = time.time()
+            self.hub.status["survive"] = "running"
+            self.hub.status["source"] = "lhd"
+            self.hub.add_log("--- started lhd %s" % " ".join(self.args))
+            threading.Thread(target=self.read, args=(self.proc,), daemon=True).start()
+
+    def read(self, proc):
+        for raw in proc.stdout:
+            try:
+                e = json.loads(raw)
+            except ValueError:
+                self.hub.add_log(raw.strip())
+                continue
+            self.hub.lhd_event(e)
+        if proc is self.proc:
+            self.hub.status["survive"] = "exited (%s)" % proc.wait()
+            self.hub.add_log("--- lhd exited")
+
+    def command(self, obj):
+        with self.lock:
+            if self.proc and self.proc.poll() is None:
+                try:
+                    self.proc.stdin.write(json.dumps(obj) + "\n")
+                    self.proc.stdin.flush()
+                    return True
+                except (BrokenPipeError, OSError):
+                    pass
+        return False
+
+    def _stop(self):
+        if self.proc and self.proc.poll() is None:
+            try:
+                os.killpg(self.proc.pid, signal.SIGTERM)
+                self.proc.wait(5)
+            except (ProcessLookupError, subprocess.TimeoutExpired):
+                try:
+                    os.killpg(self.proc.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+        self.proc = None
+
+    def stop(self):
+        with self.lock:
+            self._stop()
+
+    def restart(self, why):
+        self.hub.add_log("--- restarting lhd: %s" % why)
+        self.hub.status["restarts"] += 1
+        self.start()
+
+
+class LhdRecorder:
+    """Recording when lhd is the source: lhd writes the raw traffic (same
+    format), this keeps the page's status and the .json sidecar."""
+
+    def __init__(self, lhd, calibration):
+        self.lhd, self.calibration = lhd, calibration
+        self.meta = None
+        self.base = None
+
+    def start(self, name, notes):
+        self.stop()
+        slug = re.sub(r"[^A-Za-z0-9_.-]+", "-", name.strip()) or "session"
+        os.makedirs(CAPTURE_DIR, exist_ok=True)
+        self.base = os.path.join(CAPTURE_DIR, time.strftime("%Y%m%d-%H%M%S") + "_" + slug)
+        if self.calibration and os.path.exists(self.calibration):
+            shutil.copyfile(self.calibration, self.base + ".calibration.json")
+        self.meta = {"name": name, "notes": notes, "start_ht": time.time(), "source": "lhd",
+                     "files": {"recording": os.path.basename(self.base) + ".rec.gz"}}
+        self.lhd.command({"cmd": "record", "path": self.base + ".rec.gz"})
+        self.write_meta()
+
+    def stop(self):
+        if not self.meta or "stop_ht" in self.meta:
+            return
+        self.lhd.command({"cmd": "stop_record"})
+        self.meta["stop_ht"] = time.time()
+        self.meta["seconds"] = round(self.meta["stop_ht"] - self.meta["start_ht"], 2)
+        self.write_meta()
+
+    def write_meta(self):
+        with open(self.base + ".json", "w") as m:
+            json.dump(self.meta, m, indent=1)
+
+    def status(self):
+        if not self.meta or "stop_ht" in self.meta:
+            return None
+        return {"name": self.meta["name"], "file": os.path.relpath(self.base, REPO) + ".rec.gz",
+                "seconds": round(time.time() - self.meta["start_ht"], 1), "lines": 0}
+
+
+def make_handler(hub, survive, recorder):
+    index = os.path.join(HERE, "index.html")
+
+    class Handler(BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+
+        def do_GET(self):
+            if self.path in ("/", "/index.html"):
+                body = open(index, "rb").read()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+            elif self.path == "/events":
+                self.send_response(200)
+                self.send_header("Content-Type", "text/event-stream")
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                q = hub.subscribe()
+                try:
+                    while True:
+                        try:
+                            msg = q.get(timeout=5)
+                            self.wfile.write(b"data: " + json.dumps(msg, separators=(",", ":")).encode() + b"\n\n")
+                        except queue.Empty:
+                            self.wfile.write(b": ping\n\n")
+                        self.wfile.flush()
+                except (BrokenPipeError, ConnectionResetError):
+                    pass
+                finally:
+                    hub.unsubscribe(q)
+            else:
+                self.send_error(404)
+
+        def do_POST(self):
+            if self.path == "/restart":
+                survive.restart("requested from the page")
+            elif self.path == "/pair" and isinstance(survive, Lhd):
+                survive.command({"cmd": "pair"})
+            elif self.path == "/recalibrate" and isinstance(survive, Lhd):
+                survive.command({"cmd": "recalibrate"})
+            elif self.path == "/record/start":
+                n = int(self.headers.get("Content-Length") or 0)
+                try:
+                    body = json.loads(self.rfile.read(n) or b"{}")
+                except ValueError:
+                    body = {}
+                recorder.start(str(body.get("name", "session")), str(body.get("notes", "")))
+            elif self.path == "/record/stop":
+                recorder.stop()
+            else:
+                return self.send_error(404)
+            self.send_response(204)
+            self.end_headers()
+
+    return Handler
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--port", type=int, default=8765)
+    ap.add_argument("--survive-cli", default=DEFAULT_CLI)
+    ap.add_argument("--restart-after", type=float, default=10.0,
+                    help="restart survive-cli after this many seconds without any HID report")
+    ap.add_argument("--no-open", action="store_true", help="don't open the page in a browser")
+    ap.add_argument("--source", choices=["libsurvive", "lhd"], default="libsurvive",
+                    help="libsurvive (survive-cli) or lhd (the Rust pipeline, //lighthouse/daemon:lhd)")
+    ap.add_argument("--lhd", default=os.path.join(REPO, "bazel-bin", "lighthouse", "daemon", "lhd"))
+    ap.add_argument("--calibration", default=os.path.expanduser("~/.config/lighthouse/calibration.json"),
+                    help="lhd: station calibration file (loaded, and rewritten after each calibration)")
+    ap.add_argument("--replay", help="lhd: play this recording instead of live devices (real time)")
+    ap.add_argument("survive_args", nargs="*", default=["--lighthouse-gen", "1"],
+                    help="after --: passed to survive-cli")
+    a = ap.parse_args()
+
+    hub = Hub()
+    if a.source == "lhd":
+        os.makedirs(os.path.dirname(a.calibration), exist_ok=True)
+        args = ["--calibration", a.calibration] + (["--replay", a.replay] if a.replay else [])
+        survive = Lhd(hub, a.lhd, args)
+        recorder = LhdRecorder(survive, a.calibration)
+        a.restart_after = float("inf")
+    else:
+        recorder = Recorder(hub, a.survive_args)
+        survive = Survive(hub, a.survive_cli, a.survive_args, recorder)
+    server = ThreadingHTTPServer(("127.0.0.1", a.port), make_handler(hub, survive, recorder))
+    server.daemon_threads = True
+
+    def shutdown(*_):
+        recorder.stop()
+        survive.stop()
+        os._exit(0)
+
+    signal.signal(signal.SIGTERM, shutdown)
+    signal.signal(signal.SIGINT, shutdown)
+
+    def loop():
+        last_rates = time.time()
+        while True:
+            time.sleep(BATCH_S)
+            hub.status["recording"] = recorder.status()
+            hub.flush()
+            now = time.time()
+            if now - last_rates >= 1.0:
+                hub.tick_rates(now - last_rates)
+                last_rates = now
+            quiet = now - max(hub.last_hid, survive.started)
+            if quiet > a.restart_after and not recorder.status():
+                survive.restart("no HID report for %.0f s" % quiet)
+
+    survive.start()
+    threading.Thread(target=loop, daemon=True).start()
+    url = "http://127.0.0.1:%d/" % a.port
+    print("serving", url, flush=True)
+    if not a.no_open:
+        subprocess.Popen(["open", url])
+    server.serve_forever()
+
+
+if __name__ == "__main__":
+    main()

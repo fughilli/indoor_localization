@@ -98,6 +98,45 @@ swarm_crate.from_specs(
 )
 use_repo(swarm_crate, "swarm_crates")
 
+# Host-only crates for //lighthouse (protocol decoding, transports, tools):
+# device config JSON, zlib (config readout, .rec.gz replays), hidapi (live
+# trackers and dongles; links the system hidapi from Homebrew / libudev).
+# Scoped with `repositories` so //swarm's hub (and its lockfile) is unaffected;
+# the unscoped //swarm specs above also land here, unused.
+# Repin: CARGO_BAZEL_REPIN=1 bazelisk query @lighthouse_crates//:all
+lh_crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
+lh_crate.spec(
+    package = "serde_json",
+    repositories = ["lighthouse_crates"],
+    version = "1.0.128",
+)
+lh_crate.spec(
+    default_features = False,
+    features = ["rust_backend"],
+    package = "flate2",
+    repositories = ["lighthouse_crates"],
+    version = "1.0.34",
+)
+lh_crate.spec(
+    default_features = False,
+    features = ["linux-static-hidraw"],
+    package = "hidapi",
+    repositories = ["lighthouse_crates"],
+    version = "2.6.3",
+)
+lh_crate.from_specs(
+    name = "lighthouse_crates",
+    cargo_lockfile = "//lighthouse:crates-Cargo.lock",
+    lockfile = "//lighthouse:crates-lock.json",
+    supported_platform_triples = [
+        "aarch64-apple-darwin",
+        "aarch64-unknown-linux-gnu",
+        "x86_64-apple-darwin",
+        "x86_64-unknown-linux-gnu",
+    ],
+)
+use_repo(lh_crate, "lighthouse_crates")
+
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(
     hub_name = "pypi",

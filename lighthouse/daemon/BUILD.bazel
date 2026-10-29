@@ -1,0 +1,17 @@
+# lhd: the lighthouse tracking daemon (transport → protocol → kernel → JSON
+# lines). See src/main.rs.
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+rust_binary(
+    name = "lhd",
+    srcs = glob(["src/**/*.rs"]),
+    crate_root = "src/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//lighthouse/kernel:lh_kernel",
+        "//lighthouse/protocol:lh_protocol",
+        "//lighthouse/transport:lh_transport",
+        "@lighthouse_crates//:flate2",
+        "@lighthouse_crates//:serde_json",
+    ],
+)
