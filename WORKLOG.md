@@ -469,6 +469,20 @@ answer first:
   (BLE for the advert/mesh side, UWB for ranging)?
 - Power/size: AirTags as cheap surveyed anchors in place of 3 survey nodes.
 
+## Lighthouse crates moved to fughilli/lighthouse (2026-10-29)
+
+- The lighthouse crates and host tools (kernel, protocol, device, transport,
+  lhd, tools, docs/lighthouse-protocol.md) now live in the public repo
+  **fughilli/lighthouse** (AGPL-3.0), pinned here with `archive_override` in
+  MODULE.bazel, as Splanc's ESP32-P4 player also pins them. Build lhd with
+  `bazel build -c opt @lighthouse//daemon:lhd`; the viewer finds it under
+  `bazel-bin/external/lighthouse*/daemon/lhd`. Re-sync = bump the pin.
+- New there: `lh_device` (no_std): one device over an abstract HID Link (the
+  handshake + report decoding, out of lhd), shared by lhd and the P4. lh_protocol
+  is no_std + alloc (miniz_oxide, serde_json alloc).
+- `lighthouse/demos/splanc` (the Splanc tracker demo, stylus probe calibration)
+  stays here.
+
 ## Lighthouse (Vive Tracker 3.0) ground truth & Rust tracker (2026-10-27)
 
 State at end of session (nothing committed yet; all on disk):

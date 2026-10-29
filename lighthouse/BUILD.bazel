@@ -1,6 +1,0 @@
-# Pinned crate universe for //lighthouse host-side Rust (see MODULE.bazel:
-# lighthouse_crates). The kernel itself only uses libm (@swarm_crates).
-exports_files([
-    "crates-Cargo.lock",
-    "crates-lock.json",
-])

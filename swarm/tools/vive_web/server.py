@@ -32,6 +32,7 @@ and drops ~1 s of data, and a recording must be one unbroken stream.
 """
 
 import argparse
+import glob
 import gzip
 import json
 import re
@@ -219,7 +220,7 @@ class Hub:
             pass
 
     def lhd_event(self, e):
-        """One lhd event (lighthouse/daemon) into the page's state."""
+        """One lhd event (@lighthouse//daemon) into the page's state."""
         now = time.time()
         kind = e.get("type")
         if kind == "pose":
@@ -418,7 +419,7 @@ class Survive:
 
 
 class Lhd:
-    """The Rust pipeline (lighthouse/daemon, lhd) as the source instead of
+    """The Rust pipeline (lhd, @lighthouse//daemon) as the source instead of
     survive-cli: its JSON-line events are translated into the page's messages,
     and recording, pairing and recalibration are commands on its stdin. lhd
     handles device reconnects itself, so there's no watchdog restart."""
@@ -595,8 +596,11 @@ def main():
                     help="restart survive-cli after this many seconds without any HID report")
     ap.add_argument("--no-open", action="store_true", help="don't open the page in a browser")
     ap.add_argument("--source", choices=["libsurvive", "lhd"], default="libsurvive",
-                    help="libsurvive (survive-cli) or lhd (the Rust pipeline, //lighthouse/daemon:lhd)")
-    ap.add_argument("--lhd", default=os.path.join(REPO, "bazel-bin", "lighthouse", "daemon", "lhd"))
+                    help="libsurvive (survive-cli) or lhd (the Rust pipeline, @lighthouse//daemon:lhd)")
+    # lhd comes from the @lighthouse module (fughilli/lighthouse):
+    #   bazel build -c opt @lighthouse//daemon:lhd
+    ap.add_argument("--lhd", default=next(iter(sorted(glob.glob(os.path.join(
+        REPO, "bazel-bin", "external", "lighthouse*", "daemon", "lhd")))), None))
     ap.add_argument("--calibration", default=os.path.expanduser("~/.config/lighthouse/calibration.json"),
                     help="lhd: station calibration file (loaded, and rewritten after each calibration)")
     ap.add_argument("--replay", help="lhd: play this recording instead of live devices (real time)")

@@ -98,56 +98,16 @@ swarm_crate.from_specs(
 )
 use_repo(swarm_crate, "swarm_crates")
 
-# Host-only crates for //lighthouse (protocol decoding, transports, tools):
-# device config JSON, zlib (config readout, .rec.gz replays), hidapi (live
-# trackers and dongles; links the system hidapi from Homebrew / libudev).
-# Scoped with `repositories` so //swarm's hub (and its lockfile) is unaffected;
-# the unscoped //swarm specs above also land here, unused.
-# Repin: CARGO_BAZEL_REPIN=1 bazelisk query @lighthouse_crates//:all
-lh_crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
-# lh_protocol is no_std + alloc (it also runs on a microcontroller): serde_json's
-# alloc build and miniz_oxide for the config's zlib stream. The host tools turn
-# serde_json's std back on through their own deps (features unify).
-lh_crate.spec(
-    default_features = False,
-    features = ["alloc"],
-    package = "serde_json",
-    repositories = ["lighthouse_crates"],
-    version = "1.0.128",
+# Lighthouse (Vive Tracker) tracking: kernel, protocol, device (no_std), lhd and
+# the tools, from fughilli/lighthouse (moved out of this repo so Splanc's ESP32-P4
+# player can pin it too). lhd: bazel build -c opt @lighthouse//daemon:lhd
+bazel_dep(name = "lighthouse", version = "0.0.0")
+archive_override(
+    module_name = "lighthouse",
+    integrity = "sha256-8KeGlT7pzwdNLef7lhSrY6z3Dh94V+n5u6gwwPRVEKw=",
+    strip_prefix = "lighthouse-4919232c4e350efcfe4dd6e49a83929cdf046c4f",
+    urls = ["https://github.com/fughilli/lighthouse/archive/4919232c4e350efcfe4dd6e49a83929cdf046c4f.tar.gz"],
 )
-lh_crate.spec(
-    default_features = False,
-    features = ["with-alloc"],
-    package = "miniz_oxide",
-    repositories = ["lighthouse_crates"],
-    version = "0.9.1",
-)
-lh_crate.spec(
-    default_features = False,
-    features = ["rust_backend"],
-    package = "flate2",
-    repositories = ["lighthouse_crates"],
-    version = "1.0.34",
-)
-lh_crate.spec(
-    default_features = False,
-    features = ["linux-static-hidraw"],
-    package = "hidapi",
-    repositories = ["lighthouse_crates"],
-    version = "2.6.3",
-)
-lh_crate.from_specs(
-    name = "lighthouse_crates",
-    cargo_lockfile = "//lighthouse:crates-Cargo.lock",
-    lockfile = "//lighthouse:crates-lock.json",
-    supported_platform_triples = [
-        "aarch64-apple-darwin",
-        "aarch64-unknown-linux-gnu",
-        "x86_64-apple-darwin",
-        "x86_64-unknown-linux-gnu",
-    ],
-)
-use_repo(lh_crate, "lighthouse_crates")
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(
