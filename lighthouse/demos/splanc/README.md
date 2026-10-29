@@ -1,0 +1,234 @@
+# Splanc tracker demo
+
+A Vive Tracker 3.0 drives a Splanc LED fixture. You place a virtual plane in a 3D
+workspace, and the app streams that plane to the fixture over OSC (`/plane ,ffff`, in the
+fixture's map frame F). The fixture's `plane_slice` effect then lights the LEDs where it
+crosses the plane. The app also runs the tracker↔fixture calibration from
+`splanc-tracker-api.md` §5: rub fit, LED-touch correspondences with `led_pick`, then
+mount and record `T_TF`.
+
+Python 3.11 with numpy and scipy, plus a three.js page (pinned CDN, the same pattern as
+`swarm/tools/vive_web`). The server binds to 127.0.0.1 only.
+
+## Files
+
+| File | What |
+| --- | --- |
+| `frames.py` | Quaternions, similarity transforms, `plane_to_fixture` (§2), pose mean and spread, Umeyama. |
+| `ledmap.py` | Loads the LED map CSV (§4), computes outward normals and the local-quadric signed distance surface. |
+| `calib.py` | Joint robust fit, next-LED choice, hold detector, convergence, `T_TF` and the mount JSON. |
+| `osc.py` | OSC encode/decode, `OscStreamer` (≤120 Hz cap, ≥5 Hz keep-alive), UDP, dry-run log and callback transports. |
+| `poses.py` | `PoseSource` interface: `SseSource` (vive_web `/events`), `ReplaySource` (POSE lines), `SyntheticSource`. |
+| `synth.py` | Fake cylinder lamp, hidden truth, simulated tracker (rubs, touches, mount), `FakeFixture` (decodes OSC). |
+| `app.py` | HTTP server, state machine and CLI. |
+| `static/index.html` | The workspace UI. |
+| `effects/plane_slice.glsl`, `effects/led_pick.glsl` | The two effect sources from the API doc, to deploy with Splanc MCP. |
+| `effects/sphere_shell.glsl` | Like `plane_slice`, for a sphere: lights LEDs within `width` of its surface. Streamed as `/sphere ,ffff` (centre xyz, radius; metres, frame F). |
+| `tests/` | `test_units.py` (maths, map, hold, OSC, sources), `test_calib_synth.py` (calibration against the hidden truth), `test_app_synthetic.py` (whole app over HTTP). |
+
+The maths (`frames`, `ledmap`, `calib`) has no server or UI code in it.
+
+## Frames (read this before touching the maths)
+
+| Frame | Convention |
+| --- | --- |
+| **W** | libsurvive's world, as `swarm/tools/vive_web/server.py` streams it: gravity-aligned, right-handed, metres, **+Z up**. This is *not* SteamVR's +Y up. If a source's world is +Y up, it converts with `frames.STEAMVR_TO_W` (a +90° turn about X: (x, y, z) → (x, −z, y)) before handing poses on (`--world-up y`). |
+| **T** | The tracker's reporting frame, libsurvive's "head": origin at the 1/4" mount on the base, **+Z points out of the base** (in the tracker config the sensors all sit at z < 0). So the contact face's outward normal is +Z_T, and the initial contact point is `c = (0, 0, 0)`. |
+| **F** | The Splanc LED map frame: metres, **+Y up**. |
+
+- Fixture pose: `x_W = s·R·p + t` (`T_WF`, a similarity, where `s` is the map scale).
+- Live: `T_WF = T_WT · T_TF`.
+- Plane: `n_F = Rᵀ n_W`, `d_F = (d_W − n_W·t)/s` (`frames.plane_to_fixture`).
+- The up axes only matter in two places. The initial guess for `T_WF` assumes the
+  fixture stands upright (F +Y → W +Z), trying 8 yaws. From 3 touches on, a Umeyama
+  start with no orientation assumption is also tried. The UI draws in W with +Z up.
+
+## Running
+
+```sh
+cd lighthouse/demos/splanc
+
+# 1. Fully offline: simulated tracker + simulated fixture. Nothing goes on the network
+#    (OSC goes to the simulated fixture and the dry-run log, osc-dry-run.log).
+python3 app.py --synthetic            # open http://127.0.0.1:8770
+
+# 2. Live poses, dry run: reads swarm/tools/vive_web (http://127.0.0.1:8765/events,
+#    read-only; start it yourself). OSC is decoded and logged, not sent.
+python3 app.py --map pixielamp.csv
+
+# 3. The real fixture: OSC to <ip>:9000. Only the address you give is used; nothing is discovered.
+python3 app.py --map pixielamp.csv --fixture 192.168.1.42 --mount-name lamp-top [--dry-run to also log]
+```
+
+On macOS, sending to the fixture needs Local Network access (System Settings → Privacy &
+Security → Local Network). Homebrew's Python runs from its own `Python.app` bundle, which
+is checked separately and may never be prompted; a send then fails with
+`No route to host` (the app prints it once). Apple's `/usr/bin/python3` is covered by the
+launching app's permission and runs the demo (3.9 with numpy and scipy is enough).
+
+Other options:
+
+- `--device T20` follows a specific tracker. The default is the first one seen, or the
+  device named in the mount file.
+- `--source file.txt|.gz` replays `<t> <dev> POSE x y z qw qx qy qz` lines, for example a
+  `captures/vive/*.rec.gz` that contains them.
+- `--exclude 0-12,240` never picks these LED indices for touches (e.g. coiled inside the
+  controller housing). LEDs the tracker's flat base can't sit on (a waist between two
+  bulges; `ledmap.BASE_RADIUS`, `BASE_CLEARANCE`) are left out automatically. Both are
+  drawn dimmed purple.
+- `--scale auto|on|off --s 1.0` sets the map scale handling.
+- `--mount path.json` loads a specific mount record.
+- `--max-hz` sets the OSC rate cap (≤120, default 120). `--keepalive-hz` sets the
+  keep-alive rate (≥5, default 10) for the shape (`/plane` or `/sphere`). `/width`, `/halo`
+  and `/glow` go out on change and once a second.
+- **Shape:** the page's shape selector streams either the plane (`/plane`, deploy
+  `plane_slice`) or a sphere centred on the handle (`/sphere`, deploy `sphere_shell`),
+  with its radius slider. `x_F = Rᵀ(x_W − t)/s`, `r_F = r_W/s` (`frames.sphere_to_fixture`).
+
+With `--mount-name NAME`, `mounts/NAME.json` is loaded at startup if it exists, and a
+new mount record is saved there.
+
+## Tracker button
+
+The tracker's system button can run the whole wizard (live sources only: the vive_web batch
+carries a running press count per tracker). The page shows what the next press does.
+
+| Step | Press | Double press |
+| --- | --- | --- |
+| idle | start rubbing | |
+| rub | stop & fit; the fit then starts the touches | |
+| touch, LED blinking | confirm the touch | skip the LED |
+| touch, converged | mount mode | |
+| mount | record: hold still 1 s once the tracker is stuck on | |
+
+- A confirm uses the poses from 0.7 s to 0.15 s *before* the press, so the click's own jolt
+  isn't in it. It is rejected (low beep, reason on the page) if the contact point moved more
+  than 2 mm or the tracker turned more than 1.5° in that window.
+- The first press switches the touches to button control: a still hold no longer accepts by
+  itself.
+- A double press is two presses within 0.45 s, so a single press acts after that delay.
+- Keep presses short: holding the system button down for a few seconds turns the tracker off.
+
+## Calibration (the wizard follows §5)
+
+**The fixture must not move from the first rub until the mount is recorded.**
+
+1. **Rub** (*Start rub*). Sweep the tracker's flat base over the whole fixture surface,
+   at many orientations. A few thousand samples is plenty. *Stop & fit* runs the
+   surface-only fit: robust (Cauchy) loss, with the signed distance taken to the k
+   nearest LEDs' local surfaces (outward PCA normals, MST-oriented, plus a fitted
+   curvature term so curved fixtures aren't biased), and multi-start over yaw. On a
+   symmetric fixture this fit is rough; that is expected.
+2. **Touch** (*Start touches*). The app picks the most informative LED: far from the
+   ones already touched and on a different side of the fixture. It sends `/pick <index>`
+   and draws that LED (and its predicted position) in the workspace.
+   - Put the contact point on the LED and hold still. The app accepts the touch after
+     1 s with < 1 mm position spread and < 0.5° rotation spread, then beeps and re-fits
+     rubs and touches together.
+   - The tracker has to move 1 cm away before the next hold counts. From the fourth
+     touch on, a hold more than 3 cm from the predicted LED position is rejected (low
+     beep), so a tracker set down on the table isn't taken as a touch.
+   - The table shows each touch's residual and its tilt. Use *drop* or *redo* on
+     outliers. Over 1 cm usually means a wrong `c`, a wrong scale, or the fixture moved.
+   - *Skip LED* covers LEDs you can't reach. *Accept now* forces a touch.
+   - **Vary the tilt between touches**, or `c` can't be separated from `T_WF`.
+3. **Converged** when all of these hold:
+   - at least 4 touches,
+   - the last re-fit moved the LEDs < 0.5 mm, the rotation < 0.2° and `c` < 0.5 mm,
+   - the touch RMS is < 3 mm,
+   - in `auto` scale mode, the scale is being estimated. `s` is only estimated once the
+     touched LEDs span at least half the map's extent along every principal axis.
+     Before that, a wrong fixed scale hides in t, c and o with deceptively small
+     residuals. The synthetic runs show this.
+
+   It typically takes 6–7 touches in simulation.
+4. **Mount** (*Mount mode*, then *Record now*). Attach the tracker to the fixture
+   without moving the fixture, then hold still for 1 s. The app computes
+   `T_TF = T_WT⁻¹ · T_WF` and saves it to `mounts/<name>.json`, then goes live.
+5. **Live.** Each tracker sample gives `T_WF = T_WT · T_TF`, which is turned into
+   `/plane n_F d_F`. `/width`, `/halo` and `/glow` come from the panel.
+
+*Save session* writes the raw rubs and touches to `sessions/` for offline debugging.
+
+Mount record (`mounts/<name>.json`):
+- `T_TF` is a 4×4 similarity with `s` folded into its 3×3 block; `s`, `R_TF`,
+  `q_TF_wxyz` and `t_TF` are also stored separately.
+- It also holds the device, the map summary (with a sha256 prefix of the CSV, and a
+  warning if a different map is loaded later), the fit (`c_T`, `o`, `T_WF`, residuals)
+  and the touches.
+
+## OSC (§3)
+
+- `/plane ,ffff`, `/width ,f`, `/halo ,f`, `/glow ,fff` in live mode.
+- `/pick ,f <CSV index>` in the calibration modes. Only that mode's addresses are
+  streamed.
+- The latest value wins, capped at ≤120 Hz, and every value is re-sent at the
+  keep-alive rate.
+- Several messages due at once go out as one `#bundle`.
+- Dry-run lines look like `<time> /plane 0.12 0.98 0.05 0.061`.
+
+## What the user (or a Splanc-connected agent) has to do
+
+This session had no Splanc MCP tools, so none of these have been run.
+
+1. **Find the fixture.** Run `list_players` to get the fixture's name, IP and firmware
+   (expected: 1.12.7). The fixture needs a DHCP lease on the same 2.4 GHz LAN as this
+   machine. A `169.254.x.x` address ignores OSC.
+2. **Export the map.** Run `export_map {format: "csv"}` for that fixture, save the file
+   (e.g. `pixielamp.csv`) and pass it with `--map`. Don't commit it.
+3. **Deploy `led_pick` once.** Optionally run `compile_effect` on the source first.
+   ```
+   deploy_effect {source: <effects/led_pick.glsl>, activate: true, players: [<fixture>],
+                  name: "Tracker calibration: LED pick",
+                  description: "Blinks the LED at index `pick` (OSC /pick ,f), dims the rest. For tracker↔fixture calibration.",
+                  tags: ["tracker", "calibration", "osc"]}
+   ```
+   Note the returned `library_id`. Run `measure_effect` to confirm it fits. Use
+   `force: true` only if the estimator refuses and `measure_effect` shows it really fits.
+4. **Deploy `plane_slice` the same way.**
+   ```
+   deploy_effect {source: <effects/plane_slice.glsl>, activate: true, players: [<fixture>],
+                  name: "Tracker plane slice",
+                  description: "Lights LEDs within `width` of a plane streamed over OSC /plane ,ffff (unit normal + offset, metres, map frame).",
+                  tags: ["tracker", "plane", "osc"]}
+   ```
+5. **Switch effects** between calibration and live by deploying again by id:
+   `deploy_effect {library_id: <id>, activate: true, players: [<fixture>]}`. Don't paste
+   the source again; that fills the library with copies.
+   - **Never use `crossfade_to` on 1.12.7.** OSC only drives deck A, and a crossfade
+     leaves the effect on deck B, where it stops responding. If one happened, a plain
+     `deploy_effect` restores deck A; `list_decks` shows which deck is visible.
+6. **Rules from the doc:**
+   - Keep the library private; don't copy library entries into this repo.
+   - Don't `update_effect` / `delete_effect` entries you didn't create.
+   - Don't `commit: true` uniforms while streaming.
+   - Don't use `update_firmware`, `set_device_name`, `trust_player` or `forget_player`
+     without asking.
+7. **Run the app** with `--fixture <ip>` and do the physical calibration above.
+   Use `led_pick` while rubbing and touching, then `plane_slice` before *Go live*.
+
+## Tests
+
+```sh
+python3 tests/test_units.py          # ~1 s: frames/plane maths, map surface, hold, OSC (rate cap, keep-alive, UDP loopback), sources
+python3 tests/test_calib_synth.py -v # ~45 s: calibration vs hidden truth (T_WF, c, o, s), 3 seeds, lift-offs, a wrong touch
+python3 tests/test_app_synthetic.py  # ~45 s: the whole app over HTTP in --synthetic mode, through mount and live
+python3 tests/test_buttons.py        # ~10 s: the tracker-button wizard on simulated time, rub through mount
+```
+
+The synthetic fixture is a 300-LED helix on a 0.12 m × Ø0.08 m cylinder. The map has
+0.3 mm noise, and 20 rows are `mapped=0` with 5× the noise. The hidden truth has a
+diffuser offset of `o = 3 mm`, a 3 % map scale error, an off-centre contact point, and
+yaw and tilt.
+
+The simulated tracker adds 0.2 mm / 0.03° noise and 6 % lift-off outliers (20 % in the
+robustness test). Typical recovery:
+- LEDs placed to ≤ 1 mm in W (rotation ≤ 0.2°),
+- `c` to ≤ 1.2 mm,
+- `o` to ≤ 1.2 mm,
+- `s` to ≤ 1 %,
+in 6–7 touches.
+
+`s` comes out about 0.3–0.5 % low on average. This is a selection effect, not a model
+error: the next-LED choice prefers extreme LEDs, and map noise pushes those outward.
+With a noise-free map the bias disappears (−0.04 %).
