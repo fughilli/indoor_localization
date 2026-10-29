@@ -8,6 +8,7 @@ rust_binary(
     crate_root = "src/main.rs",
     visibility = ["//visibility:public"],
     deps = [
+        "//lighthouse/device:lh_device",
         "//lighthouse/kernel:lh_kernel",
         "//lighthouse/protocol:lh_protocol",
         "//lighthouse/transport:lh_transport",

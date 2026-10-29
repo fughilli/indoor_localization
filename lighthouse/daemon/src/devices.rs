@@ -5,15 +5,10 @@
 //! disconnecting.
 
 use crate::record::Recorder;
+use lh_device::{Decoder, Link, LinkError, Output};
 use lh_kernel::kernel::{Event, Input, Kernel};
-use lh_kernel::math::Vec3;
-use lh_kernel::timing::Pulse;
-use lh_protocol::config::{ConfigReader, DeviceConfig, ReadStep};
+use lh_protocol::commands;
 use lh_protocol::devices::{self, DeviceKind, DeviceType, Interface};
-use lh_protocol::imu::ImuCalibration;
-use lh_protocol::rf::RfDecoder;
-use lh_protocol::usb::{self, UsbImu};
-use lh_protocol::{commands, Sample};
 use lh_transport::{DeviceInfo, Transport, TransportError, TransportEvent};
 use serde_json::{json, Value};
 use std::time::Duration;
@@ -36,11 +31,8 @@ struct Dev {
     info: DeviceInfo,
     kind: &'static DeviceType,
     state: State,
-    kernel_id: Option<u32>,
-    config: Option<DeviceConfig>,
-    imu_cal: ImuCalibration,
-    rf: RfDecoder,
-    usb_imu: UsbImu,
+    /// Set once the handshake succeeded (config, IMU scales, kernel id).
+    dec: Option<Decoder>,
     last_report: Duration,
     last_imu_note: f64,
     /// Last button mask reported (the tracker repeats states).
@@ -54,67 +46,46 @@ pub struct DeviceManager {
     now: Duration,
 }
 
-/// Retry a GET a few times: a dongle NAKs (-1) until it has the answer from
-/// its tracker (~20 ms).
-fn get(t: &mut dyn Transport, dev: &Dev, id: u8, rec: &mut Recorder) -> Result<Vec<u8>, TransportError> {
-    let mut last = Err(TransportError::NoDevice);
-    for _ in 0..5 {
-        last = t.get_feature(&dev.info.key, id, 64);
-        match &last {
+/// A device's control link through the transport, recording every feature
+/// request (a failed GET is recorded as -1, like libsurvive's recordings).
+struct HidLink<'a> {
+    t: &'a mut dyn Transport,
+    dev: &'a Dev,
+    rec: &'a mut Recorder,
+}
+
+impl Link for HidLink<'_> {
+    fn get_feature(&mut self, id: u8, len: usize) -> Result<Vec<u8>, LinkError> {
+        match self.t.get_feature(&self.dev.info.key, id, len) {
             Ok(b) => {
-                rec.feature(&dev.info.name, "GET", b.len() as i64, b);
-                return last;
+                self.rec.feature(&self.dev.info.name, "GET", b.len() as i64, &b);
+                Ok(b)
             }
-            Err(TransportError::NotRecorded) => return last,
-            Err(_) => {
-                rec.feature(&dev.info.name, "GET", -1, &[id]);
-                std::thread::sleep(Duration::from_millis(20));
+            Err(TransportError::NotRecorded) => Err(LinkError::NotRecorded),
+            Err(e) => {
+                self.rec.feature(&self.dev.info.name, "GET", -1, &[id]);
+                Err(match e {
+                    TransportError::NoDevice => LinkError::Gone,
+                    TransportError::Io(m) => LinkError::Other(m),
+                    TransportError::NotRecorded => LinkError::NotRecorded,
+                })
             }
         }
     }
-    last
+
+    fn set_feature(&mut self, data: &[u8]) -> bool {
+        set(self.t, self.dev, data, self.rec)
+    }
+
+    fn delay_ms(&mut self, ms: u32) {
+        std::thread::sleep(Duration::from_millis(ms as u64));
+    }
 }
 
 fn set(t: &mut dyn Transport, dev: &Dev, data: &[u8], rec: &mut Recorder) -> bool {
     let r = t.set_feature(&dev.info.key, data);
     rec.feature(&dev.info.name, "SET", r.as_ref().map(|n| *n as i64).unwrap_or(-1), data);
     r.is_ok()
-}
-
-fn handshake(t: &mut dyn Transport, dev: &Dev, rec: &mut Recorder) -> Result<(DeviceConfig, ImuCalibration), String> {
-    let mut reader = ConfigReader::default();
-    let first = get(t, dev, commands::GET_CONFIG_START, rec).map_err(|e| format!("config start: {:?}", e))?;
-    if let ReadStep::Restart(why) = reader.start(&first) {
-        return Err(why.into());
-    }
-    let mut waits = 0;
-    let json = loop {
-        let chunk = get(t, dev, commands::GET_CONFIG_CHUNK, rec).map_err(|e| format!("config chunk: {:?}", e))?;
-        match reader.chunk(&chunk) {
-            ReadStep::More => continue,
-            ReadStep::Done(j) => break j,
-            ReadStep::Restart(why) => return Err(why.into()),
-            ReadStep::Short { got, expected } => {
-                waits += 1;
-                if waits > 200 {
-                    return Err(format!("config stuck at {} of {} bytes", got, expected));
-                }
-                std::thread::sleep(Duration::from_millis(5));
-            }
-        }
-    };
-    let config = lh_protocol::config::parse(&json)?;
-    for m in commands::startup(dev.kind.kind) {
-        set(t, dev, &m, rec);
-    }
-    let _ = get(t, dev, commands::GET_VERSION, rec);
-    let mut imu = config.imu;
-    if let Ok(s) = get(t, dev, commands::GET_IMU_SCALES, rec) {
-        if s.len() >= 3 {
-            imu.set_scale_modes(s[1], s[2]);
-        }
-    }
-    Ok((config, imu))
 }
 
 impl DeviceManager {
@@ -130,7 +101,7 @@ impl DeviceManager {
     }
 
     pub fn serial_of(&self, kernel_id: u32) -> Option<String> {
-        self.devs.iter().find(|d| d.kernel_id == Some(kernel_id)).and_then(|d| d.config.as_ref().map(|c| c.serial.clone()))
+        self.devs.iter().filter_map(|d| d.dec.as_ref()).find(|x| x.dev == kernel_id).map(|x| x.config.serial.clone())
     }
 
     pub fn handle(
@@ -150,11 +121,7 @@ impl DeviceManager {
                     info,
                     kind,
                     state: State::Unconfigured { next_try: self.now },
-                    kernel_id: None,
-                    config: None,
-                    imu_cal: ImuCalibration::default(),
-                    rf: RfDecoder::default(),
-                    usb_imu: UsbImu::default(),
+                    dec: None,
                     last_report: self.now,
                     last_imu_note: 0.0,
                     buttons: None,
@@ -166,7 +133,7 @@ impl DeviceManager {
             TransportEvent::Removed(key) => {
                 if let Some(i) = self.devs.iter().position(|d| d.info.key == key) {
                     let d = self.devs.remove(i);
-                    if let Some(id) = d.kernel_id {
+                    if let Some(id) = d.dec.as_ref().map(|x| x.dev) {
                         kernel.push(Input::DeviceRemoved { dev: id }, events);
                     }
                     notes.push(Note(json!({"type":"usb","name":d.info.name,"state":"removed"})));
@@ -181,49 +148,37 @@ impl DeviceManager {
                 if !matches!(d.state, State::Streaming) {
                     return;
                 }
-                let (Some(id), Some(cfg)) = (d.kernel_id, d.config.as_ref()) else { return };
-                let mut samples = Vec::new();
-                match role {
-                    Some(Interface::Watchman) => d.rf.decode(&data, &mut samples),
-                    Some(Interface::Imu) => d.usb_imu.decode(&data, &mut samples),
-                    Some(Interface::Lightcap) => usb::decode_lightcap(&data, &mut samples),
-                    Some(Interface::Buttons) => usb::decode_buttons(&data, &mut samples),
-                    None => {}
-                }
-                for s in samples {
-                    match s {
-                        Sample::Imu(i) => {
-                            let (a, g) = d.imu_cal.apply(&i);
-                            let accel_g = Vec3::new(a[0], a[1], a[2]);
-                            let gyro = Vec3::new(g[0], g[1], g[2]);
-                            kernel.push(Input::Imu { dev: id, time: i.timecode, accel_g, gyro }, events);
-                            // The viewer shows the accel vector; ~30 Hz is plenty.
-                            let ts = i.timecode as f64 / 48e6;
-                            if (ts - d.last_imu_note).abs() > 0.033 {
-                                d.last_imu_note = ts;
-                                // In the head frame, like poses.
-                                let r = cfg.model.body_from_head.rot.conj();
-                                let ah = r.rotate(accel_g).to_array();
-                                let gh = r.rotate(gyro).to_array();
-                                notes.push(Note(json!({"type":"imu","serial":cfg.serial,"acc":ah,"gyro":gh})));
+                let Some(dec) = d.dec.as_mut() else { return };
+                let mut outs = Vec::new();
+                dec.report(interface, &data, &mut outs);
+                let serial = dec.config.serial.clone();
+                let head_rot = dec.config.model.body_from_head.rot.conj();
+                for o in outs {
+                    match o {
+                        Output::Kernel(input) => {
+                            if let Input::Imu { time, accel_g, gyro, .. } = &input {
+                                // The viewer shows the accel vector; ~30 Hz is plenty.
+                                let ts = *time as f64 / 48e6;
+                                if (ts - d.last_imu_note).abs() > 0.033 {
+                                    d.last_imu_note = ts;
+                                    // In the head frame, like poses.
+                                    let ah = head_rot.rotate(*accel_g).to_array();
+                                    let gh = head_rot.rotate(*gyro).to_array();
+                                    notes.push(Note(json!({"type":"imu","serial":serial,"acc":ah,"gyro":gh})));
+                                }
                             }
+                            kernel.push(input, events);
                         }
-                        Sample::Light(l) => {
-                            if let Some(sensor) = cfg.channel_map.get(l.sensor as usize).copied().flatten() {
-                                kernel.push(Input::Pulse { dev: id, pulse: Pulse { sensor, start: l.timestamp, len: l.length as u32 } }, events);
-                            }
+                        Output::Battery { percent, charging } => {
+                            notes.push(Note(json!({"type":"battery","serial":serial,"percent":percent,"charging":charging})))
                         }
-                        Sample::Battery { percent, charging } => {
-                            notes.push(Note(json!({"type":"battery","serial":cfg.serial,"percent":percent,"charging":charging})))
-                        }
-                        Sample::Buttons { buttons } => {
+                        Output::Buttons(buttons) => {
                             if d.buttons != Some(buttons) {
                                 d.buttons = Some(buttons);
-                                notes.push(Note(json!({"type":"buttons","serial":cfg.serial,"buttons":buttons})));
+                                notes.push(Note(json!({"type":"buttons","serial":serial,"buttons":buttons})));
                             }
                         }
-                        Sample::TurnedOff => d.last_report = Duration::ZERO,
-                        Sample::Malformed(_) => {}
+                        Output::TurnedOff => d.last_report = Duration::ZERO,
                     }
                 }
             }
@@ -244,7 +199,10 @@ impl DeviceManager {
         for i in 0..self.devs.len() {
             let quiet = now.saturating_sub(self.devs[i].last_report);
             match self.devs[i].state {
-                State::Unconfigured { next_try } if now >= next_try => match handshake(t, &self.devs[i], rec) {
+                State::Unconfigured { next_try } if now >= next_try => match lh_device::handshake(
+                    &mut HidLink { t: &mut *t, dev: &self.devs[i], rec: &mut *rec },
+                    self.devs[i].kind,
+                ) {
                     Ok((config, imu)) => {
                         let id = self.next_kernel_id;
                         self.next_kernel_id += 1;
@@ -257,12 +215,9 @@ impl DeviceManager {
                         notes.push(Note(json!({"type":"device","name":d.info.name,"serial":config.serial,
                             "model":config.model_number,"sensors":config.model.sensors.len(),"state":"connected",
                             "sensors_head":sensors_head,"normals_head":normals_head})));
-                        kernel.push(Input::DeviceAdded { dev: id, model: config.model.clone(), wireless: d.kind.wireless() }, events);
-                        d.kernel_id = Some(id);
-                        d.config = Some(config);
-                        d.imu_cal = imu;
-                        d.rf = RfDecoder::default();
-                        d.usb_imu = UsbImu::default();
+                        let dec = Decoder::new(d.kind, config, imu, id);
+                        kernel.push(dec.added(), events);
+                        d.dec = Some(dec);
                         d.state = State::Streaming;
                         d.last_report = now;
                     }
@@ -278,10 +233,11 @@ impl DeviceManager {
                 },
                 State::Streaming if self.devs[i].kind.wireless() && quiet > Duration::from_secs(1) => {
                     let d = &mut self.devs[i];
-                    if let Some(id) = d.kernel_id.take() {
-                        kernel.push(Input::DeviceRemoved { dev: id }, events);
+                    let dec = d.dec.take();
+                    if let Some(x) = &dec {
+                        kernel.push(Input::DeviceRemoved { dev: x.dev }, events);
                     }
-                    let serial = d.config.take().map(|c| c.serial).unwrap_or_default();
+                    let serial = dec.map(|x| x.config.serial).unwrap_or_default();
                     notes.push(Note(json!({"type":"device","name":d.info.name,"serial":serial,"state":"disconnected"})));
                     d.state = State::Unconfigured { next_try: now + Duration::from_millis(500) };
                 }
@@ -302,7 +258,7 @@ impl DeviceManager {
 
     pub fn haptic(&mut self, t: &mut dyn Transport, serial: &str, rec: &mut Recorder) {
         for d in &self.devs {
-            if d.config.as_ref().map_or(false, |c| c.serial == serial || serial.is_empty()) {
+            if d.dec.as_ref().map_or(false, |x| x.config.serial == serial || serial.is_empty()) {
                 set(t, d, &commands::haptic(200.0, 0.5, 0.3), rec);
             }
         }
