@@ -11,7 +11,13 @@ Where the files in `artifacts/` came from is in [ARTIFACTS.md](ARTIFACTS.md);
 |---|---|---|---|
 | fughilli/indoor_localization (private) | `wip/p4-tracker-2026-11-01` (off `lighthouse`) | this one | the Splanc demo's `--p4` mode, the truth rig's flat head, the vive_web change, this document and the artifacts |
 | fughilli/lighthouse (public) | `wip/f32-photon-latency` (off `main` 4919232) | 324b2ba | f32 kernel for the P4, the latency work in kernel/device/lhd/lh_replay |
-| fughilli/splanc (public) | `agent/p4-tracker` (off `main` 2c493fc0) | 11296d44 | the P4 player, the C6 front end, the tracker module, the photon-to-photon pipeline |
+| fughilli/splanc-private (private) | `agent/p4-tracker` (off `main` 2c493fc0) | 11296d44 | the P4 player, the C6 front end, the tracker module, the photon-to-photon pipeline |
+
+The Splanc work is kept out of the public fughilli/splanc until it's ready for
+release. `fughilli/splanc-private` is a private copy of it: GitHub doesn't allow
+a private fork of a public repo. In `~/Projects/splanc-p4` its remote is
+`private`, and `origin` is still the public repo. To release, push or PR from
+`private` to `origin`.
 
 The local branch `f32` in the lighthouse checkout carried no commits; the new
 branch holds its working tree, so the f32 and latency changes are one commit.
