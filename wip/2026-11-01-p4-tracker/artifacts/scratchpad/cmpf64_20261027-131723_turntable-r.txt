@@ -1,0 +1,8 @@
+20261027-131723_turntable-r.rec.gz: lhd_pinned vs lhd: f64 5580 poses (2s), f32 5580 poses (1s)
+  f64 calibrated FirstStations: 699579721 p=(-0.4107,0.3707,0.0323) rms 28urad
+  f64 tracking started 
+  f64 calibrated NewStation: 699579721 p=(-0.4355,0.3423,0.0175) rms 428urad; 1416427640 p=(0.5895,0.6856,0.2552) rms 548urad
+  f32 calibrated FirstStations: 699579721 p=(-0.4107,0.3707,0.0323) rms 28urad
+  f32 tracking started 
+  f32 calibrated NewStation: 699579721 p=(-0.4355,0.3423,0.0175) rms 428urad; 1416427640 p=(0.5895,0.6856,0.2552) rms 548urad
+  common 5580: |dp| median 0.000 mm, p95 0.000 mm, max 0.000 mm; rot median 0.0000 deg, p95 0.0000, max 0.0000

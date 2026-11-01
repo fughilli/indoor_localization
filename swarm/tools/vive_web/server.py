@@ -580,6 +580,17 @@ def make_handler(hub, survive, recorder):
                 recorder.start(str(body.get("name", "session")), str(body.get("notes", "")))
             elif self.path == "/record/stop":
                 recorder.stop()
+            elif self.path == "/pose":
+                # A pose tracked somewhere else (e.g. a Splanc P4 player's wired tracker,
+                # relayed by lighthouse/demos/splanc --p4): {"dev", "p", "q"[, "t"]}, in this
+                # viewer's world. Shown like any other tracker.
+                n = int(self.headers.get("Content-Length") or 0)
+                try:
+                    body = json.loads(self.rfile.read(n) or b"{}")
+                    hub.lhd_event({"type": "pose", "serial": str(body["dev"]), "t": float(body.get("t", time.time())),
+                                   "p": [float(x) for x in body["p"]], "q": [float(x) for x in body["q"]]})
+                except (ValueError, KeyError, TypeError):
+                    return self.send_error(400)
             else:
                 return self.send_error(404)
             self.send_response(204)

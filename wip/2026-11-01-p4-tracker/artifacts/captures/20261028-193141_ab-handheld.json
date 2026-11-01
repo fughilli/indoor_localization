@@ -1,0 +1,50 @@
+{
+ "name": "ab-handheld",
+ "notes": "both trackers: still, hand-waved, still; libsurvive vs lh_replay on the same data",
+ "start_ht": 1793241101.662122,
+ "survive_args": [
+  "--lighthouse-gen",
+  "1"
+ ],
+ "lighthouses_at_start": [
+  {
+   "id": "1416427640",
+   "mode": 2,
+   "p": [
+    -2.300692,
+    -1.196738,
+    1.652352
+   ],
+   "q": [
+    -0.703141,
+    -0.431447,
+    0.35849,
+    0.436956
+   ],
+   "t": 2.844389
+  },
+  {
+   "id": "699579721",
+   "mode": 1,
+   "p": [
+    0.000252,
+    1.073801,
+    1.640395
+   ],
+   "q": [
+    0.18272,
+    0.07859,
+    0.566102,
+    0.799978
+   ],
+   "t": 2.844226
+  }
+ ],
+ "files": {
+  "recording": "20261028-193141_ab-handheld.rec.gz",
+  "config": "20261028-193141_ab-handheld.config.json"
+ },
+ "stop_ht": 1793241174.317302,
+ "seconds": 72.66,
+ "lines": 743221
+}

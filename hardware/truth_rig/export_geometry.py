@@ -77,7 +77,7 @@ def export(fab=FAB):
     stl_dir = os.path.join(out_dir, "stl")
     os.makedirs(stl_dir, exist_ok=True)
     for old in os.listdir(stl_dir):
-        if old.endswith(".stl") and old[:-4] not in STL and old != "BallStandIn.stl":  # ball_standin.py's
+        if old.endswith(".stl") and old[:-4] not in STL and old not in ("BallStandIn.stl", "HeadFlat.stl"):  # ball_standin.py, head_flat.py
             os.remove(os.path.join(stl_dir, old))  # parts no longer in the design
     for fname, obj in STL.items():
         shape = doc.getObject(obj).Shape.copy()

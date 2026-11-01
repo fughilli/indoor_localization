@@ -1,0 +1,16 @@
+F
+======================================================================
+FAIL: test_full_flow (tests.test_app_synthetic.AppSynthetic)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kevin/Projects/git_checkouts/indoor_localization/lighthouse/demos/splanc/tests/test_app_synthetic.py", line 94, in test_full_flow
+    s = self.wait(lambda s: s["converged"] and not s["fitting"], 120, "convergence")
+  File "/Users/kevin/Projects/git_checkouts/indoor_localization/lighthouse/demos/splanc/tests/test_app_synthetic.py", line 85, in wait
+    self.fail("timed out waiting for " + what + ": " + json.dumps(s)[:600])
+AssertionError: timed out waiting for convergence: {"type": "state", "now": 1793300341.9620092, "mode": "touch", "device": "SIM0", "devices": {"SIM0": 0.01}, "source": {"source": "synthetic", "samples": 6480, "mode": "touch"}, "pose": {"M": [[-0.6108870194440379, 0.3167272924540526, 0.7256037980120451, 0.4257353864732384], [0.7298221118658367, -0.12996713401218085, 0.6711692998851708, -0.2891742343280657], [0.3068822811868909, 0.9395703093922163, -0.15175934634198018, 0.890711560913754], [0.0, 0.0, 0.0, 1.0]], "age": 0.009129047393798828, "contact": [0.4236204860771757, -0.287895700296496, 0.8888621423141929]}, "T_WF": [[0.8010962723642471, 0.
+
+----------------------------------------------------------------------
+Ran 1 test in 77.802s
+
+FAILED (failures=1)
+rub fit: rub rms 0.54 mm

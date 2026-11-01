@@ -1,0 +1,516 @@
+data: {"type":"snapshot","lighthouses":[{"id":"699579721","mode":1,"p":[-0.5093153442133747,0.5467227417328256,-0.0036002855894195795],"q":[0.3278318269282082,0.3571221472037959,-0.6211432700046606,-0.6157687093035671],"t":1793145512.6882172},{"id":"1416427640","mode":2,"p":[0.5948847713476726,0.8089956500672144,0.07512166973371248],"q":[0.2874438663268554,0.27736791830075597,0.6237689012025638,0.6718299036967025],"t":1793145512.6882172}],"configs":{"LHR-C6198565":{"points":[[-0.022977622855082168,-0.025202665630728018,-0.03531567946858704],[-0.025217985644564046,-0.015350027756020429,-0.03972004233859478],[-0.03419759766310454,-0.020409256270527823,-0.030291191519796843],[-0.03287925412282348,-0.008080717635899778,-0.03541964698471129],[-0.028164439031481747,-0.016999614030495283,-0.006129413549881429],[-0.023364744297787544,0.012908105018734933,-0.0062193268176168204],[-0.010112266973406071,0.031809454771876335,-0.03535328330881894],[0.00010754890898679627,0.039388886304199705,-0.031081432858109468],[4.063331417551719e-06,0.02841188799962401,-0.039507318984344605],[0.0001237552930077098,0.017204132570698857,-0.02166262779682875],[9.90947834769041e-05,-0.022661391753330828,-0.01652782715111971],[-3.196872876796812e-05,-0.027619202037900685,-0.006050967397540808],[0.01028731826972217,0.0315702330455184,-0.035294242289289825],[-0.0001060507842921641,0.03558756418377161,-0.014171336339227856],[0.023395535712689167,0.012800344411469995,-0.005959107121825218],[0.03255412668511272,-0.007887735363282262,-0.03548179050795734],[0.028270335333049297,-0.016793226512148977,-0.0060867335650138564],[0.03394015339985489,-0.020517959777265785,-0.030334065878391266],[0.025262044935300945,-0.015153141188062727,-0.03962454129345714],[0.022993864275142543,-0.025134212437272072,-0.035472834364697337]],"normals":[[0.6226087808609009,-0.7406917810440063,-0.2524559199810028],[0.5794840455055239,0.33456504344940186,-0.7431450486183167],[-0.8324770927429199,-0.48063105344772306,-0.27563703060150146],[-0.3186790943145751,0.9125622510910033,-0.25626906752586365],[-0.8595702052116394,-0.4962731301784514,0.1218690276145935],[-0.8595702052116394,0.49627313017845137,0.1218690276145935],[-0.9456463456153866,-0.272145092487335,-0.17801706492900848],[0.0,0.9848077893257138,-0.1736479550600052],[0.0,-0.6691307425498961,-0.7431447505950928],[0.0,-0.46947175264358515,-0.882947564125061],[-5.551115123125783e-17,-0.2249510288238526,-0.9743701219558716],[1.1102230246251565e-16,-0.9925462603569031,0.1218690276145935],[0.9409955143928527,-0.2890631854534149,-0.17598310112953186],[-1.1102230246251565e-16,0.9925462603569031,0.1218690276145935],[0.8595702052116394,0.4962731301784514,0.1218690276145935],[0.318679094314575,0.9125622510910031,-0.25626906752586365],[0.8595702052116394,-0.49627313017845137,0.1218690276145935],[0.8324770927429199,-0.4806310534477233,-0.27563703060150146],[-0.5794840455055236,0.3345650434494019,-0.7431450486183167],[-0.6226087808609008,-0.7406917810440061,-0.2524559199810028]],"serial":"LHR-C6198565","imu_position":[0,0,0]}},"log":["serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","charging=False percent=64 serial=LHR-C6198565 type=battery","serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","charging=False percent=64 serial=LHR-C6198565 type=battery","serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","charging=False percent=64 serial=LHR-C6198565 type=battery","charging=False percent=64 serial=LHR-C6198565 type=battery","serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","serial=LHR-C6198565 still=False type=still","serial=LHR-C6198565 still=True type=still","name=WM0 state=removed type=usb","serial= state=removed type=device","name=WM1 product=Watchman dongle state=added type=usb","msg=WM1: handshake: config start: Io(\"hidapi error: IOHIDDeviceGetReport failed: (0xE0005000) unknown error code\") type=log"],"status":{"survive":"running","restarts":5,"source":"lhd","recording":null}}
+
+data: {"type":"batch","now":1793237679.357934,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88227.9101691246,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.3746529,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88227.92688798904,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.391995,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88227.94423007965,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.4089222,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88227.96115732193,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.4286342,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88227.98086929321,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.445409,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88227.99764418602,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.465006,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.01724123955,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.482142,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.03437709808,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.502922,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.0551571846,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.522864,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.07509922981,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.54008,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.09231519699,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.560262,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.1124970913,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.5811598,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.13339495659,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.599489,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.15172410011,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.620432,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.17266702652,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.64016,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.19239521027,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.661025,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.2132601738,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.6816099,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.2338449955,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.702239,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.25447416306,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.722868,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.2751030922,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.740642,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.29287719727,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.760326,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.31256103516,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.778188,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.33042311668,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.7954628,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.34769797325,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.8163872,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.36862230301,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.837292,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.38952708244,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.8561978,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.40843296051,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.877142,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.42937707901,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.8942149,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.44644999504,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.915021,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.46725606918,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.933023,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.48525810242,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.953909,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.50614404678,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.970751,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.52298617363,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237679.9915001,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.54373526573,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.012416,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.56465101242,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.031654,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.58388900757,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.050323,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.60255813599,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.067897,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.62013220787,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.086159,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.63839411736,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.106217,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.658452034,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.1272142,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.67944931984,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.1486678,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.70090293884,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.169659,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.7218940258,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.190629,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.74286413193,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.208541,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.76077604294,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.2295198,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.78175497055,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.2504802,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.80271530151,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.271421,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.82365608215,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.292345,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.84458017349,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.313271,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.86550617218,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.334207,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.88644218445,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.3551428,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.9073779583,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.376071,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.92830610275,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.39699,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.9492251873,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.4153962,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.96763134003,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.4327612,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88228.98499631882,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.450805,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.0030400753,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.46887,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.02110505104,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.487684,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.03991913795,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.508676,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.06091117859,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.529662,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.08189702034,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.550605,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.10284018517,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.570061,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.1222960949,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.590975,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.14321017265,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.6096919,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.16192698479,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.630595,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.18283009529,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.647428,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.19966316223,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.666803,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.21903800964,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.687797,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.24003219604,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.7084968,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.2607319355,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.725672,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.2779071331,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.746599,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.29883408546,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.765267,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.31750202179,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.7844539,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.33668899536,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.80538,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.35761523247,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.8238552,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.37609028816,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.843541,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.3957760334,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.862504,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.41473913193,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.879623,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.43185806274,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.900279,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.4525141716,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.920529,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.4727640152,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.941439,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.49367403984,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.9613838,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.51361894608,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.981672,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.53390717506,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237680.99897,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.55120515823,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.016196,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.56843113899,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.033045,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.58528017998,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.053971,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.60620617867,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.0710962,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.62333130836,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.089254,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.64148902893,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.107449,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.65968418121,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.127059,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.67929410934,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.144178,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.69641304016,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.162441,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.71467614174,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.180181,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.73241615295,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.197479,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.74971413612,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.218459,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.77069401741,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.239451,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.79168605804,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.2604039,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.81263899803,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.2813609,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.83359599113,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.302301,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.85453605652,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.3232288,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.87546396255,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.344173,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.89640808105,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.365078,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.91731309891,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.385979,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.93821406364,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.406872,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.95910716057,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.427777,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88229.98001217842,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.448683,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.00091814995,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.469588,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.0218231678,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.490497,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.04273223877,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.511408,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.06364321709,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.532334,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.08456921577,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.549527,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.10176205635,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.567203,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.11943817139,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.585917,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.1381521225,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.606827,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.15906214714,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.6262348,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.17846989632,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.6457732,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.19800829887,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.6649861,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.21722126007,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.685895,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.23813009262,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.706175,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.25841021538,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.7245061,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.27674126625,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.741326,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.29356122017,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.759999,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.31223416328,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.780294,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.332529068,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.799247,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.35148215294,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.816957,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.36919212341,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.835149,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.38738417625,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.854845,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.40708017349,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.875752,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.4279870987,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.892569,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.44480419159,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.909842,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.46207714081,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.928183,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.48041820526,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.948329,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.50056409836,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.968204,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.52043914795,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237681.987843,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.54007816315,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.006639,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.55887413025,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.0249379,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.57717299461,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.045849,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.59808421135,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.0666912,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.6189262867,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.084672,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.63690710068,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.101551,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.6537861824,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.12207,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.67430520058,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.141412,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.69364714622,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.162337,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.71457219124,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.182983,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.7352180481,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.2037802,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.75601530075,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.221345,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.77358007431,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.23823,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.7904651165,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.259188,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.81142306328,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.276358,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.82859301567,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.2969449,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.84917998314,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.3172312,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.86946630478,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.336336,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.88857102394,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.355985,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.90822005272,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.374062,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.9262971878,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.3940082,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.94624328613,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.410843,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.963078022,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.431649,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88230.98388409615,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.449548,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.00178313255,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.470494,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.0227291584,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.4875772,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.03981232643,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.505616,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.05785107613,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.526007,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.07824206352,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.546975,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.09921002388,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.566813,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.11904811859,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.583617,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.13585209846,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.600536,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.15277123451,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.618288,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.17052316666,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.636249,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.1884841919,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.6551318,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.20736694336,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.6729631,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.22519826889,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.6915,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.243735075,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.711156,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.26339101791,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.728349,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.28058409691,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.7458649,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.29809999466,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.762597,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.31483221054,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.7798982,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.33213329315,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.797399,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.34963417053,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.814118,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.36635303497,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.83361,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.38584518433,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.850807,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.40304207802,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.868428,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.42066311836,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.8893042,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.44153928757,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.906136,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.45837116241,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.926666,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.47890114784,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.9476092,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.49984431267,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.964969,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.51720404625,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237682.98223,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.53446507454,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.0007648,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.5529999733,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.021685,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.57392001152,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.0426,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.59483504295,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.063521,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.61575603485,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.084435,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.63667011261,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.105361,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.6575961113,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.126295,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.67853021622,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.147212,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.699447155,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.165178,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.71741318703,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.182431,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.73466610909,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.201428,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.75366306305,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.2197802,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.77201533318,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.2407308,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.79296588898,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.259296,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.8115310669,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.280221,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.83245611191,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.3007581,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.8529932499,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.318078,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.87031316757,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.3351738,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.88740897179,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.356149,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.9083840847,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.377107,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.92934203148,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.397829,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.95006418228,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.416286,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.96852111816,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.436692,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88231.98892712593,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.456152,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.00838708878,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.473535,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.02577018738,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.492569,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.04480409622,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.5130408,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.06527590752,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.532191,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.08442616463,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.549797,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.1020321846,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.570709,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.12294411659,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.590749,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.14298415184,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.611596,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.16383123398,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.631964,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.18419909477,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.650062,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.2022972107,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.669739,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.22197413445,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.690717,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.24295210838,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.711683,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.26391816139,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.732613,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.2848482132,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.753506,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.3057410717,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.774413,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.32664823532,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.795325,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.34756016731,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.8162189,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.36845397949,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.8371148,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.38934993744,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.8579981,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.4102332592,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.8788722,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.43110728264,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.8997471,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.45198225975,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.920327,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.47256207466,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.941233,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.49346804619,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.9621341,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.51436924934,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.983026,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.53526115417,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237683.999913,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.55214810371,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237684.0185258,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.57076096535,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237684.038572,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.59080719948,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237684.0565062,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.60874128342,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237684.07651,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.62874507904,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237684.094387,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.64662218094,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237684.114996,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.66723108292,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237684.1359859,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.68822097778,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237684.1541288,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.7063639164,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237684.172435,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.72467017174,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237684.1923819,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.74461698532,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237684.210494,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.76272916794,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237684.23145,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.78368520737,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237684.248801,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.80103611946,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237684.265821,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.81805610657,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237684.2868228,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.83905792236,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237684.304652,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.85688710213,"poses":[],"imu":[],"vel":{},"log":[]}
+
+data: {"type":"batch","now":1793237684.322701,"lit":{},"rates":{"pose":0.0,"imu":0.0,"angle":0.0,"hid":0.0},"status":{"survive":"running","restarts":5,"source":"lhd","recording":null},"buttons":{"LHR-C6198565":{"held":[0,3,5],"names":["trigger","system","B"],"presses":188}},"last_pose_age":88232.87493610382,"poses":[],"imu":[],"vel":{},"log":[]}
+

@@ -24,6 +24,8 @@ Python 3.11 with numpy and scipy, plus a three.js page (pinned CDN, the same pat
 | `static/index.html` | The workspace UI. |
 | `effects/plane_slice.glsl`, `effects/led_pick.glsl` | The two effect sources from the API doc, to deploy with Splanc MCP. |
 | `effects/sphere_shell.glsl` | Like `plane_slice`, for a sphere: lights LEDs within `width` of its surface. Streamed as `/sphere ,ffff` (centre xyz, radius; metres, frame F). |
+| `effects/tracker_demo_pose.glsl` | `--p4` only: the whole demo in one effect (LED pick, outline, plane or sphere in the world frame, the pose from the P4's uniform pool). `/pick` says what to show, `/shape` which shape. Deploy it once; the demo never needs another. |
+| `effects/plane_slice_pose.glsl`, `effects/sphere_shell_pose.glsl` | The single-purpose `--p4` versions (world-frame shape, pool `pose`). |
 | `tests/` | `test_units.py` (maths, map, hold, OSC, sources), `test_calib_synth.py` (calibration against the hidden truth), `test_app_synthetic.py` (whole app over HTTP). |
 
 The maths (`frames`, `ledmap`, `calib`) has no server or UI code in it.
@@ -166,6 +168,30 @@ Mount record (`mounts/<name>.json`):
   keep-alive rate.
 - Several messages due at once go out as one `#bundle`.
 - Dry-run lines look like `<time> /plane 0.12 0.98 0.05 0.061`.
+
+## `--p4`: a Splanc P4 player with its own tracker
+
+The fixture tracks itself (its tracker wired to the P4) and the stylus calibrates it:
+
+- lhd's base stations go to the P4 as `/lh/station` every second, so it tracks in lhd's
+  world. After moving the base stations, recalibrate lhd from a clean start (move
+  `~/.config/lighthouse/calibration.json` aside and restart the viewer: `/recalibrate`
+  reuses the scenes it holds, old ones included), then set the stylus down still in
+  several places both stations see.
+- The P4's tracker (`/lh/pose` back from it) is the fixture tracker while probing, so the
+  fit is the mount itself (P4 tracker <- map); it goes to the P4 as `/lh/mount`, which
+  saves it. The fixture may move between touches.
+- Run `effects/tracker_demo_pose.glsl` on the fixture throughout. The demo streams
+  `/pick` (an LED index to blink, -1 the live shape, -2 a faint outline; once a second,
+  since the effect keeps the last value) and, live, `/shape` (0 plane, 1 sphere) with
+  `/plane` or `/sphere` in the world frame. The lamp shows the outline whenever the P4
+  isn't tracking.
+- The P4 predicts the pose to when each frame will light, and logs photon-to-photon
+  latency per stage on its console every 5 s (Splanc `docs/design/p4-c6-split.md`
+  §4.2.1). To compare, send it OSC on udp/9000:
+  - `/lh/predict ,f 0` (or 1) turns prediction off (or on);
+  - `/lh/lead ,f <ms>` predicts further ahead;
+  - `/lh/stream ,f 0` (or 1) sends sweeps whole (or streams them).
 
 ## What the user (or a Splanc-connected agent) has to do
 

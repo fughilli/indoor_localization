@@ -28,7 +28,7 @@ class Stream:
     def __init__(self):
         self.values = {}
 
-    def set(self, addr, *v):
+    def set(self, addr, *v, keepalive=None):
         self.values[addr] = v
 
     def clear(self, *addrs):

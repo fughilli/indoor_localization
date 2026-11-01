@@ -1,0 +1,174 @@
+ESP-ROM:esp32p4-eco7-20260109
+Build:Jan  9 2026
+rst:0x1 (POWERON),boot:0x10f (SPI_FAST_FLASH_BOOT)
+SPI mode:DIO, clock div:1
+load:0x4ffb60d0,len:0x1174
+load:0x4ffac2c0,len:0xd2c
+load:0x4ffaefc0,len:0x3540
+entry 0x4ffac2c0
+[boot] reset_reason=POWERON (1)
+[led] capacity 512 LEDs (configured 0+0, tx buffer 512) = 15992 B; heap 33872204 before, max 2048 LEDs
+[led] ws2812 backend=parlio channels=2 ch0_err=0x0 ch1_err=0x0
+littlefs: restored /lfs/fx.pb (1360 B)
+littlefs: restored /lfs/fx_sel.pb (105 B)
+[cc] LUT ready (seq=1, flash)
+[player] identity E8:F6:0A:E8:1B:2C / "Led Widget FD6C1F" ap "Led Widget FD6C1F-AP" host Led-Widget-FD6C1F.local build 2c493fc0-dirty
+[hw] boot gpio=20/21 order=GRB/GRB leds=0/0
+[wifi] policy auto (cap 60s, every 300s, decay 0h -> 900s)
+E (664) sdmmc_io: sdmmc_io_read_byte: sdmmc_io_rw_direct (read 0x3) returned 0x107
+[link] SDIO: front end ready after 571 ms (2 tries)
+[link] C6 HELLO after 4059 ms
+[link] C6 front end up over SDIO, image 6fe4d5be (matches)
+[fx] t=0.03 frame=0 update=ok shade_cancelled=0/0
+[ft] r0:0/0/0 w0:0/0/0 dt33 fps=30 sl=0-0
+[module] vive-tracker
+[tracker] Vive tracker on the USB OTG port; mount not set
+usb: host install: ESP_OK
+[player-netstack] map=0 leds heap=33627176 max=33030132 min=33627160 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x22/2/0/0
+[net] t=5002 link rx=2/97B noise=0 tx=2/30B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6088 render=2156 xmit=1048 logdrain=820
+[tracker] no tracker, 0 stations; IMU 0/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000); mount not set
+usb: client event 0
+usb: device 28de:2300 at addr 1, full speed
+usb: HID interface 0, IN ep 0x81, mps 64
+usb: HID interface 1, IN ep 0x83, mps 64
+usb: HID interface 2, IN ep 0x84, mps 64
+lh: Tracker (2018 / 3.0) (28de:2300)
+E (11544) USBH: Dev 1 EP 0 STALL
+E (11566) USBH: Dev 1 EP 0 STALL
+E (11586) USBH: Dev 1 EP 0 STALL
+E (11606) USBH: Dev 1 EP 0 STALL
+E (11626) USBH: Dev 1 EP 0 STALL
+E (11646) USBH: Dev 1 EP 0 STALL
+E (11666) USBH: Dev 1 EP 0 STALL
+E (11686) USBH: Dev 1 EP 0 STALL
+E (11706) USBH: Dev 1 EP 0 STALL
+E (11726) USBH: Dev 1 EP 0 STALL
+E (11746) USBH: Dev 1 EP 0 STALL
+E (11766) USBH: Dev 1 EP 0 STALL
+E (11786) USBH: Dev 1 EP 0 STALL
+E (11806) USBH: Dev 1 EP 0 STALL
+E (11826) USBH: Dev 1 EP 0 STALL
+E (11846) USBH: Dev 1 EP 0 STALL
+E (11866) USBH: Dev 1 EP 0 STALL
+E (11886) USBH: Dev 1 EP 0 STALL
+E (11906) USBH: Dev 1 EP 0 STALL
+E (11926) USBH: Dev 1 EP 0 STALL
+E (11947) USBH: Dev 1 EP 0 STALL
+E (11967) USBH: Dev 1 EP 0 STALL
+E (11987) USBH: Dev 1 EP 0 STALL
+E (12007) USBH: Dev 1 EP 0 STALL
+E (12027) USBH: Dev 1 EP 0 STALL
+E (12047) USBH: Dev 1 EP 0 STALL
+E (12067) USBH: Dev 1 EP 0 STALL
+E (12087) USBH: Dev 1 EP 0 STALL
+E (12107) USBH: Dev 1 EP 0 STALL
+E (12127) USBH: Dev 1 EP 0 STALL
+[fx] t=1.05 frame=31 update=ok shade_cancelled=0/0
+[ft] r31:27999/32699/33694 w30:27996/32831/33010 dt33 fps=35 sl=28-33
+E (12147) USBH: Dev 1 EP 0 STALL
+E (12167) USBH: Dev 1 EP 0 STALL
+E (12187) USBH: Dev 1 EP 0 STALL
+E (12207) USBH: Dev 1 EP 0 STALL
+E (12227) USBH: Dev 1 EP 0 STALL
+E (12252) USBH: Dev 1 EP 0 STALL
+E (12272) USBH: Dev 1 EP 0 STALL
+lh: VIVE Tracker 3.0 MV LHR-C6198565 configured: 20 sensors
+lh: DeviceAdded { dev: 0 }
+[fx] t=2.06 frame=68 update=ok shade_cancelled=0/0
+[ft] r37:24581/27297/29000 w37:24582/27367/28856 dt29 fps=40 sl=25-28
+[fx] t=3.07 frame=111 update=ok shade_cancelled=0/0
+[ft] r43:21999/23465/25419 w43:22000/23544/25622 dt25 fps=45 sl=22-25
+lh: adopted station 699579721 at (0.878, 0.264, 1.227) from lhd
+lh: DeviceRemoved { dev: 0 }
+lh: DeviceAdded { dev: 0 }
+lh: adopted station 1416427640 at (-2.042, 1.766, 1.159) from lhd
+lh: DeviceRemoved { dev: 0 }
+lh: DeviceAdded { dev: 0 }
+[fx] t=4.08 frame=162 update=ok shade_cancelled=0/0
+[ft] r51:17581/19815/23000 w51:17581/19901/22869 dt23 fps=55 sl=18-22
+[player-netstack] map=0 leds heap=33588188 max=33030132 min=33556744 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x22/2/0/0
+[net] t=10003 link rx=59/2962B noise=0 tx=52/680B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6088 render=2156 xmit=1048 logdrain=820
+[tracker] configured, 2 stations; IMU 231/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000); mount not set
+[fx] t=5.09 frame=223 update=ok shade_cancelled=0/0
+[ft] r61:15999/16564/18418 w61:15996/16590/18420 dt18 fps=60 sl=16-18
+[fx] t=6.09 frame=286 update=ok shade_cancelled=0/0
+[ft] r63:15999/16015/16582 w63:15996/16015/16458 dt17 fps=60 sl=16-16
+[fx] t=7.10 frame=349 update=ok shade_cancelled=0/0
+[ft] r63:15999/16015/17000 w63:15999/16015/16847 dt17 fps=60 sl=16-16
+[fx] t=8.11 frame=412 update=ok shade_cancelled=0/0
+[ft] r63:15999/16015/16588 w63:15988/16015/16462 dt17 fps=60 sl=16-16
+[fx] t=9.12 frame=475 update=ok shade_cancelled=0/0
+[ft] r63:15582/16009/17000 w63:15584/16009/16842 dt17 fps=60 sl=16-16
+[player-netstack] map=0 leds heap=33538792 max=33030132 min=33505904 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x22/2/0/0
+[net] t=15004 link rx=124/6332B noise=0 tx=102/1330B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6088 render=2156 xmit=1016 logdrain=820
+[tracker] configured, 2 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000); mount not set
+[fx] t=10.13 frame=538 update=ok shade_cancelled=0/0
+[ft] r63:15999/16006/16418 w63:15865/16006/16418 dt16 fps=60 sl=16-16
+[fx] t=11.14 frame=601 update=ok shade_cancelled=0/0
+[ft] r63:15999/16015/17000 w63:15997/16015/16872 dt17 fps=60 sl=16-16
+[fx] t=12.15 frame=664 update=ok shade_cancelled=0/0
+[ft] r63:15999/16015/16582 w63:15999/16015/16456 dt17 fps=60 sl=16-16
+[fx] t=13.16 frame=727 update=ok shade_cancelled=0/0
+[ft] r63:15588/16009/17000 w63:15586/16009/16874 dt17 fps=60 sl=16-16
+[fx] t=14.16 frame=790 update=ok shade_cancelled=0/0
+[ft] r63:15999/16006/16412 w63:15864/16006/16412 dt16 fps=60 sl=16-16
+[player-netstack] map=0 leds heap=33538792 max=33030132 min=33505852 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x22/2/0/0
+[net] t=20004 link rx=189/9702B noise=0 tx=151/1967B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6088 render=2156 xmit=1000 logdrain=796
+[tracker] configured, 2 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000); mount not set
+[fx] t=15.17 frame=853 update=ok shade_cancelled=0/0
+[ft] r63:15999/16015/17000 w63:15998/16015/16866 dt17 fps=60 sl=16-16
+[fx] t=16.18 frame=916 update=ok shade_cancelled=0/0
+[ft] r63:15999/16015/16582 w63:15996/16015/16456 dt17 fps=60 sl=16-16
+[fx] t=17.19 frame=979 update=ok shade_cancelled=0/0
+[ft] r63:15583/16009/17000 w63:15582/16009/16873 dt17 fps=60 sl=16-16
+[fx] t=18.20 frame=1042 update=ok shade_cancelled=0/0
+[ft] r63:15999/16006/16418 w63:15863/16006/16417 dt16 fps=60 sl=16-16
+[fx] t=19.21 frame=1105 update=ok shade_cancelled=0/0
+[ft] r63:15999/16015/17000 w63:16000/16015/16869 dt17 fps=60 sl=16-16
+[player-netstack] map=0 leds heap=33538792 max=33030132 min=33505852 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x22/2/0/0
+[net] t=25005 link rx=254/13072B noise=0 tx=201/2617B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6088 render=2156 xmit=1000 logdrain=796
+[tracker] configured, 2 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000); mount not set
+[fx] t=20.22 frame=1168 update=ok shade_cancelled=0/0
+[ft] r63:15999/16015/16582 w63:15997/16015/16455 dt17 fps=60 sl=16-16
+[fx] t=21.23 frame=1231 update=ok shade_cancelled=0/0
+[ft] r63:15582/16009/17000 w63:15582/16009/16871 dt17 fps=60 sl=16-16
+lh: sweep timing locked
+[fx] t=22.24 frame=1294 update=ok shade_cancelled=0/0
+[ft] r63:15585/16006/16418 w63:15586/16006/16418 dt16 fps=60 sl=16-16
+[fx] t=23.24 frame=1357 update=ok shade_cancelled=0/0
+[ft] r63:15584/16015/17000 w63:15584/16015/16854 dt17 fps=60 sl=16-16
+[fx] t=24.25 frame=1420 update=ok shade_cancelled=0/0
+[ft] r63:15590/16009/16587 w63:15590/16015/16454 dt17 fps=60 sl=16-16
+[player-netstack] map=0 leds heap=33535444 max=33030132 min=33505852 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x22/2/0/0
+[net] t=30007 link rx=319/16442B noise=0 tx=251/3267B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6088 render=2156 xmit=952 logdrain=796
+[tracker] configured, 2 stations; IMU 250/s, light 989/s, poses 0/s; pos (0.000, 0.000, 0.000); mount not set
+[fx] t=25.26 frame=1483 update=ok shade_cancelled=0/0
+[ft] r63:15589/16006/16411 w63:15589/15993/16416 dt16 fps=60 sl=16-16
+[fx] t=26.27 frame=1546 update=ok shade_cancelled=0/0
+[ft] r63:15582/16015/16585 w63:15582/16022/16542 dt17 fps=60 sl=16-16
+[fx] t=27.28 frame=1609 update=ok shade_cancelled=0/0
+[ft] r63:15583/16015/17000 w63:15584/16015/16859 dt17 fps=60 sl=16-16
+[fx] t=28.29 frame=1672 update=ok shade_cancelled=0/0
+[ft] r63:15583/16015/16582 w63:15582/16015/16446 dt17 fps=60 sl=16-16
+[fx] t=29.30 frame=1735 update=ok shade_cancelled=0/0
+[ft] r63:15589/16015/17000 w63:15589/16015/16869 dt17 fps=60 sl=16-16
+[player-netstack] map=0 leds heap=33535588 max=33030132 min=33505852 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x22/2/0/0
+[net] t=35008 link rx=381/19627B noise=0 tx=301/3917B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6088 render=2156 xmit=952 logdrain=796
+[tracker] configured, 2 stations; IMU 250/s, light 1634/s, poses 0/s; pos (0.000, 0.000, 0.000); mount not set
+[fx] t=30.31 frame=1798 update=ok shade_cancelled=0/0
+[ft] r63:15584/16015/16581 w63:15583/16015/16455 dt17 fps=60 sl=16-16
+[fx] t=31.32 frame=1861 update=ok shade_cancelled=0/0
+[ft] r63:15581/16009/17000 w63:15582/16009/16868 dt17 fps=60 sl=16-16
+[fx] t=32.32 frame=1924 update=ok shade_cancelled=0/0
+[ft] r63:15583/16006/16419 w63:15583/16006/16418 dt16 fps=60 sl=16-16
+[fx] t=33.33 frame=1987 update=ok shade_cancelled=0/0
+[ft] r63:15583/16015/17000 w63:15584/16009/16872 dt17 fps=60 sl=16-16
+[fx] t=34.34 frame=2050 update=ok shade_cancelled=0/0
+[ft] r63

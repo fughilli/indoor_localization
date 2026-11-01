@@ -1,0 +1,54 @@
+{
+ "name": "turntable-r",
+ "notes": "Wireless via dongle, power bank. Tracker off-center on turntable (radius not measured; fit it from the trajectory), rotating about the vertical axis by hand, rate not constant. Protocol: ~30 s static, ~60 s rotating (both directions), ~15 s static. Retake (first take bumped at start).",
+ "start_ht": 1793132243.447554,
+ "survive_args": [
+  "--lighthouse-gen",
+  "1",
+  "--disambiguator-min-sync-sensors",
+  "1"
+ ],
+ "lighthouses_at_start": [
+  {
+   "id": "1416427640",
+   "mode": 2,
+   "p": [
+    0.752753,
+    -0.481366,
+    0.186148
+   ],
+   "q": [
+    0.019861,
+    -0.605332,
+    -0.705109,
+    0.368781
+   ],
+   "t": 282.462889
+  },
+  {
+   "id": "699579721",
+   "mode": 1,
+   "p": [
+    6.8e-05,
+    0.410724,
+    0.57637
+   ],
+   "q": [
+    -0.052641,
+    -0.01841,
+    0.689553,
+    0.722085
+   ],
+   "t": 282.462631
+  }
+ ],
+ "files": {
+  "recording": "20261027-131723_turntable-r.rec.gz",
+  "config": "20261027-131723_turntable-r.config.json"
+ },
+ "stop_ht": 1793132354.745087,
+ "seconds": 111.3,
+ "lines": 517778,
+ "calibration_note": "The .config.json saved with this recording is corrupted (live libsurvive recalibrated badly while it couldn't lock over wireless). The stations didn't move: replay with 20261027-131201_turntable-center.config.json and --disable-calibrate 1.",
+ "use_config": "20261027-131201_turntable-center.config.json"
+}

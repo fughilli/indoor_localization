@@ -1,0 +1,417 @@
+benchmarks: 65 fit, 7 held-out
+[ws] connecting ws://127.0.0.1:8081/ws
+[jit] pinned OFF for this run
+[fps] pinned 30 fps
+[chip] esp32p4
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpjvacee0i.fxb
+wrote 381 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpoziz34vt.fxb
+wrote 609 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmppvjzeky0.fxb
+wrote 449 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp31_341xj.fxb
+wrote 669 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp1wk41xvk.fxb
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp054rsrj3.fxb
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp85vr4z9z.fxb
+wrote 381 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpgnxjfenw.fxb
+wrote 933 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpd4bqcpc3.fxb
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpzrf06w31.fxb
+wrote 381 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpiw530d6s.fxb
+wrote 997 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp0lgjx_q3.fxb
+wrote 645 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpiojyiise.fxb
+wrote 1181 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpho870y8y.fxb
+wrote 637 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpz8mry0ht.fxb
+wrote 609 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp0ywbcfw0.fxb
+wrote 449 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpr6hm6lwk.fxb
+wrote 797 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpcmtfjjh1.fxb
+wrote 37 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp5zrh0rni.fxb
+wrote 545 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpzyrgb3p5.fxb
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmprcyua7kj.fxb
+wrote 381 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpc1527uic.fxb
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpytigfokp.fxb
+wrote 381 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp5i0rn6_v.fxb
+wrote 349 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpoy4t8j3g.fxb
+wrote 317 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpp1wsr6fd.fxb
+wrote 541 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpp9u01ibt.fxb
+wrote 317 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpir491hqr.fxb
+wrote 349 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp0wiew89r.fxb
+wrote 605 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmptvbkquoq.fxb
+wrote 349 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpx0ym7jhi.fxb
+wrote 801 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp0z2qlefk.fxb
+wrote 545 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpzg8a4lui.fxb
+wrote 673 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmptzy40_b_.fxb
+wrote 481 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpkivjnja5.fxb
+wrote 673 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpnf3yai3d.fxb
+wrote 481 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpa7be63eo.fxb
+wrote 1189 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp8fvcjb6d.fxb
+wrote 669 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp3vobx2lu.fxb
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpr572cn2w.fxb
+wrote 609 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpianncndd.fxb
+wrote 449 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp4y6fssg4.fxb
+wrote 349 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpsgbsq7bc.fxb
+wrote 413 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpwqszyrk9.fxb
+wrote 349 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpr0rmylkn.fxb
+wrote 605 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpdl52q8ce.fxb
+wrote 349 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpfw8zwrt4.fxb
+7:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+8:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+9:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+10:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+11:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+12:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+13:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+14:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+15:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+16:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+17:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+18:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+19:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+20:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+21:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+22:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+23:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+24:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+25:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+26:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+27:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+28:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+29:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+30:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+31:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+32:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+33:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+34:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+35:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+36:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+37:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+38:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+wrote 669 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmphojnu5rf.fxb
+7:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+8:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+9:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+10:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+11:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+12:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+13:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+14:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+15:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+16:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+17:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+18:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+19:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+20:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+21:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+22:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+23:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+24:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+25:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+26:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+27:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+28:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+29:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+30:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+31:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+32:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+33:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+34:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+35:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+36:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+37:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+38:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpp2f7a30c.fxb
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpqrriasqs.fxb
+wrote 381 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpx4cy2tjl.fxb
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp3g5nsm81.fxb
+wrote 381 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpnsp_hjcz.fxb
+wrote 1573 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpmlpsyemm.fxb
+wrote 933 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmprliikbl7.fxb
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpztsci260.fxb
+wrote 381 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpq7snhky0.fxb
+wrote 669 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp8r7zuhlj.fxb
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpk_ycyrid.fxb
+wrote 609 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpwb7nhk3t.fxb
+wrote 449 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpbzhkex7j.fxb
+wrote 40 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpfk5l892_.fxb
+wrote 40 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpk958ften.fxb
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmppjisc_he.fxb
+wrote 381 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpe3ysxegk.fxb
+wrote 37 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp_r9slp20.fxb
+measuring [fit] empty (37 B) @ 128 LEDs…
+  empty: frame=134166 show=595930 @ 128 LEDs
+wrote 40 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpj3n8rohx.fxb
+measuring [fit] sweep16 (40 B) @ 16 LEDs…
+  sweep16: frame=20949 show=79830 @ 16 LEDs
+wrote 40 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp94w5ruws.fxb
+measuring [fit] sweep256 (40 B) @ 256 LEDs…
+  sweep256: frame=312617 show=1185800 @ 256 LEDs
+wrote 317 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp331oz86z.fxb
+measuring [fit] hash1M (317 B) @ 128 LEDs…
+  hash1M: frame=1241706 show=595930 @ 128 LEDs
+wrote 317 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp2cjl995p.fxb
+measuring [fit] hash3M (317 B) @ 128 LEDs…
+  hash3M: frame=1513257 show=595920 @ 128 LEDs
+wrote 349 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp9ppw2bcs.fxb
+measuring [fit] hash12M (349 B) @ 128 LEDs…
+  hash12M: frame=1467775 show=596040 @ 128 LEDs
+wrote 349 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpp_ibxmve.fxb
+measuring [fit] hsv2rgb2M (349 B) @ 128 LEDs…
+  hsv2rgb2M: frame=2803775 show=595940 @ 128 LEDs
+wrote 349 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp4pntegpb.fxb
+measuring [fit] length3M (349 B) @ 128 LEDs…
+  length3M: frame=1753981 show=595990 @ 128 LEDs
+wrote 349 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpbeazrjkl.fxb
+measuring [fit] negM (349 B) @ 128 LEDs…
+  negM: frame=1249087 show=596100 @ 128 LEDs
+wrote 349 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpehngcgqv.fxb
+measuring [fit] normalize3M (349 B) @ 128 LEDs…
+  normalize3M: frame=2089211 show=595950 @ 128 LEDs
+wrote 349 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpqe2nhu4p.fxb
+measuring [fit] paletteM (349 B) @ 128 LEDs…
+  paletteM: frame=1570573 show=595940 @ 128 LEDs
+wrote 381 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp368lnwst.fxb
+measuring [fit] absfM (381 B) @ 128 LEDs…
+  absfM: frame=1447417 show=595920 @ 128 LEDs
+wrote 381 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpoffxiw88.fxb
+measuring [fit] ceilfM (381 B) @ 128 LEDs…
+  ceilfM: frame=1559127 show=595930 @ 128 LEDs
+wrote 381 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp38z_vonl.fxb
+measuring [fit] cosM (381 B) @ 128 LEDs…
+  cosM: frame=1839703 show=595920 @ 128 LEDs
+wrote 381 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpzsxcud9a.fxb
+measuring [fit] floorfM (381 B) @ 128 LEDs…
+  floorfM: frame=1481987 show=595930 @ 128 LEDs
+wrote 381 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpghs_f81j.fxb
+measuring [fit] fractfM (381 B) @ 128 LEDs…
+  fractfM: frame=1510879 show=595970 @ 128 LEDs
+wrote 381 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpc5ruy2bo.fxb
+measuring [fit] signfM (381 B) @ 128 LEDs…
+  signfM: frame=1476689 show=596080 @ 128 LEDs
+wrote 381 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp1e8ozr6x.fxb
+measuring [fit] sinM (381 B) @ 128 LEDs…
+  sinM: frame=1815035 show=595990 @ 128 LEDs
+wrote 381 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmprbwqq2bj.fxb
+measuring [fit] sqrtfM (381 B) @ 128 LEDs…
+  sqrtfM: frame=1665027 show=595950 @ 128 LEDs
+wrote 381 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp51fqfh0x.fxb
+measuring [fit] tanM (381 B) @ 128 LEDs…
+  tanM: frame=2419807 show=595960 @ 128 LEDs
+wrote 413 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmps2txbcd2.fxb
+measuring [fit] normalize32M (413 B) @ 128 LEDs…
+  normalize32M: frame=2992133 show=595920 @ 128 LEDs
+wrote 449 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp50m1h8f5.fxb
+measuring [fit] addM (449 B) @ 128 LEDs…
+  addM: frame=1565035 show=595950 @ 128 LEDs
+wrote 449 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpqae4nd11.fxb
+measuring [fit] divM (449 B) @ 128 LEDs…
+  divM: frame=1629575 show=595950 @ 128 LEDs
+wrote 449 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpqpp7icy2.fxb
+measuring [fit] mulM (449 B) @ 128 LEDs…
+  mulM: frame=1576613 show=595900 @ 128 LEDs
+wrote 449 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpjkbd3eez.fxb
+measuring [fit] subM (449 B) @ 128 LEDs…
+  subM: frame=1567634 show=595920 @ 128 LEDs
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmplornl91_.fxb
+measuring [fit] absf2M (477 B) @ 128 LEDs…
+  absf2M: frame=1845159 show=596000 @ 128 LEDs
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp0ezs6u4_.fxb
+measuring [fit] atan2fM (477 B) @ 128 LEDs…
+  atan2fM: frame=2079086 show=595940 @ 128 LEDs
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmplw820z7g.fxb
+measuring [fit] ceilf2M (477 B) @ 128 LEDs…
+  ceilf2M: frame=2146027 show=595950 @ 128 LEDs
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpodhjt1_w.fxb
+measuring [fit] cos2M (477 B) @ 128 LEDs…
+  cos2M: frame=2677858 show=595960 @ 128 LEDs
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpw0fcuk63.fxb
+measuring [fit] floorf2M (477 B) @ 128 LEDs…
+  floorf2M: frame=1963063 show=595910 @ 128 LEDs
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpb8o85mvx.fxb
+measuring [fit] fractf2M (477 B) @ 128 LEDs…
+  fractf2M: frame=2047764 show=595930 @ 128 LEDs
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpfdx16zmv.fxb
+measuring [fit] modfM (477 B) @ 128 LEDs…
+  modfM: frame=1910339 show=595940 @ 128 LEDs
+7:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+8:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+9:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+10:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+11:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+12:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+13:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+14:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+15:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+16:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+17:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+18:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+19:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+20:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+21:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+22:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+23:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+24:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+25:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+26:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+27:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+28:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+29:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+30:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+31:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+32:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+33:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+34:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+35:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+36:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+37:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+38:7: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpw8dygihd.fxb
+measuring [fit] powfM (477 B) @ 128 LEDs…
+  powfM: frame=2901281 show=595930 @ 128 LEDs
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp6bo30van.fxb
+measuring [fit] signf2M (477 B) @ 128 LEDs…
+  signf2M: frame=1926137 show=596020 @ 128 LEDs
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpl4ygg_59.fxb
+measuring [fit] sin2M (477 B) @ 128 LEDs…
+  sin2M: frame=2655591 show=595950 @ 128 LEDs
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpmlj1vim4.fxb
+measuring [fit] sqrtf2M (477 B) @ 128 LEDs…
+  sqrtf2M: frame=2295107 show=595930 @ 128 LEDs
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpphgzu3t9.fxb
+measuring [fit] stepfM (477 B) @ 128 LEDs…
+  stepfM: frame=1742451 show=596020 @ 128 LEDs
+wrote 477 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmprisvoxmt.fxb
+measuring [fit] tan2M (477 B) @ 128 LEDs…
+  tan2M: frame=3777189 show=595970 @ 128 LEDs
+wrote 481 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpdrvaibca.fxb
+measuring [fit] maxfM (481 B) @ 128 LEDs…
+  maxfM: frame=1793473 show=595960 @ 128 LEDs
+wrote 481 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpqwi8wjb_.fxb
+measuring [fit] minfM (481 B) @ 128 LEDs…
+  minfM: frame=1764567 show=595960 @ 128 LEDs
+wrote 541 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpkmxid1d3.fxb
+measuring [fit] hash32M (541 B) @ 128 LEDs…
+  hash32M: frame=2641897 show=596020 @ 128 LEDs
+wrote 545 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpnzievajm.fxb
+measuring [fit] expfM (545 B) @ 128 LEDs…
+  expfM: frame=2329481 show=595950 @ 128 LEDs
+wrote 545 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpmitxeqqv.fxb
+measuring [fit] logfM (545 B) @ 128 LEDs…
+  logfM: frame=2635767 show=595950 @ 128 LEDs
+wrote 605 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpgtlagr51.fxb
+measuring [fit] length32M (605 B) @ 128 LEDs…
+  length32M: frame=3128281 show=596050 @ 128 LEDs
+wrote 605 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpopwhfgeo.fxb
+measuring [fit] palette2M (605 B) @ 128 LEDs…
+  palette2M: frame=2802633 show=595910 @ 128 LEDs
+wrote 609 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpxatr9gy7.fxb
+measuring [fit] add2M (609 B) @ 128 LEDs…
+  add2M: frame=2165149 show=595980 @ 128 LEDs
+wrote 609 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmprwzl85s0.fxb
+measuring [fit] div2M (609 B) @ 128 LEDs…
+  div2M: frame=2218325 show=595950 @ 128 LEDs
+wrote 609 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp34zw3ud9.fxb
+measuring [fit] mul2M (609 B) @ 128 LEDs…
+  mul2M: frame=2136095 show=595960 @ 128 LEDs
+wrote 609 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmprf3kl6pr.fxb
+measuring [fit] sub2M (609 B) @ 128 LEDs…
+  sub2M: frame=2109484 show=595920 @ 128 LEDs
+wrote 637 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpqp9tahg9.fxb
+measuring [fit] distance3M (637 B) @ 128 LEDs…
+  distance3M: frame=2624353 show=595960 @ 128 LEDs
+wrote 645 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp8e9_3iow.fxb
+measuring [fit] cross3M (645 B) @ 128 LEDs…
+  cross3M: frame=2429879 show=595940 @ 128 LEDs
+wrote 669 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmplhqtf_9l.fxb
+measuring [fit] atan2f2M (669 B) @ 128 LEDs…
+  atan2f2M: frame=3152815 show=596260 @ 128 LEDs
+wrote 669 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp7kwdplmn.fxb
+measuring [fit] modf2M (669 B) @ 128 LEDs…
+  modf2M: frame=2860233 show=595950 @ 128 LEDs
+7:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+8:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+9:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+10:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+11:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+12:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+13:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+14:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+15:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+16:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+17:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+18:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+19:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+20:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+21:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+22:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+23:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+24:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+25:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+26:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+27:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+28:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+29:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+30:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+31:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+32:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+33:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+34:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+35:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+36:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+37:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+38:11: warning: perf: pow(x, 0.5) costs ~1,800 cycles per LED on the FPU-less device; write sqrt(x)
+wrote 669 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpidyis8xo.fxb
+measuring [fit] powf2M (669 B) @ 128 LEDs…
+  powf2M: frame=4843633 show=595950 @ 128 LEDs
+wrote 669 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpri2n_hhe.fxb
+measuring [fit] stepf2M (669 B) @ 128 LEDs…
+  stepf2M: frame=2532971 show=595930 @ 128 LEDs
+wrote 673 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpivmmitm3.fxb
+measuring [fit] maxf2M (673 B) @ 128 LEDs…
+  maxf2M: frame=2612925 show=595940 @ 128 LEDs
+wrote 673 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpi2b00g9k.fxb
+measuring [fit] minf2M (673 B) @ 128 LEDs…
+  minf2M: frame=2517480 show=595960 @ 128 LEDs
+wrote 797 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp993z998q.fxb
+measuring [fit] dot32M (797 B) @ 128 LEDs…
+  dot32M: frame=3463587 show=595950 @ 128 LEDs
+wrote 801 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpm9pvicw1.fxb
+measuring [fit] logf2M (801 B) @ 128 LEDs…
+  logf2M: frame=4269291 show=595980 @ 128 LEDs
+wrote 933 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpyb0tm1gu.fxb
+measuring [fit] clamp3M (933 B) @ 128 LEDs…
+  clamp3M: frame=3489144 show=595960 @ 128 LEDs
+wrote 933 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpyigzgbw_.fxb
+measuring [fit] smoothstep3M (933 B) @ 128 LEDs…
+  smoothstep3M: frame=3931279 show=595970 @ 128 LEDs
+wrote 997 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpl7ter4st.fxb
+measuring [fit] cross32M (997 B) @ 128 LEDs…
+  cross32M: frame=3663323 show=595920 @ 128 LEDs
+wrote 1181 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp3rd3bz6z.fxb
+measuring [fit] distance32M (1181 B) @ 128 LEDs…
+  distance32M: frame=4916257 show=595970 @ 128 LEDs
+wrote 1189 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpfu68jp83.fxb
+measuring [fit] mix32M (1189 B) @ 128 LEDs…
+  mix32M: frame=4458717 show=595990 @ 128 LEDs
+wrote 1573 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpwcrrswyc.fxb
+measuring [fit] smoothstep32M (1573 B) @ 128 LEDs…
+  smoothstep32M: frame=6500591 show=595980 @ 128 LEDs
+wrote 1573 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpyjt_86o3.fxb
+measuring [heldout] clamp32M (1573 B) @ 128 LEDs…
+  clamp32M: frame=5602663 show=595950 @ 128 LEDs
+wrote 445 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpdnnv97aj.fxb
+measuring [heldout] dot3M (445 B) @ 128 LEDs…
+  dot3M: frame=1929173 show=595920 @ 128 LEDs
+wrote 801 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmpisa0akhq.fxb
+measuring [heldout] expf2M (801 B) @ 128 LEDs…
+  expf2M: frame=3696701 show=595910 @ 128 LEDs
+wrote 317 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmprl7_zt0g.fxb
+measuring [heldout] hsv2rgbM (317 B) @ 128 LEDs…
+  hsv2rgbM: frame=1968187 show=595930 @ 128 LEDs
+28:34: warning: `time` scaled by the uniform `speed` is used as a phase (in sin()): moving the `speed` slider rescales ALL elapsed time, so the effect jumps (by Δspeed × time). Integrate the rate in update() instead — `state float speed_phase;` and `speed_phase = fract(speed_phase + dt * speed);` — then use `speed_phase` where `time * speed` was (one phase per rate; keep constant factors inside: `dt * speed * 0.5`).
+29:32: warning: `time` scaled by the uniform `speed` is used as a phase (in sin()): moving the `speed` slider rescales ALL elapsed time, so the effect jumps (by Δspeed × time). Integrate the rate in update() instead — `state float speed_phase;` and `speed_phase = fract(speed_phase + dt * speed);` — then use `speed_phase` where `time * speed` was (one phase per rate; keep constant factors inside: `dt * speed * 0.5`).
+wrote 1504 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp4t_2u3w5.fxb
+measuring [heldout] lavalamp (1504 B) @ 200 LEDs…
+  lavalamp: frame=9482187 show=927800 @ 200 LEDs
+wrote 741 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmp49c0ufll.fxb
+measuring [heldout] mix3M (741 B) @ 128 LEDs…
+  mix3M: frame=2818439 show=595930 @ 128 LEDs
+wrote 413 bytes to /var/folders/_y/_wwsf3qj1c7gblr74j9zg1bc0000gn/T/tmppm08zzg5.fxb
+measuring [heldout] neg2M (413 B) @ 128 LEDs…
+  neg2M: frame=1511593 show=595930 @ 128 LEDs
+wrote /private/tmp/claude-501/-Users-kevin-Projects-git-checkouts-indoor-localization/ea7d830b-6f55-49b3-94bb-12e39a7b266a/scratchpad/p4_bundle.json: 65 fit, 7 held-out samples

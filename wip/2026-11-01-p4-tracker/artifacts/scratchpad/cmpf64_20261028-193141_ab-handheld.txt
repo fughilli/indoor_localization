@@ -1,0 +1,12 @@
+20261028-193141_ab-handheld.rec.gz: lhd_pinned vs lhd: f64 15278 poses (2s), f32 15278 poses (1s)
+  f64 calibrated FirstStations: 1416427640 p=(-0.1925,2.2625,1.1725) rms 51urad; 699579721 p=(0.4218,-0.9782,1.1778) rms 144urad
+  f64 tracking started 
+  f64 tracking started 
+  f64 calibrated MoreScenes: 1416427640 p=(-0.1959,2.2590,1.1804) rms 45urad; 699579721 p=(0.4245,-0.9791,1.1760) rms 155urad
+  f64 calibrated MoreScenes: 1416427640 p=(-0.1936,2.2594,1.1801) rms 45urad; 699579721 p=(0.4250,-0.9782,1.1766) rms 158urad
+  f32 calibrated FirstStations: 1416427640 p=(-0.1925,2.2625,1.1725) rms 51urad; 699579721 p=(0.4218,-0.9782,1.1778) rms 144urad
+  f32 tracking started 
+  f32 tracking started 
+  f32 calibrated MoreScenes: 1416427640 p=(-0.1959,2.2590,1.1804) rms 45urad; 699579721 p=(0.4245,-0.9791,1.1760) rms 155urad
+  f32 calibrated MoreScenes: 1416427640 p=(-0.1936,2.2594,1.1801) rms 45urad; 699579721 p=(0.4250,-0.9782,1.1766) rms 158urad
+  common 15278: |dp| median 0.000 mm, p95 0.000 mm, max 0.000 mm; rot median 0.0000 deg, p95 0.0000, max 0.0000

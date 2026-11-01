@@ -1,0 +1,8 @@
+20261027-132216_slider.rec.gz: lhd_pinned vs lhd: f64 11686 poses (2s), f32 11686 poses (1s)
+  f64 calibrated FirstStations: 699579721 p=(0.4785,0.4422,-0.0125) rms 582urad; 1416427640 p=(0.8536,-0.6381,-0.0378) rms 352urad
+  f64 tracking started 
+  f64 calibrated MoreScenes: 699579721 p=(0.4785,0.4420,-0.0186) rms 524urad; 1416427640 p=(0.8518,-0.6378,-0.0359) rms 360urad
+  f32 calibrated FirstStations: 699579721 p=(0.4785,0.4422,-0.0125) rms 582urad; 1416427640 p=(0.8536,-0.6381,-0.0378) rms 352urad
+  f32 tracking started 
+  f32 calibrated MoreScenes: 699579721 p=(0.4785,0.4420,-0.0186) rms 524urad; 1416427640 p=(0.8518,-0.6378,-0.0359) rms 360urad
+  common 11686: |dp| median 0.000 mm, p95 0.000 mm, max 0.000 mm; rot median 0.0000 deg, p95 0.0000, max 0.0000

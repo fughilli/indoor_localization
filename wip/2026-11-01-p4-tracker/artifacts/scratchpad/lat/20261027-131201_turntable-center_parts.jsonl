@@ -1,0 +1,52 @@
+{"event":'DeviceAdded { dev: 0 }'}
+{"event":'TimingLocked { dev: 0 }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'StationSeen { dev: 0, slot: 0, info: StationInfo { fw_version: 27910, id: 699579721, cal: [AxisCal { phase: 0.03076171875, tilt: -0.0019741058349609375, curve: -0.0003199577331542969, gibphase: -1.19921875, gibmag: -0.01490020751953125 }, AxisCal { phase: 0.055908203125, tilt: 0.002593994140625, curve: -0.0006361007690429688, gibphase: -1.1611328125, gibmag: 0.002094268798828125 }], unlock_count: 9, hw_version: 9, accel_dir: [1, 127, 0], mode: 1, faults: 0 } }'}
+{"event":'StationSeen { dev: 0, slot: 1, info: StationInfo { fw_version: 27910, id: 1416427640, cal: [AxisCal { phase: 0.0274505615234375, tilt: -0.00470733642578125, curve: 0.001094818115234375, gibphase: 2.740234375, gibmag: 0.00588226318359375 }, AxisCal { phase: 0.0318603515625, tilt: -0.0069122314453125, curve: 0.0010061264038085938, gibphase: 0.051971435546875, gibmag: -0.00853729248046875 }], unlock_count: 6, hw_version: 9, accel_dir: [1, 127, 0], mode: 2, faults: 0 } }'}
+{"event":"calibrated","reason":"FirstStations","scenes":1,"dropped":6,"tracker_up_err_deg":0.34,"stations":[{"id":699579721,"pos":[-0.5054,0.5429,0.0009],"rot":[-0.33208,-0.35257,0.61672,0.62054],"sd":[4.66e-3,5.55e-3,7.38e-3,9.84e-3,7.77e-3,9.64e-3],"rms_urad":409,"up_err_deg":2.12},{"id":1416427640,"pos":[0.5858,0.8224,-0.0119],"rot":[0.27900,0.28839,0.67670,0.61731],"sd":[0.00e0,0.00e0,0.00e0,1.69e-2,1.72e-2,0.00e0],"rms_urad":333,"up_err_deg":5.01}]}
+{"event":'TrackingStarted { dev: 0, rms: 0.000521909827337233 }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":"calibrated","reason":"MoreScenes","scenes":2,"dropped":11,"tracker_up_err_deg":1.10,"stations":[{"id":699579721,"pos":[-0.5070,0.5454,-0.0042],"rot":[-0.33800,-0.34651,0.62426,0.61318],"sd":[4.48e-3,5.31e-3,5.48e-3,7.19e-3,6.76e-3,7.07e-3],"rms_urad":355,"up_err_deg":1.28},{"id":1416427640,"pos":[0.5879,0.8166,0.0847],"rot":[0.28750,0.28376,0.64333,0.65034],"sd":[0.00e0,0.00e0,0.00e0,1.93e-2,1.66e-2,0.00e0],"rms_urad":221,"up_err_deg":0.81}]}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}

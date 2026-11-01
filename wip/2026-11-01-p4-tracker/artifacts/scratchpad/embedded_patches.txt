@@ -1,0 +1,7 @@
+patches/embedded-fug90-gen-key.patch
+patches/embedded-esp32-libs-c6-c3.patch
+patches/embedded-mbedtls-record-6k.patch
+patches/embedded-mbedtls-private-sdk-hdrs.patch
+patches/embedded-esp32c3-build-target.patch
+patches/embedded-esp32c3-mbedtls-sw-ecc.patch
+patches/embedded-esp32c6-sections-ld-override.patch

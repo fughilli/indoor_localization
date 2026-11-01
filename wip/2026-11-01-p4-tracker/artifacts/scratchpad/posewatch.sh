@@ -1,0 +1,1 @@
+for i in $(seq 1 100); do curl -s -m2 http://127.0.0.1:8770/state | /usr/bin/python3 -c "import sys,json,time;j=json.load(sys.stdin);p=j.get('pose');print(time.strftime('%H:%M:%S'), p and [round(x,3) for x in p['contact']], j['p4']['tracking'])"; sleep 1.5; done

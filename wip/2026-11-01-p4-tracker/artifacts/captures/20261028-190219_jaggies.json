@@ -1,0 +1,11 @@
+{
+ "name": "jaggies",
+ "notes": "lhd jaggies after StationsMoved recal",
+ "start_ht": 1793239339.0702012,
+ "source": "lhd",
+ "files": {
+  "recording": "20261028-190219_jaggies.rec.gz"
+ },
+ "stop_ht": 1793239354.104703,
+ "seconds": 15.03
+}

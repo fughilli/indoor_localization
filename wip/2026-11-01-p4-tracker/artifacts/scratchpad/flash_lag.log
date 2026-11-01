@@ -1,0 +1,190 @@
+(19:46:42) [32mINFO: [0mInvocation ID: a8cf8ea9-df5d-4384-bd56-53fec79f7e3a
+(19:46:43) [32mINFO: [0mCurrent date is 2026-10-30
+(19:46:43) [32mComputing main repo mapping:[0m 
+(19:46:43) [32mLoading:[0m 
+(19:46:43) [32mLoading:[0m 0 packages loaded
+(19:46:43) [32mAnalyzing:[0m target //firmware/player_app:flash_esp32p4_player_c6 (0 packages loaded, 0 targets configured)
+(19:46:43) [32mAnalyzing:[0m target //firmware/player_app:flash_esp32p4_player_c6 (0 packages loaded, 0 targets configured)
+
+(19:46:43) [32mINFO: [0mAnalyzed target //firmware/player_app:flash_esp32p4_player_c6 (0 packages loaded, 0 targets configured).
+(19:46:44) [32m[20 / 32][0m Compiling Rust rlib lh_kernel_f32 (10 files); 1s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(19:46:45) [32m[26 / 32][0m [Prepa] Compiling Rust rlib lh_device_f32 (1 file)
+(19:46:47) [32m[28 / 32][0m Linking firmware/player_app/player_app_link_sdio; 1s disk-cache, darwin-sandbox
+(19:46:47) [32mINFO: [0mFrom Linking firmware/player_app/player_app_link_sdio:
+stdout (/private/var/tmp/_bazel_kevin/e8aec63e9758729ea6d2eba9d240d281/execroot/_main/bazel-out/_tmp/actions/stdout-14) 5285550 exceeds maximum size of --experimental_ui_max_stdouterr_bytes=1048576 bytes; skipping
+(19:46:47) [32mINFO: [0mFrom Packaging //firmware/player_app:esp32p4_player_c6:
+WARNING: Deprecated: Option '--flash_mode' is deprecated. Use '--flash-mode' instead.
+WARNING: Deprecated: Option '--flash_freq' is deprecated. Use '--flash-freq' instead.
+WARNING: Deprecated: Option '--flash_size' is deprecated. Use '--flash-size' instead.
+esptool v5.6.0
+Creating ESP32-P4 image...
+Merged 3 ELF sections.
+Successfully created ESP32-P4 image.
+(19:46:47) [32mINFO: [0mFound 1 target...
+Target //firmware/player_app:flash_esp32p4_player_c6 up-to-date:
+  bazel-bin/firmware/player_app/flash_esp32p4_player_c6.sh
+(19:46:47) [32mINFO: [0mElapsed time: 4.964s, Critical Path: 4.40s
+(19:46:47) [32mINFO: [0m13 processes: 2 internal, 11 darwin-sandbox.
+(19:46:47) [32mINFO: [0mBuild completed successfully, 13 total actions
+(19:46:47) [32mINFO: [0mRunning command line: bazel-bin/firmware/player_app/flash_esp32p4_player_c6.sh --port /dev/cu.usbmodem5CF71536071
+[0mesptool v5.6.0
+Serial port /dev/cu.usbmodem5CF71536071:
+Connecting....
+Connected to ESP32-P4 on /dev/cu.usbmodem5CF71536071:
+Chip type:          ESP32-P4 (revision v3.2)
+Features:           Dual Core + LP Core, 400MHz
+Crystal frequency:  40MHz
+MAC:                e8:f6:0a:e8:1b:2c
+
+Uploading stub flasher...
+Running stub flasher...
+Stub flasher running.
+
+Configuring flash size...
+
+Writing '/private/var/tmp/_bazel_kevin/e8aec63e9758729ea6d2eba9d240d281/execroot/_main/bazel-out/darwin_arm64-opt/bin/external/firmware~/libs/board/esp32p4_bootloader.bin' at 0x00002000...
+Flash will be erased from 0x00002000 to 0x00007fff...
+Compressed 21568 bytes to 13778...
+Writing at 0x00007440 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100.0% 13.46kB/13.46kB [1s] 
+Wrote 21568 bytes (13778 compressed) at 0x00002000 in 1.4 seconds (119.4 kbit/s).
+Verifying written data...
+Hash of data verified.
+
+Writing '/private/var/tmp/_bazel_kevin/e8aec63e9758729ea6d2eba9d240d281/execroot/_main/bazel-out/darwin_arm64-opt/bin/external/rules_nixpkgs_core~~_nix_pkg~firmware~~nix_pkg~arduino_esp32/partitions_huge_app.bin' at 0x00008000...
+Flash will be erased from 0x00008000 to 0x00008fff...
+Compressed 3072 bytes to 137...
+Writing at 0x00008c00 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100.0% 137B/137B [0s] 
+Wrote 3072 bytes (137 compressed) at 0x00008000 in 0.0 seconds (1024.2 kbit/s).
+Verifying written data...
+Hash of data verified.
+
+Writing '/private/var/tmp/_bazel_kevin/e8aec63e9758729ea6d2eba9d240d281/external/rules_nixpkgs_core~~_nix_pkg~firmware~~nix_pkg~arduino_esp32/tools/partitions/boot_app0.bin' at 0x0000e000...
+Flash will be erased from 0x0000e000 to 0x0000ffff...
+Compressed 8192 bytes to 47...
+Writing at 0x00010000 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100.0% 47B/47B [0s] 
+Wrote 8192 bytes (47 compressed) at 0x0000e000 in 0.1 seconds (1144.8 kbit/s).
+Verifying written data...
+Hash of data verified.
+
+Writing '/private/var/tmp/_bazel_kevin/e8aec63e9758729ea6d2eba9d240d281/execroot/_main/bazel-out/darwin_arm64-opt/bin/firmware/player_app/esp32p4_player_c6.bin' at 0x00010000...
+Flash will be erased from 0x00010000 to 0x00259fff...
+Compressed 2399056 bytes to 1864830...
+Writing at 0x000188de                                  0.9% 16.00kB/1.78MB [1s] 
+Writing at 0x0001ca87 ╸                                1.8% 32.00kB/1.78MB [2s] 
+Writing at 0x00020a82 ╸                                2.6% 48.00kB/1.78MB [4s] 
+Writing at 0x00024ad0 ━                                3.5% 64.00kB/1.78MB [5s] 
+Writing at 0x00028aad ━                                4.4% 80.00kB/1.78MB [7s] 
+Writing at 0x0002caa8 ━╸                               5.3% 96.00kB/1.78MB [8s] 
+Writing at 0x00030aa3 ━╸                               6.2% 112.00kB/1.78MB [10s] 
+Writing at 0x00034a9e ━━                               7.0% 128.00kB/1.78MB [11s] 
+Writing at 0x00038a9e ━━                               7.9% 144.00kB/1.78MB [12s] 
+Writing at 0x0003ca9a ━━╸                              8.8% 160.00kB/1.78MB [14s] 
+Writing at 0x00040a95 ━━╸                              9.7% 176.00kB/1.78MB [15s] 
+Writing at 0x00044a90 ━━━                             10.5% 192.00kB/1.78MB [17s] 
+Writing at 0x00048a8b ━━━                             11.4% 208.00kB/1.78MB [18s] 
+Writing at 0x0004ca86 ━━━╸                            12.3% 224.00kB/1.78MB [20s] 
+Writing at 0x00050a81 ━━━╸                            13.2% 240.00kB/1.78MB [21s] 
+Writing at 0x00054a7c ━━━━                            14.1% 256.00kB/1.78MB [22s] 
+Writing at 0x00058a77 ━━━━                            14.9% 272.00kB/1.78MB [24s] 
+Writing at 0x0005ca85 ━━━━╸                           15.8% 288.00kB/1.78MB [25s] 
+Writing at 0x00060a6c ━━━━━                           16.7% 304.00kB/1.78MB [27s] 
+Writing at 0x00064a9b ━━━━━                           17.6% 320.00kB/1.78MB [28s] 
+Writing at 0x00068a96 ━━━━━╸                          18.5% 336.00kB/1.78MB [30s] 
+Writing at 0x0006ca91 ━━━━━╸                          19.3% 352.00kB/1.78MB [31s] 
+Writing at 0x00070a69 ━━━━━━                          20.2% 368.00kB/1.78MB [33s] 
+Writing at 0x00074aaf ━━━━━━                          21.1% 384.00kB/1.78MB [34s] 
+Writing at 0x00078aae ━━━━━━╸                         22.0% 400.00kB/1.78MB [35s] 
+Writing at 0x0007caa9 ━━━━━━╸                         22.8% 416.00kB/1.78MB [37s] 
+Writing at 0x00080aa4 ━━━━━━━                         23.7% 432.00kB/1.78MB [38s] 
+Writing at 0x00084a9f ━━━━━━━                         24.6% 448.00kB/1.78MB [40s] 
+Writing at 0x00088a6e ━━━━━━━╸                        25.5% 464.00kB/1.78MB [41s] 
+Writing at 0x0008cacb ━━━━━━━╸                        26.4% 480.00kB/1.78MB [43s] 
+Writing at 0x00090ac6 ━━━━━━━━                        27.2% 496.00kB/1.78MB [44s] 
+Writing at 0x00094ac1 ━━━━━━━━                        28.1% 512.00kB/1.78MB [45s] 
+Writing at 0x00098abc ━━━━━━━━╸                       29.0% 528.00kB/1.78MB [47s] 
+Writing at 0x0009cab7 ━━━━━━━━╸                       29.9% 544.00kB/1.78MB [48s] 
+Writing at 0x000a0ab2 ━━━━━━━━━                       30.8% 560.00kB/1.78MB [50s] 
+Writing at 0x000a4aad ━━━━━━━━━                       31.6% 576.00kB/1.78MB [51s] 
+Writing at 0x000a8aa8 ━━━━━━━━━╸                      32.5% 592.00kB/1.78MB [53s] 
+Writing at 0x000acaa3 ━━━━━━━━━━                      33.4% 608.00kB/1.78MB [54s] 
+Writing at 0x000b0a9e ━━━━━━━━━━                      34.3% 624.00kB/1.78MB [55s] 
+Writing at 0x000b4a99 ━━━━━━━━━━╸                     35.1% 640.00kB/1.78MB [57s] 
+Writing at 0x000b8a94 ━━━━━━━━━━╸                     36.0% 656.00kB/1.78MB [58s] 
+Writing at 0x000bca8f ━━━━━━━━━━━                     36.9% 672.00kB/1.78MB [1:00] 
+Writing at 0x000c0a8a ━━━━━━━━━━━                     37.8% 688.00kB/1.78MB [1:01] 
+Writing at 0x000c4a85 ━━━━━━━━━━━╸                    38.7% 704.00kB/1.78MB [1:03] 
+Writing at 0x000c8a80 ━━━━━━━━━━━╸                    39.5% 720.00kB/1.78MB [1:04] 
+Writing at 0x000cca7b ━━━━━━━━━━━━                    40.4% 736.00kB/1.78MB [1:05] 
+Writing at 0x000d0a76 ━━━━━━━━━━━━                    41.3% 752.00kB/1.78MB [1:07] 
+Writing at 0x000d4a71 ━━━━━━━━━━━━╸                   42.2% 768.00kB/1.78MB [1:08] 
+Writing at 0x000d8a6c ━━━━━━━━━━━━╸                   43.1% 784.00kB/1.78MB [1:10] 
+Writing at 0x000dca67 ━━━━━━━━━━━━━                   43.9% 800.00kB/1.78MB [1:11] 
+Writing at 0x000e0a62 ━━━━━━━━━━━━━                   44.8% 816.00kB/1.78MB [1:13] 
+Writing at 0x000e4a5d ━━━━━━━━━━━━━╸                  45.7% 832.00kB/1.78MB [1:14] 
+Writing at 0x000e8a58 ━━━━━━━━━━━━━╸                  46.6% 848.00kB/1.78MB [1:16] 
+Writing at 0x000eca53 ━━━━━━━━━━━━━━                  47.4% 864.00kB/1.78MB [1:17] 
+Writing at 0x000f0a4e ━━━━━━━━━━━━━━                  48.3% 880.00kB/1.78MB [1:18] 
+Writing at 0x000f4a49 ━━━━━━━━━━━━━━╸                 49.2% 896.00kB/1.78MB [1:20] 
+Writing at 0x000f8a44 ━━━━━━━━━━━━━━━                 50.1% 912.00kB/1.78MB [1:21] 
+Writing at 0x000fca3f ━━━━━━━━━━━━━━━                 51.0% 928.00kB/1.78MB [1:23] 
+Writing at 0x00100a3a ━━━━━━━━━━━━━━━╸                51.8% 944.00kB/1.78MB [1:24] 
+Writing at 0x00104a35 ━━━━━━━━━━━━━━━╸                52.7% 960.00kB/1.78MB [1:26] 
+Writing at 0x00108a30 ━━━━━━━━━━━━━━━━                53.6% 976.00kB/1.78MB [1:27] 
+Writing at 0x0010ca2b ━━━━━━━━━━━━━━━━                54.5% 992.00kB/1.78MB [1:28] 
+Writing at 0x00110a26 ━━━━━━━━━━━━━━━━╸               55.4% 1008.00kB/1.78MB [1:30] 
+Writing at 0x00114a21 ━━━━━━━━━━━━━━━━╸               56.2% 1.00MB/1.78MB [1:31] 
+Writing at 0x001189f0 ━━━━━━━━━━━━━━━━━               57.1% 1.02MB/1.78MB [1:33] 
+Writing at 0x0011ca41 ━━━━━━━━━━━━━━━━━               58.0% 1.03MB/1.78MB [1:34] 
+Writing at 0x00120a3c ━━━━━━━━━━━━━━━━━╸              58.9% 1.05MB/1.78MB [1:36] 
+Writing at 0x00124a37 ━━━━━━━━━━━━━━━━━╸              59.7% 1.06MB/1.78MB [1:37] 
+Writing at 0x00128a32 ━━━━━━━━━━━━━━━━━━              60.6% 1.08MB/1.78MB [1:38] 
+Writing at 0x0012ca2d ━━━━━━━━━━━━━━━━━━              61.5% 1.09MB/1.78MB [1:40] 
+Writing at 0x00130a28 ━━━━━━━━━━━━━━━━━━╸             62.4% 1.11MB/1.78MB [1:41] 
+Writing at 0x00134a23 ━━━━━━━━━━━━━━━━━━╸             63.3% 1.12MB/1.78MB [1:43] 
+Writing at 0x001389e6 ━━━━━━━━━━━━━━━━━━━             64.1% 1.14MB/1.78MB [1:44] 
+Writing at 0x0013e94f ━━━━━━━━━━━━━━━━━━━╸            65.0% 1.16MB/1.78MB [1:46] 
+Writing at 0x00148a69 ━━━━━━━━━━━━━━━━━━━╸            65.9% 1.17MB/1.78MB [1:47] 
+Writing at 0x001561d8 ━━━━━━━━━━━━━━━━━━━━            66.8% 1.19MB/1.78MB [1:49] 
+Writing at 0x001612d5 ━━━━━━━━━━━━━━━━━━━━            67.7% 1.20MB/1.78MB [1:50] 
+Writing at 0x00166e43 ━━━━━━━━━━━━━━━━━━━━╸           68.5% 1.22MB/1.78MB [1:51] 
+Writing at 0x0016d436 ━━━━━━━━━━━━━━━━━━━━╸           69.4% 1.23MB/1.78MB [1:53] 
+Writing at 0x0017483b ━━━━━━━━━━━━━━━━━━━━━           70.3% 1.25MB/1.78MB [1:54] 
+Writing at 0x0017b812 ━━━━━━━━━━━━━━━━━━━━━           71.2% 1.27MB/1.78MB [1:56] 
+Writing at 0x00181de4 ━━━━━━━━━━━━━━━━━━━━━╸          72.0% 1.28MB/1.78MB [1:57] 
+Writing at 0x0018803b ━━━━━━━━━━━━━━━━━━━━━╸          72.9% 1.30MB/1.78MB [1:59] 
+Writing at 0x0018e74e ━━━━━━━━━━━━━━━━━━━━━━          73.8% 1.31MB/1.78MB [2:00] 
+Writing at 0x0019491a ━━━━━━━━━━━━━━━━━━━━━━          74.7% 1.33MB/1.78MB [2:01] 
+Writing at 0x0019aa7c ━━━━━━━━━━━━━━━━━━━━━━╸         75.6% 1.34MB/1.78MB [2:03] 
+Writing at 0x001a1730 ━━━━━━━━━━━━━━━━━━━━━━╸         76.4% 1.36MB/1.78MB [2:04] 
+Writing at 0x001aa71f ━━━━━━━━━━━━━━━━━━━━━━━         77.3% 1.38MB/1.78MB [2:06] 
+Writing at 0x001b0f33 ━━━━━━━━━━━━━━━━━━━━━━━         78.2% 1.39MB/1.78MB [2:07] 
+Writing at 0x001b7257 ━━━━━━━━━━━━━━━━━━━━━━━╸        79.1% 1.41MB/1.78MB [2:09] 
+Writing at 0x001bd7aa ━━━━━━━━━━━━━━━━━━━━━━━╸        80.0% 1.42MB/1.78MB [2:10] 
+Writing at 0x001c3747 ━━━━━━━━━━━━━━━━━━━━━━━━        80.8% 1.44MB/1.78MB [2:11] 
+Writing at 0x001cca17 ━━━━━━━━━━━━━━━━━━━━━━━━╸       81.7% 1.45MB/1.78MB [2:13] 
+Writing at 0x001d3b6a ━━━━━━━━━━━━━━━━━━━━━━━━╸       82.6% 1.47MB/1.78MB [2:14] 
+Writing at 0x001d9ac9 ━━━━━━━━━━━━━━━━━━━━━━━━━       83.5% 1.48MB/1.78MB [2:16] 
+Writing at 0x001df52a ━━━━━━━━━━━━━━━━━━━━━━━━━       84.3% 1.50MB/1.78MB [2:17] 
+Writing at 0x001e52e5 ━━━━━━━━━━━━━━━━━━━━━━━━━╸      85.2% 1.52MB/1.78MB [2:19] 
+Writing at 0x001eaeb5 ━━━━━━━━━━━━━━━━━━━━━━━━━╸      86.1% 1.53MB/1.78MB [2:20] 
+Writing at 0x001f0672 ━━━━━━━━━━━━━━━━━━━━━━━━━━      87.0% 1.55MB/1.78MB [2:22] 
+Writing at 0x001f7698 ━━━━━━━━━━━━━━━━━━━━━━━━━━      87.9% 1.56MB/1.78MB [2:23] 
+Writing at 0x001fd4b5 ━━━━━━━━━━━━━━━━━━━━━━━━━━╸     88.7% 1.58MB/1.78MB [2:24] 
+Writing at 0x0020540a ━━━━━━━━━━━━━━━━━━━━━━━━━━╸     89.6% 1.59MB/1.78MB [2:26] 
+Writing at 0x0020e96b ━━━━━━━━━━━━━━━━━━━━━━━━━━━     90.5% 1.61MB/1.78MB [2:27] 
+Writing at 0x0021488d ━━━━━━━━━━━━━━━━━━━━━━━━━━━     91.4% 1.62MB/1.78MB [2:29] 
+Writing at 0x0021b3c4 ━━━━━━━━━━━━━━━━━━━━━━━━━━━╸    92.3% 1.64MB/1.78MB [2:30] 
+Writing at 0x00221658 ━━━━━━━━━━━━━━━━━━━━━━━━━━━╸    93.1% 1.66MB/1.78MB [2:32] 
+Writing at 0x00227f8d ━━━━━━━━━━━━━━━━━━━━━━━━━━━━    94.0% 1.67MB/1.78MB [2:33] 
+Writing at 0x0022e982 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━    94.9% 1.69MB/1.78MB [2:34] 
+Writing at 0x00235674 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸   95.8% 1.70MB/1.78MB [2:36] 
+Writing at 0x0023b1a4 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸   96.6% 1.72MB/1.78MB [2:37] 
+Writing at 0x0024127d ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   97.5% 1.73MB/1.78MB [2:39] 
+Writing at 0x00247f39 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸  98.4% 1.75MB/1.78MB [2:40] 
+Writing at 0x0024f373 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸  99.3% 1.77MB/1.78MB [2:42] 
+Writing at 0x00259b50 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100.0% 1.78MB/1.78MB [2:43] 
+Wrote 2399056 bytes (1864830 compressed) at 0x00010000 in 163.5 seconds (117.4 kbit/s).
+Verifying written data...
+Hash of data verified.
+
+Hard resetting via RTS pin...

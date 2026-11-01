@@ -1,0 +1,54 @@
+{
+ "name": "near",
+ "notes": "Wireless via dongle, power bank. Handheld, dome facing one station, inside its FOV throughout. Protocol: ~10 s at ~1 m, ~20 s slow approach to ~10-20 cm, ~10 s hold close, ~20 s slow retreat to ~1 m.",
+ "start_ht": 1793132713.9736068,
+ "survive_args": [
+  "--lighthouse-gen",
+  "1",
+  "--disambiguator-min-sync-sensors",
+  "1"
+ ],
+ "lighthouses_at_start": [
+  {
+   "id": "1416427640",
+   "mode": 2,
+   "p": [
+    0.752753,
+    -0.481366,
+    0.186148
+   ],
+   "q": [
+    0.019861,
+    -0.605332,
+    -0.705109,
+    0.368781
+   ],
+   "t": 282.462889
+  },
+  {
+   "id": "699579721",
+   "mode": 1,
+   "p": [
+    6.8e-05,
+    0.410724,
+    0.57637
+   ],
+   "q": [
+    -0.052641,
+    -0.01841,
+    0.689553,
+    0.722085
+   ],
+   "t": 282.462631
+  }
+ ],
+ "files": {
+  "recording": "20261027-132513_near.rec.gz",
+  "config": "20261027-132513_near.config.json"
+ },
+ "stop_ht": 1793132807.219315,
+ "seconds": 93.25,
+ "lines": 520546,
+ "calibration_note": "The .config.json saved with this recording is corrupted (live libsurvive recalibrated badly while it couldn't lock over wireless). The stations didn't move: replay with 20261027-131201_turntable-center.config.json and --disable-calibrate 1.",
+ "use_config": "20261027-131201_turntable-center.config.json"
+}

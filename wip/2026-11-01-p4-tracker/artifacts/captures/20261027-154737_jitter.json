@@ -1,0 +1,11 @@
+{
+ "name": "jitter",
+ "notes": "Live lhd, tracker as-is (likely still), for the ~30 Hz ripple.",
+ "start_ht": 1793141257.511652,
+ "source": "lhd",
+ "files": {
+  "recording": "20261027-154737_jitter.rec.gz"
+ },
+ "stop_ht": 1793141277.546252,
+ "seconds": 20.03
+}

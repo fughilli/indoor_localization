@@ -1,0 +1,4 @@
+map: {"count": 300, "mapped": 280, "reachable": 268, "spacing_mm": 8.14007361574202, "extent_mm": [123.1, 81.5, 103.3], "source": {"synthetic": "cylinder_lamp", "n": 300}}
+pose source: synthetic
+OSC: synthetic fixture + dry-run (log: /private/tmp/claude-501/-Users-kevin-Projects-git-checkouts-indoor-localization/ea7d830b-6f55-49b3-94bb-12e39a7b266a/scratchpad/osc_dbg.log)
+serving http://127.0.0.1:8791/

@@ -1,0 +1,52 @@
+{
+ "name": "turntable-center",
+ "notes": "Wireless via dongle, tracker on power bank, approx centered on turntable, rotating about one (vertical) axis by hand, rate not constant. Protocol: ~60 s hands-off static, ~60 s rotating, ~15 s hands-off static.",
+ "start_ht": 1793131664.367102,
+ "survive_args": [
+  "--lighthouse-gen",
+  "1",
+  "--disambiguator-min-sync-sensors",
+  "1"
+ ],
+ "lighthouses_at_start": [
+  {
+   "id": "1416427640",
+   "mode": 2,
+   "p": [
+    0.883748,
+    -0.344332,
+    0.503174
+   ],
+   "q": [
+    0.51664,
+    0.582958,
+    0.417906,
+    0.467544
+   ],
+   "t": 0.013409
+  },
+  {
+   "id": "699579721",
+   "mode": 1,
+   "p": [
+    0.0,
+    0.416121,
+    0.574592
+   ],
+   "q": [
+    -0.043309,
+    -0.028729,
+    0.667999,
+    0.742345
+   ],
+   "t": 0.013569
+  }
+ ],
+ "files": {
+  "recording": "20261027-130744_turntable-center.rec.gz",
+  "config": "20261027-130744_turntable-center.config.json"
+ },
+ "stop_ht": 1793131870.2220612,
+ "seconds": 205.85,
+ "lines": 464478
+}

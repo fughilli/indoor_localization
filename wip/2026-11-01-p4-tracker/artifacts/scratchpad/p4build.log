@@ -1,0 +1,242 @@
+(13:19:44) [32mINFO: [0mInvocation ID: a5d844db-f49a-4c44-b531-0c76ce87cfd1
+(13:19:44) [32mINFO: [0mCurrent date is 2026-10-29
+(13:19:44) [32mComputing main repo mapping:[0m 
+(13:19:45) [32mComputing main repo mapping:[0m 
+(13:19:46) [32mComputing main repo mapping:[0m 
+(13:19:47) [32mComputing main repo mapping:[0m 
+(13:19:48) [32mComputing main repo mapping:[0m 
+(13:19:49) [32mComputing main repo mapping:[0m 
+(13:19:51) [32mComputing main repo mapping:[0m 
+these 4 derivations will be built:
+  /nix/store/p9w9q0p4zd53zckycn2zys4dd7nifha5-source.drv
+  /nix/store/vch74kam2dvgp6zgd7ayqajnbnv6j335-esp32-arduino-libs-idf-release_v5.5-73550728-v6.zip.drv
+  /nix/store/p9zsa9p6mxlc0h8f48wd2sin150rgdrn-esp32-arduino-libs-c6-c3.drv
+  /nix/store/l5hfp31b4c0z7rpi2sh9y0qnihg1by6s-arduino-esp32-3.3.10.drv
+these 32 paths will be fetched (10.35 MiB download, 47.76 MiB unpacked):
+  /nix/store/av5ii8wayf26mrwyd51zbw3789qfkiy0-bzip2-1.0.8-bin
+  /nix/store/ajss1y0gm4yv38iyv91hh4x2kn1kgwhy-curl-8.20.0
+  /nix/store/rkikksdb8b21cpr8fqi90xcbhdwp1anj-curl-8.20.0-bin
+  /nix/store/ayhbxi69sdn58v6wcaqm3g516flyrl9s-curl-8.20.0-dev
+  /nix/store/q27wlvsjq83qlsrsvmfwzpcpvg07igv6-curl-8.20.0-man
+  /nix/store/qb699v8v0b1fx90m624nz4k61dkvhk4d-diffutils-3.12
+  /nix/store/nyfw8jm667s7clqvv4619npqvqkf3lah-ed-1.22.2
+  /nix/store/xrrw396w7in6mzwbvkzh2i2rbjzqzilj-file-5.45
+  /nix/store/c7f47z7lh9np21r8sslxr9jjx8k7zy32-findutils-4.10.0
+  /nix/store/a3jxs27j50x445r08cf0z7mcc37j3533-gawk-5.3.2
+  /nix/store/98rvfxbz5w8pj1bvzz57c34xjxx2id3h-gettext-0.25.1
+  /nix/store/c21haj428ka99z2sbchvxkyppvqjcxw8-gnu-config-2024-01-01
+  /nix/store/x0cncwr8gd54wimcxz41ivig86kvk965-gnumake-4.4.1
+  /nix/store/z5i75mxray6m2rxda7yx7pd08iyiv7p3-gnused-4.9
+  /nix/store/hlg3zlwh7vvrgnrjpxlgpl96dqsfbm9s-gnutar-1.35
+  /nix/store/jb5m8ks7xianrjrjf9hqr1jyfxbbnc6f-gzip-1.14
+  /nix/store/6453s9bq0ghr77sd9yachagz5vgbv71y-libssh2-1.11.1
+  /nix/store/gzs8lg91mbxh54bdjg00n3nljh7bb97x-libssh2-1.11.1-dev
+  /nix/store/4ca5zyxy9lw0kcws0syqw9v6z9h864zq-locale-118
+  /nix/store/27gx9vka03fsb1vyf4xrwrlxdszsmpdw-mirrors-list
+  /nix/store/vq75k8k1wcczj86bq9sg8j1qxwxpr38s-nghttp2-1.68.1
+  /nix/store/l5nk3mfni71a5krrvvswr7djykfz5h18-nghttp2-1.68.1-dev
+  /nix/store/2rbnq0kjhq6kdhmfh0cq4v3hfykgrvbm-nghttp2-1.68.1-lib
+  /nix/store/f6lwfkwg3lz0qill0zn1s7gpidjaarhp-openssl-3.6.2
+  /nix/store/d3aahbwnc0dbb1h91cqi2rg1hs5qd8zl-openssl-3.6.2-bin
+  /nix/store/r5qn40shnry7nlhkppgsfs98719vcx6g-openssl-3.6.2-dev
+  /nix/store/pbrvq8dgqlfgp3hp6pxpk51880iplrvc-patch-2.8
+  /nix/store/p165ii2jfq3iymfrvy1acrmm4y3jhnc2-stdenv-darwin
+  /nix/store/lp2zh9wlj7awdf57wljd25cn58imxfj4-unzip-6.0
+  /nix/store/9jfbyf5pd7ddm64rnd3w0ar3zrkiilzx-update-autotools-gnu-config-scripts-hook
+  /nix/store/fcx7vjxlz8nml28wk0ljq5f79i5j0yq8-xz-5.8.3-bin
+  /nix/store/pdpr3xqvawq337q1wdby94cp25422r7w-zlib-1.3.2-dev
+copying path '/nix/store/a3jxs27j50x445r08cf0z7mcc37j3533-gawk-5.3.2' from 'https://cache.nixos.org'...
+copying path '/nix/store/z5i75mxray6m2rxda7yx7pd08iyiv7p3-gnused-4.9' from 'https://cache.nixos.org'...
+copying path '/nix/store/4ca5zyxy9lw0kcws0syqw9v6z9h864zq-locale-118' from 'https://cache.nixos.org'...
+copying path '/nix/store/av5ii8wayf26mrwyd51zbw3789qfkiy0-bzip2-1.0.8-bin' from 'https://cache.nixos.org'...
+copying path '/nix/store/qb699v8v0b1fx90m624nz4k61dkvhk4d-diffutils-3.12' from 'https://cache.nixos.org'...
+copying path '/nix/store/c7f47z7lh9np21r8sslxr9jjx8k7zy32-findutils-4.10.0' from 'https://cache.nixos.org'...
+copying path '/nix/store/jb5m8ks7xianrjrjf9hqr1jyfxbbnc6f-gzip-1.14' from 'https://cache.nixos.org'...
+copying path '/nix/store/xrrw396w7in6mzwbvkzh2i2rbjzqzilj-file-5.45' from 'https://cache.nixos.org'...
+copying path '/nix/store/27gx9vka03fsb1vyf4xrwrlxdszsmpdw-mirrors-list' from 'https://cache.nixos.org'...
+copying path '/nix/store/fcx7vjxlz8nml28wk0ljq5f79i5j0yq8-xz-5.8.3-bin' from 'https://cache.nixos.org'...
+copying path '/nix/store/q27wlvsjq83qlsrsvmfwzpcpvg07igv6-curl-8.20.0-man' from 'https://cache.nixos.org'...
+copying path '/nix/store/nyfw8jm667s7clqvv4619npqvqkf3lah-ed-1.22.2' from 'https://cache.nixos.org'...
+copying path '/nix/store/c21haj428ka99z2sbchvxkyppvqjcxw8-gnu-config-2024-01-01' from 'https://cache.nixos.org'...
+copying path '/nix/store/98rvfxbz5w8pj1bvzz57c34xjxx2id3h-gettext-0.25.1' from 'https://cache.nixos.org'...
+copying path '/nix/store/2rbnq0kjhq6kdhmfh0cq4v3hfykgrvbm-nghttp2-1.68.1-lib' from 'https://cache.nixos.org'...
+copying path '/nix/store/f6lwfkwg3lz0qill0zn1s7gpidjaarhp-openssl-3.6.2' from 'https://cache.nixos.org'...
+copying path '/nix/store/vq75k8k1wcczj86bq9sg8j1qxwxpr38s-nghttp2-1.68.1' from 'https://cache.nixos.org'...
+copying path '/nix/store/lp2zh9wlj7awdf57wljd25cn58imxfj4-unzip-6.0' from 'https://cache.nixos.org'...
+copying path '/nix/store/9jfbyf5pd7ddm64rnd3w0ar3zrkiilzx-update-autotools-gnu-config-scripts-hook' from 'https://cache.nixos.org'...
+copying path '/nix/store/pdpr3xqvawq337q1wdby94cp25422r7w-zlib-1.3.2-dev' from 'https://cache.nixos.org'...
+copying path '/nix/store/l5nk3mfni71a5krrvvswr7djykfz5h18-nghttp2-1.68.1-dev' from 'https://cache.nixos.org'...
+copying path '/nix/store/pbrvq8dgqlfgp3hp6pxpk51880iplrvc-patch-2.8' from 'https://cache.nixos.org'...
+copying path '/nix/store/6453s9bq0ghr77sd9yachagz5vgbv71y-libssh2-1.11.1' from 'https://cache.nixos.org'...
+copying path '/nix/store/d3aahbwnc0dbb1h91cqi2rg1hs5qd8zl-openssl-3.6.2-bin' from 'https://cache.nixos.org'...
+copying path '/nix/store/x0cncwr8gd54wimcxz41ivig86kvk965-gnumake-4.4.1' from 'https://cache.nixos.org'...
+copying path '/nix/store/hlg3zlwh7vvrgnrjpxlgpl96dqsfbm9s-gnutar-1.35' from 'https://cache.nixos.org'...
+copying path '/nix/store/r5qn40shnry7nlhkppgsfs98719vcx6g-openssl-3.6.2-dev' from 'https://cache.nixos.org'...
+copying path '/nix/store/ajss1y0gm4yv38iyv91hh4x2kn1kgwhy-curl-8.20.0' from 'https://cache.nixos.org'...
+copying path '/nix/store/p165ii2jfq3iymfrvy1acrmm4y3jhnc2-stdenv-darwin' from 'https://cache.nixos.org'...
+copying path '/nix/store/rkikksdb8b21cpr8fqi90xcbhdwp1anj-curl-8.20.0-bin' from 'https://cache.nixos.org'...
+copying path '/nix/store/gzs8lg91mbxh54bdjg00n3nljh7bb97x-libssh2-1.11.1-dev' from 'https://cache.nixos.org'...
+copying path '/nix/store/ayhbxi69sdn58v6wcaqm3g516flyrl9s-curl-8.20.0-dev' from 'https://cache.nixos.org'...
+building '/nix/store/vch74kam2dvgp6zgd7ayqajnbnv6j335-esp32-arduino-libs-idf-release_v5.5-73550728-v6.zip.drv'...
+building '/nix/store/p9w9q0p4zd53zckycn2zys4dd7nifha5-source.drv'...
+
+trying https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-73550728-v6.zip
+
+trying https://github.com/espressif/arduino-esp32/archive/3.3.10.tar.gz
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+                                 Dload  Upload  Total   Spent   Left   Speed
+  0      0   0      0   0      0      0      0                              0
+  0      0   0      0   0      0      0      0                              0
+100 64.70M   0 64.70M   0      0  2.48M      0           00:26          3.38M
+unpacking source archive /private/tmp/nix-build-source.drv-0/download.tar.gz
+100 501.6M 100 501.6M   0      0  4.76M      0   01:45   01:45          6.02M
+building '/nix/store/p9zsa9p6mxlc0h8f48wd2sin150rgdrn-esp32-arduino-libs-c6-c3.drv'...
+building '/nix/store/l5hfp31b4c0z7rpi2sh9y0qnihg1by6s-arduino-esp32-3.3.10.drv'...
+/nix/store/zrfaawsn8n1p5lgshbqla6flzl2bmqck-arduino-esp32-3.3.10
+(13:22:12) [32mLoading:[0m 
+(13:22:12) [32mLoading:[0m 2 packages loaded
+(13:22:13) [32mLoading:[0m 2 packages loaded
+    currently loading: firmware/p4
+(13:22:13) [32mAnalyzing:[0m 2 targets (3 packages loaded, 0 targets configured)
+(13:22:13) [32mAnalyzing:[0m 2 targets (3 packages loaded, 0 targets configured)
+
+(13:22:14) [32mAnalyzing:[0m 2 targets (54 packages loaded, 28 targets configured)
+
+/nix/store/272hr8f4k8hw7s0ixmpmhgnhnzqdw0qa-picotool-2.2.0-a4
+(13:22:15) [32mAnalyzing:[0m 2 targets (75 packages loaded, 49 targets configured)
+
+/nix/store/282x78dx67grdd0n49zdh2qwh845hdl4-esptool-5.1.0
+(13:22:16) [32mAnalyzing:[0m 2 targets (119 packages loaded, 49 targets configured)
+
+(13:22:17) [32mAnalyzing:[0m 2 targets (120 packages loaded, 809 targets configured)
+
+(13:22:19) [32mAnalyzing:[0m 2 targets (120 packages loaded, 809 targets configured)
+
+(13:22:20) [32mAnalyzing:[0m 2 targets (120 packages loaded, 809 targets configured)
+
+(13:22:21) [32mAnalyzing:[0m 2 targets (120 packages loaded, 809 targets configured)
+
+(13:22:22) [32mAnalyzing:[0m 2 targets (120 packages loaded, 809 targets configured)
+
+(13:22:23) [32mAnalyzing:[0m 2 targets (121 packages loaded, 809 targets configured)
+
+(13:22:24) [32mAnalyzing:[0m 2 targets (121 packages loaded, 809 targets configured)
+
+(13:22:25) [32mAnalyzing:[0m 2 targets (121 packages loaded, 809 targets configured)
+
+(13:22:26) [32mAnalyzing:[0m 2 targets (121 packages loaded, 809 targets configured)
+
+(13:22:27) [32mAnalyzing:[0m 2 targets (121 packages loaded, 809 targets configured)
+
+(13:22:28) [32mAnalyzing:[0m 2 targets (121 packages loaded, 809 targets configured)
+
+(13:22:29) [32mAnalyzing:[0m 2 targets (121 packages loaded, 809 targets configured)
+
+(13:22:30) [32mAnalyzing:[0m 2 targets (121 packages loaded, 809 targets configured)
+
+(13:22:31) [32mAnalyzing:[0m 2 targets (121 packages loaded, 809 targets configured)
+
+(13:22:32) [32mAnalyzing:[0m 2 targets (121 packages loaded, 809 targets configured)
+
+(13:22:33) [32mAnalyzing:[0m 2 targets (121 packages loaded, 809 targets configured)
+
+(13:22:34) [32mAnalyzing:[0m 2 targets (121 packages loaded, 809 targets configured)
+
+(13:22:36) [32mAnalyzing:[0m 2 targets (121 packages loaded, 809 targets configured)
+
+(13:22:37) [32mAnalyzing:[0m 2 targets (121 packages loaded, 809 targets configured)
+
+(13:22:38) [32mAnalyzing:[0m 2 targets (121 packages loaded, 809 targets configured)
+
+(13:22:39) [32mAnalyzing:[0m 2 targets (121 packages loaded, 809 targets configured)
+
+(13:22:40) [32mAnalyzing:[0m 2 targets (121 packages loaded, 809 targets configured)
+
+(13:22:41) [32mAnalyzing:[0m 2 targets (122 packages loaded, 809 targets configured)
+
+(13:22:42) [32mAnalyzing:[0m 2 targets (122 packages loaded, 809 targets configured)
+
+(13:22:43) [32mAnalyzing:[0m 2 targets (122 packages loaded, 809 targets configured)
+
+(13:22:44) [32mAnalyzing:[0m 2 targets (122 packages loaded, 809 targets configured)
+
+(13:22:45) [32mAnalyzing:[0m 2 targets (122 packages loaded, 809 targets configured)
+
+(13:22:46) [32mAnalyzing:[0m 2 targets (122 packages loaded, 809 targets configured)
+
+(13:22:47) [32mAnalyzing:[0m 2 targets (122 packages loaded, 809 targets configured)
+
+(13:22:48) [32mAnalyzing:[0m 2 targets (122 packages loaded, 809 targets configured)
+
+(13:22:49) [32mAnalyzing:[0m 2 targets (122 packages loaded, 809 targets configured)
+
+(13:22:50) [32mAnalyzing:[0m 2 targets (122 packages loaded, 809 targets configured)
+
+(13:22:51) [32mAnalyzing:[0m 2 targets (122 packages loaded, 809 targets configured)
+
+(13:22:52) [32mAnalyzing:[0m 2 targets (122 packages loaded, 809 targets configured)
+
+(13:22:53) [32mAnalyzing:[0m 2 targets (123 packages loaded, 809 targets configured)
+
+(13:22:54) [32mAnalyzing:[0m 2 targets (124 packages loaded, 809 targets configured)
+
+(13:22:55) [32mAnalyzing:[0m 2 targets (124 packages loaded, 809 targets configured)
+
+(13:22:56) [32mAnalyzing:[0m 2 targets (124 packages loaded, 809 targets configured)
+
+(13:22:57) [32mAnalyzing:[0m 2 targets (124 packages loaded, 809 targets configured)
+
+(13:22:58) [32mAnalyzing:[0m 2 targets (163 packages loaded, 6284 targets configured)
+
+/nix/store/vg50h4rmb0qwfhh28kzcx6a30s30am6b-riscv32-esp-elf-14.2.0_20260121
+(13:22:59) [32mINFO: [0mAnalyzed 2 targets (164 packages loaded, 13575 targets configured).
+(13:22:59) [32m[3 / 11][0m [Prepa] Creating runfiles tree bazel-out/darwin_arm64-opt/bin/firmware/p4/flash_esp32p4_hello.sh.runfiles
+(13:23:00) [32m[6 / 75][0m checking cached actions
+(13:23:01) [32m[6 / 75][0m [Prepa] Executing genrule @@firmware~//libs/board:esp32p4_bootloader_bin
+(13:23:02) [32mINFO: [0mFrom Executing genrule @@firmware~//libs/board:esp32p4_bootloader_bin:
+Warning: Deprecated: Option '--flash_mode' is deprecated. Use '--flash-mode' instead.
+Warning: Deprecated: Option '--flash_freq' is deprecated. Use '--flash-freq' instead.
+Warning: Deprecated: Option '--flash_size' is deprecated. Use '--flash-size' instead.
+esptool v5.1.0
+Creating ESP32P4 image...
+Merged 2 ELF sections.
+Successfully created ESP32P4 image.
+(13:23:03) [32m[8 / 75][0m Compiling cores/esp32/MacAddress.cpp; 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:23:04) [32m[10 / 75][0m Compiling cores/esp32/MacAddress.cpp; 2s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:23:05) [32m[13 / 75][0m Compiling libraries/SPI/src/SPI.cpp; 1s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:23:06) [32m[17 / 75][0m Compiling cores/esp32/Print.cpp; 1s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:23:07) [32m[19 / 75][0m Compiling cores/esp32/main.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:23:08) [32m[22 / 75][0m Compiling cores/esp32/HardwareSerial.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:23:09) [32m[25 / 75][0m Compiling cores/esp32/Stream.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:23:10) [32m[27 / 75][0m Compiling cores/esp32/HWCDC.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:23:11) [32m[29 / 75][0m Compiling cores/esp32/StreamString.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:23:12) [32m[34 / 75][0m Compiling cores/esp32/FunctionalInterrupt.cpp; 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:23:13) [32m[36 / 75][0m Compiling cores/esp32/FunctionalInterrupt.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:23:14) [32m[38 / 75][0m Compiling cores/esp32/Tone.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:23:15) [32m[40 / 75][0m Compiling cores/esp32/FirmwareMSC.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:23:16) [32m[42 / 75][0m Compiling cores/esp32/WString.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:23:17) [32m[44 / 75][0m Compiling cores/esp32/USB.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:23:18) [32m[47 / 75][0m Compiling cores/esp32/Esp.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:23:19) [32m[49 / 75][0m Compiling cores/esp32/USBCDC.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:23:20) [32m[55 / 75][0m Compiling cores/esp32/esp32-hal-periman.c; 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:23:21) [32m[62 / 75][0m Compiling cores/esp32/esp32-hal-uart.c; 0s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:23:22) [32m[66 / 75][0m Compiling cores/esp32/esp32-hal-timer.c; 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:23:23) [32m[70 / 75][0m Compiling cores/esp32/esp32-hal-sigmadelta.c; 0s disk-cache, darwin-sandbox
+(13:23:24) [32m[72 / 75][0m Linking firmware/p4/hello; 0s disk-cache, darwin-sandbox
+(13:23:25) [32mINFO: [0mFrom Linking firmware/p4/hello:
+stdout (/private/var/tmp/_bazel_kevin/e8aec63e9758729ea6d2eba9d240d281/execroot/_main/bazel-out/_tmp/actions/stdout-134) 3755153 exceeds maximum size of --experimental_ui_max_stdouterr_bytes=1048576 bytes; skipping
+(13:23:25) [32mINFO: [0mFrom Packaging //firmware/p4:esp32p4_hello:
+Warning: Deprecated: Option '--flash_mode' is deprecated. Use '--flash-mode' instead.
+Warning: Deprecated: Option '--flash_freq' is deprecated. Use '--flash-freq' instead.
+Warning: Deprecated: Option '--flash_size' is deprecated. Use '--flash-size' instead.
+esptool v5.1.0
+Creating ESP32P4 image...
+Merged 3 ELF sections.
+Successfully created ESP32P4 image.
+(13:23:25) [32mINFO: [0mFound 2 targets...
+(13:23:25) [32mINFO: [0mElapsed time: 221.631s, Critical Path: 5.34s
+(13:23:25) [32mINFO: [0m75 processes: 7 internal, 68 darwin-sandbox.
+(13:23:25) [32mINFO: [0mBuild completed successfully, 75 total actions
+[0mexit 0

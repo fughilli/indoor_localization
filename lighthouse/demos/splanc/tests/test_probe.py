@@ -97,6 +97,28 @@ class Probe(unittest.TestCase):
     def setUpClass(cls):
         cls.ledmap = load_map()
 
+    def test_robust_pivot_ignores_jiggle(self):
+        """A pivot with the approach, the lift-off and pose jumps mixed in (40 % junk): the
+        plain solve's RMS fails the check, the robust one keeps the tip within a millimetre."""
+        sc = Scene(self.ledmap, seed=3)
+        x = np.array([0.1, 0.0, 0.05])
+        good = sc.pivot_samples(x, n=300)
+        rng = np.random.default_rng(7)
+        junk = []
+        for k in range(200):
+            M = good[k % len(good)].copy()
+            M[:3, 3] += rng.normal(scale=0.02, size=3) if k % 2 else np.array([0, 0, 0.03]) * (k / 200)
+            junk.append(M)
+        Ms = good[:150] + junk + good[150:]
+        c_plain, _, rms_plain, _ = probe.pivot(Ms)
+        c, q, rms, spread, inl, sig = probe.pivot_robust(Ms)
+        log("robust pivot: plain c err %.1f mm (rms %.1f); robust c err %.2f mm, rms %.2f mm, kept %d/%d" % (
+            np.linalg.norm(c_plain - sc.c) * 1e3, rms_plain * 1e3, np.linalg.norm(c - sc.c) * 1e3, rms * 1e3,
+            inl.sum(), len(Ms)))
+        self.assertLess(np.linalg.norm(c - sc.c), 0.001)
+        self.assertIsNotNone(probe.pivot_ok(len(Ms), rms_plain, spread))   # the plain one is rejected
+        self.assertIsNone(probe.pivot_ok(int(inl.sum()), rms, spread, inliers=(int(inl.sum()), len(Ms))))
+
     def test_pivot_recovers_the_tip(self):
         sc = Scene(self.ledmap)
         c, q, rms, spread = probe.pivot(sc.pivot_samples(np.array([0.1, 0.0, 0.05])))
@@ -174,15 +196,17 @@ class AppFlow(unittest.TestCase):
             a.press_dev = "STY"
             a._press_stylus(1, clock[0])
 
-        def tip_on(row):
-            s, R, t = fr.sim_parts(sc.T_TF)
-            return s * R @ (ledmap.p[row] + sc.h * ledmap.n[row]) + t
-
-        press()                                    # idle -> pivot on the blinking LED
+        press()                                    # idle -> pivot on the pivot fixture
         self.assertEqual(a.mode, "pivot")
-        for M in sc.pivot_samples(tip_on(a.piv_row)):
-            feed(M)
-        press()                                    # pivot done -> probe
+        self.assertIsNone(a.pick_row)              # no LED: the pivot isn't on the fixture
+        for M_WS in sc.pivot_samples(np.array([0.3, -0.2, 0.1])):   # a point fixed in the world
+            clock[0] += 1 / 120
+            a.on_pose(poses.PoseSample("STY", clock[0], M_WS[:3, 3], fr.mat_to_quat(M_WS[:3, :3])))
+        press()                                    # pivot done (tip saved) -> idle
+        self.assertEqual(a.mode, "idle", a.events[-3:])
+        self.assertLess(np.linalg.norm(a.c_tip - sc.c), 0.0005)
+        self.assertTrue(os.path.exists(os.path.join(appmod.MOUNTS, "stylus-STY.json")))
+        press()                                    # -> probe
         self.assertEqual(a.mode, "probe", a.events[-3:])
         for _ in range(15):
             if a.pconverged:

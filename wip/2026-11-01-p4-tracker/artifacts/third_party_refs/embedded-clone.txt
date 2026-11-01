@@ -1,0 +1,2 @@
+base: c09017cbed63eadf538a4af92dc84301330f3303  local commit: 8cfd248c50307cc4ae560886d372bddb79d0545c (esp32p4 target)
+https://github.com/fughilli/embedded.git

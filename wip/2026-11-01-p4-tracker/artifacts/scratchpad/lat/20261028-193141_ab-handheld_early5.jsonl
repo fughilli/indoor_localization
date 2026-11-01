@@ -1,0 +1,48 @@
+{"event":'DeviceAdded { dev: 0 }'}
+{"event":'DeviceAdded { dev: 1 }'}
+{"event":'TimingLocked { dev: 0 }'}
+{"event":'TimingLocked { dev: 1 }'}
+{"event":'Still { dev: 1, still: true }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'StationSeen { dev: 1, slot: 1, info: StationInfo { fw_version: 27910, id: 1416427640, cal: [AxisCal { phase: 0.0274505615234375, tilt: -0.00470733642578125, curve: 0.001094818115234375, gibphase: 2.740234375, gibmag: 0.00588226318359375 }, AxisCal { phase: 0.0318603515625, tilt: -0.0069122314453125, curve: 0.0010061264038085938, gibphase: 0.051971435546875, gibmag: -0.00853729248046875 }], unlock_count: 5, hw_version: 9, accel_dir: [4, 127, 45], mode: 2, faults: 0 } }'}
+{"event":'StationSeen { dev: 0, slot: 1, info: StationInfo { fw_version: 27910, id: 1416427640, cal: [AxisCal { phase: 0.0274505615234375, tilt: -0.00470733642578125, curve: 0.001094818115234375, gibphase: 2.740234375, gibmag: 0.00588226318359375 }, AxisCal { phase: 0.0318603515625, tilt: -0.0069122314453125, curve: 0.0010061264038085938, gibphase: 0.051971435546875, gibmag: -0.00853729248046875 }], unlock_count: 5, hw_version: 9, accel_dir: [4, 127, 45], mode: 2, faults: 0 } }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 1, still: false }'}
+{"event":'Still { dev: 1, still: true }'}
+{"event":'StationSeen { dev: 0, slot: 0, info: StationInfo { fw_version: 27910, id: 699579721, cal: [AxisCal { phase: 0.03076171875, tilt: -0.0019741058349609375, curve: -0.0003199577331542969, gibphase: -1.19921875, gibmag: -0.01490020751953125 }, AxisCal { phase: 0.055908203125, tilt: 0.002593994140625, curve: -0.0006361007690429688, gibphase: -1.1611328125, gibmag: 0.002094268798828125 }], unlock_count: 6, hw_version: 9, accel_dir: [-6, 127, 56], mode: 1, faults: 0 } }'}
+{"event":'StationSeen { dev: 1, slot: 0, info: StationInfo { fw_version: 27910, id: 699579721, cal: [AxisCal { phase: 0.03076171875, tilt: -0.0019741058349609375, curve: -0.0003199577331542969, gibphase: -1.19921875, gibmag: -0.01490020751953125 }, AxisCal { phase: 0.055908203125, tilt: 0.002593994140625, curve: -0.0006361007690429688, gibphase: -1.1611328125, gibmag: 0.002094268798828125 }], unlock_count: 6, hw_version: 9, accel_dir: [-6, 127, 56], mode: 1, faults: 0 } }'}
+{"event":'Still { dev: 1, still: false }'}
+{"event":"calibrated","reason":"FirstStations","scenes":1,"dropped":4,"tracker_up_err_deg":0.14,"stations":[{"id":1416427640,"pos":[-0.1918,2.2549,1.1685],"rot":[0.02403,0.02487,0.56795,0.82234],"sd":[4.38e-2,2.46e-2,4.09e-2,1.59e-2,1.73e-2,1.32e-2],"rms_urad":51,"up_err_deg":1.51},{"id":699579721,"pos":[0.4204,-0.9748,1.1738],"rot":[0.80496,0.51250,0.18074,0.23815],"sd":[0.00e0,0.00e0,0.00e0,1.65e-2,1.49e-2,0.00e0],"rms_urad":144,"up_err_deg":0.45}]}
+{"event":'TrackingStarted { dev: 1, rms: 5.203844561111887e-5 }'}
+{"event":'TrackingStarted { dev: 0, rms: 0.00042600844486160655 }'}
+{"event":'Still { dev: 1, still: true }'}
+{"event":'StationsDisagree { dev: 1, pos: 0.05420810672108177, rot: 0.016304485690978122, count: 1 }'}
+{"event":'StationsDisagree { dev: 1, pos: 0.054348230291066404, rot: 0.016394923500976124, count: 2 }'}
+{"event":'StationsDisagree { dev: 1, pos: 0.05426252439212143, rot: 0.016365643599563134, count: 3 }'}
+{"event":'StationsDisagree { dev: 1, pos: 0.06670780699006375, rot: 0.015910685760939174, count: 4 }'}
+{"event":'Still { dev: 1, still: false }'}
+{"event":'Still { dev: 1, still: true }'}
+{"event":"calibrated","reason":"MoreScenes","scenes":2,"dropped":6,"tracker_up_err_deg":0.09,"stations":[{"id":1416427640,"pos":[-0.1951,2.2513,1.1763],"rot":[0.02434,0.02393,0.56669,0.82322],"sd":[2.98e-2,1.78e-2,3.07e-2,1.21e-2,1.16e-2,9.81e-3],"rms_urad":45,"up_err_deg":1.72},{"id":699579721,"pos":[0.4231,-0.9758,1.1720],"rot":[0.80452,0.51307,0.18151,0.23783],"sd":[0.00e0,0.00e0,0.00e0,1.25e-2,1.08e-2,0.00e0],"rms_urad":155,"up_err_deg":0.40}]}
+{"event":'Still { dev: 1, still: false }'}
+{"event":'StationsDisagree { dev: 1, pos: 0.0663632665914001, rot: 0.015361402810399733, count: 1 }'}
+{"event":'Still { dev: 1, still: true }'}
+{"event":'Still { dev: 0, still: true }'}
+{"event":'StationsDisagree { dev: 1, pos: 0.054361592777013724, rot: 0.010772300127443965, count: 2 }'}
+{"event":"calibrated","reason":"MoreScenes","scenes":2,"dropped":6,"tracker_up_err_deg":0.09,"stations":[{"id":1416427640,"pos":[-0.1928,2.2518,1.1761],"rot":[0.02483,0.02424,0.56662,0.82325],"sd":[2.98e-2,1.78e-2,3.07e-2,1.21e-2,1.16e-2,9.81e-3],"rms_urad":45,"up_err_deg":1.73},{"id":699579721,"pos":[0.4235,-0.9749,1.1726],"rot":[0.80473,0.51285,0.18181,0.23734],"sd":[0.00e0,0.00e0,0.00e0,1.25e-2,1.09e-2,0.00e0],"rms_urad":158,"up_err_deg":0.46}]}
+{"event":'StationsDisagree { dev: 1, pos: 0.06685472853603483, rot: 0.015376277343790285, count: 3 }'}
+{"event":'Still { dev: 0, still: false }'}
+{"event":'Still { dev: 1, still: false }'}
+{"event":'Still { dev: 1, still: true }'}
+{"event":'Still { dev: 1, still: false }'}
+{"event":'Still { dev: 1, still: true }'}
+{"event":'Still { dev: 1, still: false }'}
+{"event":'Still { dev: 1, still: true }'}
+{"event":'Still { dev: 1, still: false }'}
+{"event":'Still { dev: 1, still: true }'}
+{"event":'Still { dev: 1, still: false }'}
+{"event":'Still { dev: 1, still: true }'}
+{"event":'Still { dev: 0, still: true }'}

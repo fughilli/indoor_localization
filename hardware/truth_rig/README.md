@@ -10,6 +10,7 @@ Parts for collecting UWB data against Vive Tracker ground truth.
 | `stl/SeatCone.stl` | print | 3 per plate, +1 | Flanged puck with a 45° cone for the 1/2" ball, and a blind 1/4" dowel hole underneath. The extra one glued to a brick is the pivot (tip) calibration fixture. |
 | `stl/MastCollar.stl` | print | 1 | Keeps the mobile rig's mast square to its plate. |
 | `stl/BallStandIn.stl` | print | 1, optional | Printed stand-in for the stylus's steel ball (from `ball_standin.py`): a 12.7 mm sphere on a 7.67 mm peg (bore − 0.2, a slip fit) that's glued into the tube's bore. It sits on the bore rim like the steel ball does. Print it peg down. |
+| `stl/HeadFlat.stl` + `dxf/HeadFlat.dxf` | print + laser | as needed | Flat tracker head (from `head_flat.py`): the Head's 28 × 40 mm top plate, pin and pogo key, glued straight onto a laser-cut part. The same cap screw goes up through the laser-cut part (7.2 mm hole, in the DXF with the flange outline to engrave) and the flange; the flange is `t_screw` − stock thick (3.89 mm on 1/4" stock), so 5 mm of thread still goes into the tracker. Set `STOCK_T` in the script for other stock. Prints bottom-down, no supports. |
 | `dxf/PlateStatic.dxf` | laser | 1 per static board | Outline; 4× M3 holes (board standoffs); 3× 1/4" dowel holes (seat cones); 1/4" tripod hole. |
 | `dxf/PlateMobile.dxf` | laser | 1 | The same, plus the mast tube's hole. |
 

@@ -1,0 +1,81 @@
+[c6] [link] p4=up v1.0 rx=82482 tx=60748 bad=0 full=0 fwd=158 to=0 push=0 down=0 unsent=0
+[fx] t=3061.04 frame=254772 update=ok shade_cancelled=0/250
+[ft] r84:11587/12011/12998 w84:11548/12016/12814 dt13 fps=80 sl=11-11
+[fx] t=3062.04 frame=254856 update=ok shade_cancelled=0/250
+[ft] r84:11574/12011/12574 w84:11561/12011/12438 dt13 fps=80 sl=11-11
+[fx] t=3063.05 frame=254940 update=ok shade_cancelled=0/250
+[ft] r84:11551/12011/12590 w84:11545/12011/12425 dt13 fps=80 sl=11-11
+lh: stations disagree by 0.071 m / 3.9 deg (614 in a row)
+[fx] t=3064.06 frame=255024 update=ok shade_cancelled=0/250
+[ft] r84:11997/12011/12999 w84:11936/12011/12788 dt13 fps=80 sl=11-11
+[fx] t=3065.06 frame=255108 update=ok shade_cancelled=0/250
+[ft] r84:11574/12011/13000 w84:11573/12011/12818 dt13 fps=80 sl=11-11
+[player-netstack] map=250 leds heap=33498176 max=33030132 min=33447384 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xaa/4/0/0
+[net] t=3075994 link rx=60804/2671062B noise=0 tx=82632/2383239B msgs=158 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=5720 render=2156 xmit=952 logdrain=780
+[tracker] configured, tracking, 2 stations; IMU 250/s, light 3473/s, poses 120/s; pos (0.010, 0.025, 0.204); mount not set
+[c6] [link] p4=up v1.0 rx=82666 tx=60814 bad=0 full=0 fwd=158 to=0 push=0 down=0 unsent=0
+[fx] t=3066.07 frame=255192 update=ok shade_cancelled=0/250
+[ft] r84:11577/12011/13000 w84:11572/12011/12799 dt13 fps=80 sl=11-11
+[fx] t=3067.07 frame=255276 update=ok shade_cancelled=0/250
+[ft] r84:11573/12011/13001 w84:11571/12011/12829 dt13 fps=80 sl=11-11
+lh: stations disagree by 0.071 m / 3.9 deg (615 in a row)
+[fx] t=3068.08 frame=255360 update=ok shade_cancelled=0/250
+[ft] r84:11997/12011/13001 w84:11940/12012/12776 dt13 fps=80 sl=11-11
+[fx] t=3069.09 frame=255444 update=ok shade_cancelled=0/250
+[ft] r84:11582/12011/13002 w84:11581/12007/12779 dt13 fps=80 sl=11-11
+[fx] t=3070.09 frame=255528 update=ok shade_cancelled=0/250
+[ft] r84:11553/12006/12997 w84:11569/12016/12814 dt13 fps=80 sl=11-11
+[player-netstack] map=250 leds heap=33510432 max=33030132 min=33447384 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xaa/4/0/0
+[net] t=3080995 link rx=60871/2674517B noise=0 tx=82824/2390968B msgs=159 big=0 host=up session=1 mtx_wait_max=2us handle_max=114us
+[stack] free loopTask=5720 render=2156 xmit=952 logdrain=780
+[tracker] configured, tracking, 2 stations; IMU 251/s, light 3489/s, poses 120/s; pos (0.010, 0.025, 0.204); mount not set
+[c6] [link] p4=up v1.0 rx=82847 tx=60881 bad=0 full=0 fwd=159 to=0 push=0 down=0 unsent=0
+[fx] t=3071.10 frame=255612 update=ok shade_cancelled=0/250
+[ft] r84:11574/12004/12427 w84:11542/11999/12478 dt12 fps=80 sl=11-11
+lh: stations disagree by 0.071 m / 3.9 deg (616 in a row)
+[fx] t=3072.10 frame=255696 update=ok shade_cancelled=0/250
+[ft] r84:11998/12011/13000 w84:11955/12011/12795 dt13 fps=80 sl=11-11
+[fx] t=3073.11 frame=255780 update=ok shade_cancelled=0/250
+[ft] r84:11573/12011/13001 w84:11575/12012/12786 dt13 fps=80 sl=11-11
+[fx] t=3074.11 frame=255864 update=ok shade_cancelled=0/250
+[ft] r84:11518/12011/12999 w84:11524/12011/12786 dt13 fps=80 sl=11-11
+[fx] t=3075.12 frame=255948 update=ok shade_cancelled=0/250
+[ft] r84:11574/12011/12577 w84:11562/12011/12435 dt13 fps=80 sl=11-11
+[player-netstack] map=250 leds heap=33507400 max=33030132 min=33447384 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xaa/4/0/0
+[net] t=3085995 link rx=60937/2677949B noise=0 tx=83005/2398031B msgs=159 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=5720 render=2156 xmit=952 logdrain=780
+[tracker] configured, tracking, 2 stations; IMU 231/s, light 3214/s, poses 111/s; pos (0.010, 0.025, 0.203); mount not set
+lh: stations disagree by 0.071 m / 3.9 deg (617 in a row)
+[c6] [link] p4=up v1.0 rx=83018 tx=60946 bad=0 full=0 fwd=159 to=0 push=0 down=0 unsent=0
+[fx] t=3076.13 frame=256032 update=ok shade_cancelled=0/250
+[ft] r84:11994/12011/13001 w84:11937/12011/12769 dt13 fps=80 sl=11-11
+[fx] t=3077.13 frame=256116 update=ok shade_cancelled=0/250
+[ft] r84:11578/12011/13001 w84:11568/12007/12799 dt13 fps=80 sl=11-11
+[fx] t=3078.14 frame=256200 update=ok shade_cancelled=0/250
+[ft] r84:11574/12011/12593 w84:11556/12016/12593 dt13 fps=80 sl=11-11
+[fx] t=3079.14 frame=256284 update=ok shade_cancelled=0/250
+[ft] r84:11524/12011/13001 w84:11518/12011/12820 dt13 fps=80 sl=11-11
+lh: stations disagree by 0.071 m / 3.9 deg (618 in a row)
+[fx] t=3080.15 frame=256368 update=ok shade_cancelled=0/250
+[ft] r84:11992/12011/13003 w84:11950/12012/12818 dt13 fps=80 sl=11-11
+[player-netstack] map=250 leds heap=33513224 max=33030132 min=33447384 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xaa/4/0/0
+[net] t=3090997 link rx=61003/2681381B noise=0 tx=83185/2404971B msgs=159 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=5720 render=2156 xmit=952 logdrain=780
+[tracker] configured, tracking, 2 stations; IMU 216/s, light 2996/s, poses 103/s; pos (0.010, 0.025, 0.203); mount not set
+[c6] [link] p4=up v1.0 rx=83199 tx=61012 bad=0 full=0 fwd=159 to=0 push=0 down=0 unsent=0
+[fx] t=3081.15 frame=256452 update=ok shade_cancelled=0/250
+[ft] r84:11594/12011/13000 w84:11589/12007/12776 dt13 fps=80 sl=11-11
+[fx] t=3082.16 frame=256536 update=ok shade_cancelled=0/250
+[ft] r84:11574/12006/12577 w84:11573/12011/12608 dt13 fps=80 sl=11-11
+[fx] t=3083.17 frame=256620 update=ok shade_cancelled=0/250
+[ft] r84:11583/12004/12420 w84:11564/12004/12438 dt12 fps=80 sl=11-11
+lh: stations disagree by 0.071 m / 3.9 deg (619 in a row)
+[fx] t=3084.17 frame=256704 update=ok shade_cancelled=0/250
+[ft] r84:11999/12011/12999 w84:11951/12012/12763 dt13 fps=80 sl=11-11
+[fx] t=3085.18 frame=256788 update=ok shade_cancelled=0/250
+[ft] r84:11998/12011/13002 w84:11983/12011/12764 dt13 fps=80 sl=11-11
+[player-netstack] map=250 leds heap=33529096 max=33030132 min=33447384 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xaa/4/0/0
+[net] t=3095998 link rx=61068/2684764B noise=0 tx=83341/2410330B msgs=159 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=5720 render=2156 xmit=952 logdrain=780
+[tracker] configured, tracking, 2 stations; IMU 181/s, light 2518/s, poses 87/s; pos (0.009, 0.025, 0.203); mount not set

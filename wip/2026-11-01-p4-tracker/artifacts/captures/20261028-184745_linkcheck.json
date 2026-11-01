@@ -1,0 +1,11 @@
+{
+ "name": "linkcheck",
+ "notes": "two dongles, diagnosing disconnects",
+ "start_ht": 1793238465.566753,
+ "source": "lhd",
+ "files": {
+  "recording": "20261028-184745_linkcheck.rec.gz"
+ },
+ "stop_ht": 1793238473.605128,
+ "seconds": 8.04
+}

@@ -1,0 +1,597 @@
+(13:37:39) [32mINFO: [0mInvocation ID: da25e7e0-01a9-43fa-b3fc-5b93330c1340
+(13:37:39) [32mINFO: [0mCurrent date is 2026-10-29
+(13:37:39) [32mComputing main repo mapping:[0m 
+(13:37:40) [32mComputing main repo mapping:[0m 
+(13:37:40) [32mLoading:[0m 
+(13:37:40) [32mLoading:[0m 1 packages loaded
+(13:37:40) [32mAnalyzing:[0m 4 targets (3 packages loaded, 0 targets configured)
+(13:37:40) [32mAnalyzing:[0m 4 targets (3 packages loaded, 0 targets configured)
+
+(13:37:42) [32mAnalyzing:[0m 4 targets (99 packages loaded, 10371 targets configured)
+[32m[75 / 75][0m no actions running
+/nix/store/59xhnaic74h55f9g3g9450yhd3lv9ifa-mbedtls-src
+(13:37:43) [32mAnalyzing:[0m 4 targets (100 packages loaded, 10739 targets configured)
+[32m[75 / 75][0m no actions running
+(13:37:44) [32mAnalyzing:[0m 4 targets (102 packages loaded, 10751 targets configured)
+[32m[75 / 75][0m no actions running
+(13:37:45) [32mAnalyzing:[0m 4 targets (102 packages loaded, 10751 targets configured)
+[32m[75 / 75][0m no actions running
+(13:37:46) [32mAnalyzing:[0m 4 targets (103 packages loaded, 10763 targets configured)
+[32m[75 / 75][0m no actions running
+(13:37:47) [32mAnalyzing:[0m 4 targets (103 packages loaded, 10763 targets configured)
+[32m[75 / 75][0m no actions running
+(13:37:48) [32mAnalyzing:[0m 4 targets (103 packages loaded, 10763 targets configured)
+[32m[75 / 75][0m no actions running
+(13:37:49) [32mAnalyzing:[0m 4 targets (104 packages loaded, 10765 targets configured)
+[32m[75 / 75][0m no actions running
+(13:37:50) [32mAnalyzing:[0m 4 targets (104 packages loaded, 10765 targets configured)
+[32m[75 / 75][0m no actions running
+(13:37:51) [32mAnalyzing:[0m 4 targets (104 packages loaded, 10765 targets configured)
+[32m[75 / 75][0m no actions running
+(13:37:52) [32mAnalyzing:[0m 4 targets (104 packages loaded, 10765 targets configured)
+[32m[75 / 75][0m no actions running
+(13:37:53) [32mAnalyzing:[0m 4 targets (104 packages loaded, 10765 targets configured)
+[32m[75 / 75][0m no actions running
+(13:37:54) [32mAnalyzing:[0m 4 targets (104 packages loaded, 10765 targets configured)
+[32m[75 / 75][0m no actions running
+(13:37:55) [32mAnalyzing:[0m 4 targets (104 packages loaded, 10765 targets configured)
+[32m[75 / 75][0m no actions running
+(13:37:56) [32mAnalyzing:[0m 4 targets (104 packages loaded, 10765 targets configured)
+[32m[75 / 75][0m no actions running
+(13:37:57) [32mAnalyzing:[0m 4 targets (104 packages loaded, 10765 targets configured)
+[32m[75 / 75][0m no actions running
+(13:37:58) [32mAnalyzing:[0m 4 targets (104 packages loaded, 10765 targets configured)
+[32m[75 / 75][0m no actions running
+(13:37:59) [32mAnalyzing:[0m 4 targets (104 packages loaded, 10765 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:00) [32mAnalyzing:[0m 4 targets (104 packages loaded, 10765 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:01) [32mAnalyzing:[0m 4 targets (108 packages loaded, 10778 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:02) [32mAnalyzing:[0m 4 targets (108 packages loaded, 10778 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:03) [32mAnalyzing:[0m 4 targets (108 packages loaded, 10778 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:04) [32mAnalyzing:[0m 4 targets (110 packages loaded, 10811 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:05) [32mAnalyzing:[0m 4 targets (114 packages loaded, 13120 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:06) [32mAnalyzing:[0m 4 targets (114 packages loaded, 13120 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:07) [32mAnalyzing:[0m 4 targets (114 packages loaded, 13120 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:08) [32mAnalyzing:[0m 4 targets (114 packages loaded, 13120 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:09) [32mAnalyzing:[0m 4 targets (114 packages loaded, 13120 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:10) [32mAnalyzing:[0m 4 targets (114 packages loaded, 13120 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:11) [32mAnalyzing:[0m 4 targets (114 packages loaded, 13120 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:12) [32mAnalyzing:[0m 4 targets (114 packages loaded, 13120 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:13) [32mAnalyzing:[0m 4 targets (114 packages loaded, 13120 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:14) [32mAnalyzing:[0m 4 targets (114 packages loaded, 13120 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:15) [32mAnalyzing:[0m 4 targets (114 packages loaded, 13120 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:16) [32mAnalyzing:[0m 4 targets (114 packages loaded, 13120 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:17) [32mAnalyzing:[0m 4 targets (114 packages loaded, 13120 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:18) [32mAnalyzing:[0m 4 targets (114 packages loaded, 13120 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:19) [32mAnalyzing:[0m 4 targets (114 packages loaded, 13120 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:20) [32mAnalyzing:[0m 4 targets (114 packages loaded, 13120 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:21) [32mAnalyzing:[0m 4 targets (114 packages loaded, 13120 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:22) [32mAnalyzing:[0m 4 targets (114 packages loaded, 13120 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:23) [32mAnalyzing:[0m 4 targets (114 packages loaded, 13120 targets configured)
+[32m[75 / 75][0m no actions running
+/nix/store/hpdsxyn1q17hsggir6rf43dwhhccqvqv-minify-2.23.1
+(13:38:24) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:25) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:26) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:27) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:28) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:29) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:30) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:31) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:32) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:33) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:34) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:35) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:36) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:37) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:38) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:39) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:40) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:41) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:42) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:43) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:44) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:45) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:46) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:47) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:48) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:49) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:50) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:51) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:52) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:53) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:54) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:55) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:56) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:57) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:58) [32mAnalyzing:[0m 4 targets (115 packages loaded, 13127 targets configured)
+[32m[75 / 75][0m no actions running
+(13:38:59) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:00) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:01) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:02) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:03) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:04) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:05) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:06) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:07) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:08) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:09) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:10) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:11) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:12) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:13) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:14) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:15) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:16) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:17) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:18) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:19) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:20) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:21) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:22) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:23) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:24) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:25) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:26) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:27) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:28) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:29) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:30) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:31) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:32) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:33) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:34) [32mAnalyzing:[0m 4 targets (117 packages loaded, 13188 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:35) [32mAnalyzing:[0m 4 targets (137 packages loaded, 13793 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:36) [32mAnalyzing:[0m 4 targets (192 packages loaded, 16848 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:37) [32mAnalyzing:[0m 4 targets (219 packages loaded, 17578 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:38) [32mAnalyzing:[0m 4 targets (219 packages loaded, 17578 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:39) [32mAnalyzing:[0m 4 targets (225 packages loaded, 17716 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:40) [32mAnalyzing:[0m 4 targets (227 packages loaded, 17748 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:41) [32mAnalyzing:[0m 4 targets (227 packages loaded, 17748 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:42) [32mAnalyzing:[0m 4 targets (227 packages loaded, 17748 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:43) [32mAnalyzing:[0m 4 targets (227 packages loaded, 17748 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:44) [32mAnalyzing:[0m 4 targets (227 packages loaded, 17748 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:45) [32mAnalyzing:[0m 4 targets (227 packages loaded, 17748 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:46) [32mAnalyzing:[0m 4 targets (227 packages loaded, 17748 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:47) [32mAnalyzing:[0m 4 targets (227 packages loaded, 17748 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:48) [32mAnalyzing:[0m 4 targets (227 packages loaded, 17748 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:49) [32mAnalyzing:[0m 4 targets (227 packages loaded, 17748 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:50) [32mAnalyzing:[0m 4 targets (227 packages loaded, 17748 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:51) [32mAnalyzing:[0m 4 targets (227 packages loaded, 17748 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:52) [32mAnalyzing:[0m 4 targets (227 packages loaded, 17748 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:53) [32mAnalyzing:[0m 4 targets (227 packages loaded, 17748 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:55) [32mAnalyzing:[0m 4 targets (227 packages loaded, 17748 targets configured)
+[32m[75 / 75][0m no actions running
+(13:39:55) [32mINFO: [0mAnalyzed 4 targets (228 packages loaded, 18082 targets configured).
+(13:39:56) [32m[131 / 540][0m Creating runfiles tree bazel-out/darwin_arm64-opt-exec-ST-d57f47055a04/bin/tools/mk_flashbundle.runfiles [for tool]; 0s local ... (2 actions, 1 running)
+(13:39:57) [32mINFO: [0mFrom Executing genrule @@firmware~//libs/board:esp32c6_bootloader_bin:
+WARNING: Deprecated: Option '--flash_mode' is deprecated. Use '--flash-mode' instead.
+WARNING: Deprecated: Option '--flash_freq' is deprecated. Use '--flash-freq' instead.
+WARNING: Deprecated: Option '--flash_size' is deprecated. Use '--flash-size' instead.
+esptool v5.6.0
+Creating ESP32-C6 image...
+Merged 2 ELF sections.
+Successfully created ESP32-C6 image.
+(13:39:57) [32m[239 / 775][0m Executing genrule //firmware/player_app/ld:esp32c6_sections_ld; 0s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:39:58) [32m[248 / 775][0m Executing genrule //firmware/player_app/ld:esp32c6_sections_ld; 1s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:39:59) [32m[251 / 775][0m Compiling libraries/BLE/src/BLE2901.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:00) [32m[253 / 775][0m Compiling libraries/BLE/src/BLE2901.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:01) [32m[254 / 775][0m Compiling libraries/BLE/src/BLE2901.cpp; 3s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:02) [32m[256 / 775][0m Compiling libraries/WiFi/src/AP.cpp; 4s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:03) [32m[260 / 775][0m Compiling libraries/BLE/src/BLE2902.cpp; 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:04) [32m[262 / 775][0m Compiling libraries/BLE/src/BLE2902.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:05) [32m[264 / 775][0m Compiling libraries/BLE/src/BLE2902.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:06) [32m[266 / 775][0m Compiling libraries/WiFi/src/STA.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:07) [32m[268 / 775][0m Compiling libraries/WiFi/src/STA.cpp; 3s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:09) [32m[271 / 775][0m Compiling libraries/BLE/src/BLE2904.cpp; 1s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:40:10) [32m[274 / 775][0m Compiling libraries/WiFi/src/WiFi.cpp; 1s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:40:11) [32m[276 / 775][0m Compiling libraries/WiFi/src/WiFi.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:12) [32m[278 / 775][0m Compiling libraries/WiFi/src/WiFi.cpp; 3s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:13) [32m[280 / 775][0m Compiling libraries/BLE/src/BLEAddress.cpp; 3s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:14) [32m[283 / 775][0m Compiling libraries/WiFi/src/WiFiAP.cpp; 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:15) [32m[284 / 775][0m Compiling libraries/WiFi/src/WiFiAP.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:16) [32m[286 / 775][0m Compiling libraries/WiFi/src/WiFiAP.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:17) [32m[287 / 775][0m Compiling libraries/WiFi/src/WiFiAP.cpp; 3s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:18) [32m[289 / 775][0m Compiling libraries/BLE/src/BLEAdvertisedDevice.cpp; 4s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:19) [32m[292 / 775][0m Compiling libraries/WiFi/src/WiFiGeneric.cpp; 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:20) [32m[294 / 775][0m Compiling libraries/WiFi/src/WiFiGeneric.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:21) [32m[295 / 775][0m Compiling libraries/WiFi/src/WiFiGeneric.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:22) [32m[298 / 775][0m Compiling libraries/WiFi/src/WiFiGeneric.cpp; 3s disk-cache, darwin-sandbox ... (4 actions, 2 running)
+(13:40:24) [32m[301 / 775][0m Compiling mbedtls/library/cipher_wrap.c; 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:25) [32m[303 / 775][0m Compiling libraries/WiFi/src/WiFiMulti.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:26) [32m[304 / 775][0m Compiling libraries/WiFi/src/WiFiMulti.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:27) [32m[305 / 775][0m Compiling libraries/WiFi/src/WiFiMulti.cpp; 3s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:28) [32m[308 / 775][0m Compiling libraries/BLE/src/BLECharacteristic.cpp; 3s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:40:29) [32m[314 / 775][0m Compiling libraries/WiFi/src/WiFiSTA.cpp; 1s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:40:31) [32m[315 / 775][0m Compiling libraries/WiFi/src/WiFiSTA.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:32) [32m[317 / 775][0m Compiling libraries/WiFi/src/WiFiSTA.cpp; 3s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:33) [32m[321 / 775][0m Compiling libraries/BLE/src/BLECharacteristicMap.cpp; 4s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:34) [32m[324 / 775][0m Compiling libraries/WiFi/src/WiFiScan.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:35) [32m[325 / 775][0m Compiling libraries/WiFi/src/WiFiScan.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:36) [32m[326 / 775][0m Compiling libraries/WiFi/src/WiFiScan.cpp; 3s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:37) [32m[328 / 775][0m Compiling libraries/WiFi/src/WiFiScan.cpp; 4s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:38) [32m[330 / 775][0m Compiling libraries/BLE/src/BLEClient.cpp; 4s disk-cache, darwin-sandbox ... (3 actions running)
+(13:40:39) [32m[335 / 775][0m Compiling libraries/Network/src/NetworkClient.cpp; 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:43) [32m[336 / 775][0m Compiling libraries/BLE/src/BLEDescriptor.cpp; 4s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:40:44) [32m[340 / 775][0m Compiling libraries/Network/src/NetworkEvents.cpp; 0s disk-cache, darwin-sandbox ... (4 actions, 2 running)
+(13:40:46) [32m[340 / 775][0m Compiling libraries/Network/src/NetworkEvents.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:47) [32m[341 / 775][0m Compiling libraries/BLE/src/BLEDescriptorMap.cpp; 3s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:48) [32m[343 / 775][0m Compiling libraries/BLE/src/BLEDescriptorMap.cpp; 4s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:49) [32m[345 / 775][0m Compiling libraries/Network/src/NetworkInterface.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:50) [32m[346 / 775][0m Compiling libraries/Network/src/NetworkInterface.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:51) [32m[347 / 775][0m Compiling cores/esp32/HWCDC.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:52) [32m[349 / 775][0m Compiling libraries/BLE/src/BLEDevice.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:53) [32m[350 / 775][0m Compiling libraries/BLE/src/BLEDevice.cpp; 3s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:54) [32m[351 / 775][0m Compiling libraries/BLE/src/BLEDevice.cpp; 5s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:40:55) [32m[353 / 775][0m Compiling cores/esp32/HardwareSerial.cpp; 3s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:40:56) [32m[355 / 775][0m Compiling libraries/Network/src/NetworkServer.cpp; 1s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:40:58) [32m[356 / 775][0m Compiling libraries/Network/src/NetworkServer.cpp; 3s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:40:59) [32m[357 / 775][0m Compiling libraries/Network/src/NetworkServer.cpp; 4s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:00) [32m[362 / 775][0m Compiling libraries/Network/src/NetworkUdp.cpp; 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:01) [32m[363 / 775][0m Compiling libraries/Network/src/NetworkUdp.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:02) [32m[364 / 775][0m Compiling libraries/BLE/src/BLEEddystoneURL.cpp; 2s disk-cache, darwin-sandbox ... (3 actions running)
+(13:41:03) [32m[367 / 775][0m Compiling libraries/BLE/src/BLEEddystoneURL.cpp; 3s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:04) [32m[371 / 775][0m Compiling libraries/Preferences/src/Preferences.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:05) [32m[372 / 775][0m Compiling cores/esp32/Print.cpp; 2s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:41:06) [32m[376 / 775][0m Compiling libraries/BLE/src/BLEHIDDevice.cpp; 3s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:41:08) [32m[377 / 775][0m Compiling cores/esp32/Stream.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:09) [32m[379 / 775][0m Compiling libraries/SPI/src/SPI.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:10) [32m[381 / 775][0m Compiling libraries/BLE/src/BLERemoteCharacteristic.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:11) [32m[382 / 775][0m Compiling libraries/BLE/src/BLERemoteCharacteristic.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:12) [32m[383 / 775][0m Compiling libraries/BLE/src/BLERemoteCharacteristic.cpp; 4s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:41:13) [32m[388 / 775][0m Compiling libraries/BLE/src/BLERemoteDescriptor.cpp; 0s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:41:14) [32m[390 / 775][0m Compiling libraries/BLE/src/BLERemoteDescriptor.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 2 running)
+(13:41:16) [32m[390 / 775][0m Compiling libraries/BLE/src/BLERemoteDescriptor.cpp; 3s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:17) [32m[393 / 775][0m Compiling cores/esp32/chip-debug-report.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:18) [32m[397 / 775][0m Compiling libraries/BLE/src/BLERemoteService.cpp; 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:19) [32m[400 / 775][0m Compiling libraries/BLE/src/BLERemoteService.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:20) [32m[402 / 775][0m Compiling libraries/BLE/src/BLERemoteService.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:21) [32m[403 / 775][0m Compiling cores/esp32/base64.cpp; 2s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:41:22) [32m[406 / 775][0m Compiling libraries/BLE/src/BLEScan.cpp; 0s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:41:23) [32m[410 / 775][0m Compiling libraries/BLE/src/BLEScan.cpp; 2s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:41:25) [32m[414 / 775][0m Compiling mbedtls/3rdparty/everest/library/Hacl_Curve25519_joined.c; 0s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:41:26) [32m[417 / 775][0m Compiling libraries/BLE/src/BLESecurity.cpp; 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:27) [32m[420 / 775][0m Compiling libraries/BLE/src/BLESecurity.cpp; 1s disk-cache, darwin-sandbox ... (3 actions running)
+(13:41:28) [32m[423 / 775][0m Compiling libraries/BLE/src/BLESecurity.cpp; 2s disk-cache, darwin-sandbox ... (3 actions running)
+(13:41:28) [32mINFO: [0mFrom Minifying bazel-out/darwin_arm64-opt-ST-de653ad7bc01/bin/firmware/landing/landing.expanded.html:
+(0.5 ms, 5.1 kB, 2.0 kB,  39.4%, 9.5 MB/s) - bazel-out/darwin_arm64-opt-ST-de653ad7bc01/bin/firmware/landing/landing.expanded.html to bazel-out/darwin_arm64-opt-ST-de653ad7bc01/bin/firmware/landing/landing.html
+(13:41:29) [32m[435 / 775][0m Compiling mbedtls/library/psa_crypto_client.c; 0s disk-cache, darwin-sandbox ... (3 actions running)
+(13:41:30) [32m[442 / 775][0m Compiling libraries/BLE/src/BLEServer.cpp; 1s disk-cache, darwin-sandbox ... (3 actions running)
+(13:41:31) [32m[444 / 775][0m Compiling libraries/BLE/src/BLEServer.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:32) [32m[445 / 775][0m Compiling libraries/BLE/src/BLEServer.cpp; 3s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:33) [32m[450 / 775][0m Compiling firmware/player_app/netstack_transport.cpp; 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:34) [32m[451 / 775][0m Compiling firmware/player_app/netstack_transport.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:35) [32m[452 / 775][0m Compiling libraries/BLE/src/BLEService.cpp; 2s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:41:37) [32m[457 / 775][0m Compiling libraries/BLE/src/BLEService.cpp; 4s disk-cache, darwin-sandbox ... (3 actions running)
+(13:41:38) [32m[461 / 775][0m Compiling libraries/BLE/src/GeneralUtils.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 2 running)
+(13:41:39) [32m[462 / 775][0m Compiling libraries/BLE/src/GeneralUtils.cpp; 2s disk-cache, darwin-sandbox ... (3 actions running)
+(13:41:40) [32m[465 / 775][0m Compiling libraries/BLE/src/GeneralUtils.cpp; 3s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:41:41) [32m[466 / 775][0m Compiling libraries/BLE/src/BLEServiceMap.cpp; 3s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:42) [32m[469 / 775][0m Compiling libraries/BLE/src/FreeRTOS.cpp; 1s disk-cache, darwin-sandbox ... (4 actions, 2 running)
+(13:41:43) [32m[470 / 775][0m Compiling libraries/BLE/src/FreeRTOS.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:44) [32m[471 / 775][0m Compiling libraries/BLE/src/BLEUUID.cpp; 1s disk-cache, darwin-sandbox ... (3 actions running)
+(13:41:45) [32m[474 / 775][0m Compiling libraries/BLE/src/BLEUUID.cpp; 2s disk-cache, darwin-sandbox ... (3 actions running)
+(13:41:46) [32m[483 / 775][0m Compiling libraries/BLE/src/BLEUtils.cpp; 3s disk-cache, darwin-sandbox ... (3 actions running)
+(13:41:47) [32m[492 / 775][0m Compiling mbedtls/library/sha1.c; 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:48) [32m[494 / 775][0m Compiling Rust (without process_wrapper) rlib tinyjson (4 files) [for tool]; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:49) [32m[497 / 775][0m Compiling Rust (without process_wrapper) rlib tinyjson (4 files) [for tool]; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:50) [32m[500 / 775][0m Compiling Rust (without process_wrapper) rlib tinyjson (4 files) [for tool]; 3s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:51) [32m[502 / 775][0m Compiling mbedtls/library/sha512.c; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:52) [32m[506 / 775][0m Compiling mbedtls/library/ssl_cache.c; 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:53) [32m[511 / 775][0m Compiling mbedtls/library/ssl_ciphersuites.c; 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:54) [32m[518 / 775][0m Compiling mbedtls/library/ssl_client.c; 0s disk-cache, darwin-sandbox ... (3 actions running)
+(13:41:55) [32m[522 / 775][0m Compiling Rust rlib netstack (23 files); 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:56) [32m[525 / 775][0m Compiling Rust rlib netstack (23 files); 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:57) [32m[527 / 775][0m Compiling Rust rlib netstack (23 files); 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:41:57) [32mINFO: [0mFrom Compiling Rust rlib netstack (23 files):
+[0m[1m[33mwarning[0m[0m[1m: constant `SBOX` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mfirmware/netstack/src/ccmp.rs:15:7[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m15[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mconst SBOX: [u8; 256] = [[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m       [0m[0m[1m[33m^^^^[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m   [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(dead_code)]` on by default[0m
+
+[0m[1m[33mwarning[0m[0m[1m: constant `RCON` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mfirmware/netstack/src/ccmp.rs:34:7[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m34[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mconst RCON: [u8; 11] = [0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36];[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m       [0m[0m[1m[33m^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `inv_sbox` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mfirmware/netstack/src/ccmp.rs:36:4[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m36[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mfn inv_sbox(x: u8) -> u8 {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m    [0m[0m[1m[33m^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `xtime` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mfirmware/netstack/src/ccmp.rs:41:4[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m41[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mfn xtime(x: u8) -> u8 {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m    [0m[0m[1m[33m^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `gmul` is never used[0m
+[0m  [0m[0m[1m[38;5;12m--> [0m[0mfirmware/netstack/src/ccmp.rs:44:4[0m
+[0m   [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m44[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mfn gmul(mut a: u8, mut b: u8) -> u8 {[0m
+[0m   [0m[0m[1m[38;5;12m|[0m[0m    [0m[0m[1m[33m^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `add_rk` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mfirmware/netstack/src/ccmp.rs:262:4[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m262[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mfn add_rk(s: &mut [u8; 16], k: &[u8; 16]) {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m    [0m[0m[1m[33m^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `sub_bytes` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mfirmware/netstack/src/ccmp.rs:267:4[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m267[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mfn sub_bytes(s: &mut [u8; 16]) {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m    [0m[0m[1m[33m^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `inv_sub_bytes` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mfirmware/netstack/src/ccmp.rs:272:4[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m272[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mfn inv_sub_bytes(s: &mut [u8; 16]) {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m    [0m[0m[1m[33m^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `shift_rows` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mfirmware/netstack/src/ccmp.rs:277:4[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m277[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mfn shift_rows(s: &mut [u8; 16]) {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m    [0m[0m[1m[33m^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `inv_shift_rows` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mfirmware/netstack/src/ccmp.rs:286:4[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m286[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mfn inv_shift_rows(s: &mut [u8; 16]) {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m    [0m[0m[1m[33m^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `mix_columns` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mfirmware/netstack/src/ccmp.rs:294:4[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m294[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mfn mix_columns(s: &mut [u8; 16]) {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m    [0m[0m[1m[33m^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: function `inv_mix_columns` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mfirmware/netstack/src/ccmp.rs:304:4[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m304[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mfn inv_mix_columns(s: &mut [u8; 16]) {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m    [0m[0m[1m[33m^^^^^^^^^^^^^^^[0m
+
+[0m[1m[33mwarning[0m[0m[1m: 12 warnings emitted[0m
+
+(13:41:58) [32m[531 / 775][0m Compiling mbedtls/library/ssl_msg.c; 0s disk-cache, darwin-sandbox ... (3 actions running)
+(13:41:59) [32m[535 / 775][0m Compiling mbedtls/library/ssl_ticket.c; 0s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:00) [32m[540 / 775][0m Compiling Rust rlib fx_vm (1 file); 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:42:01) [32m[542 / 775][0m Compiling port/net_sockets.c; 1s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:42:02) [32m[547 / 775][0m [Prepa] Compiling Rust rlib pbview (1 file) ... (3 actions, 1 running)
+(13:42:03) [32m[551 / 775][0m Compiling mbedtls/library/ssl_tls12_server.c; 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:42:04) [32m[555 / 775][0m Compiling mbedtls/library/x509_crl.c; 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:42:04) [32mINFO: [0mFrom Compiling Rust rlib osc (1 file):
+[0m[1m[33mwarning[0m[0m[1m: variable does not need to be mutable[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mfirmware/osc/src/lib.rs:705:17[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m705[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m            let mut addr_of = |k: usize, buf: &mut [u8; MAILBOX_ADDR_CAP]| -> Option<usize> {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                 [0m[0m[1m[38;5;12m----[0m[0m[1m[33m^^^^^^^[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                 [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m                 [0m[0m[1m[38;5;12mhelp: remove this `mut`[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(unused_mut)]` on by default[0m
+
+[0m[1m[33mwarning[0m[0m[1m: 1 warning emitted[0m
+
+(13:42:05) [32m[560 / 775][0m Compiling mbedtls/library/x509.c; 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:42:06) [32m[563 / 775][0m Compiling mbedtls/library/version_features.c; 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:42:07) [32m[568 / 775][0m Compiling Rust bin _bs_ (25 files) [for tool]; 0s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:08) [32m[575 / 775][0m Compiling Rust rlib winnow v0.7.15 (98 files) [for tool]; 0s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:09) [32m[578 / 775][0m Compiling Rust rlib serde_core v1.0.228 (20 files) [for tool]; 0s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:10) [32m[584 / 775][0m Running Cargo build script semver [for tool]; 0s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:11) [32m[589 / 775][0m Compiling Rust rlib syn v2.0.98 (96 files) [for tool]; 0s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:12) [32m[598 / 775][0m Compiling Rust rlib syn v2.0.98 (96 files) [for tool]; 1s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:13) [32m[602 / 775][0m Compiling Rust rlib syn v2.0.98 (96 files) [for tool]; 2s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:14) [32m[607 / 775][0m Compiling Rust rlib syn v2.0.98 (96 files) [for tool]; 3s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:15) [32m[608 / 775][0m Compiling Rust rlib syn v2.0.98 (96 files) [for tool]; 4s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:16) [32m[612 / 775][0m Compiling Rust rlib sensor (8 files); 0s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:17) [32m[613 / 775][0m Compiling Rust proc-macro thiserror_impl v1.0.69 (10 files) [for tool]; 1s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:18) [32m[619 / 775][0m Compiling Rust rlib ledmapper_view (1 file); 0s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:42:19) [32m[620 / 775][0m Compiling Rust rlib ledmapper_view (1 file); 1s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:20) [32m[621 / 775][0m Compiling Rust rlib ledmapper_view (1 file); 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:42:21) [32m[623 / 775][0m Compiling firmware/player_app/sensor_bus.cpp; 2s disk-cache, darwin-sandbox ... (4 actions, 3 running)
+(13:42:22) [32m[624 / 775][0m Compiling firmware/player_app/ota_app.cpp; 1s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:24) [32m[625 / 775][0m Compiling firmware/player_app/ota_app.cpp; 3s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:25) [32m[626 / 775][0m Compiling firmware/player_app/main.cpp; 3s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:27) [32m[627 / 775][0m Compiling firmware/player_app/main.cpp; 5s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:42:28) [32m[630 / 775][0m Compiling Rust rlib serde v1.0.228 (25 files) [for tool]; 1s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:42:30) [32m[633 / 775][0m Compiling Rust proc-macro zerofrom_derive v0.1.5 (3 files) [for tool]; 1s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:42:31) [32m[635 / 775][0m Compiling Rust proc-macro zerofrom_derive v0.1.5 (3 files) [for tool]; 2s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:32) [32m[639 / 775][0m Compiling Rust rlib toml_edit v0.22.24 (58 files) [for tool]; 0s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:33) [32m[642 / 775][0m Compiling Rust rlib toml_edit v0.22.24 (58 files) [for tool]; 1s disk-cache, darwin-sandbox ... (2 actions running)
+(13:42:35) [32m[643 / 775][0m Compiling Rust rlib toml_edit v0.22.24 (58 files) [for tool]; 3s disk-cache, darwin-sandbox ... (2 actions, 1 running)
+(13:42:36) [32m[647 / 775][0m Compiling Rust rlib icu_locid v1.5.0 (48 files) [for tool]; 1s disk-cache, darwin-sandbox
+(13:42:37) [32m[648 / 775][0m Compiling Rust rlib icu_provider v1.5.0 (20 files) [for tool]; 0s disk-cache, darwin-sandbox
+(13:42:38) [32m[650 / 775][0m Compiling Rust rlib icu_properties v1.5.1 (14 files) [for tool]; 0s disk-cache, darwin-sandbox
+(13:42:39) [32m[651 / 775][0m Compiling Rust rlib icu_normalizer v1.5.0 (13 files) [for tool]; 0s disk-cache, darwin-sandbox
+(13:42:40) [32m[653 / 775][0m Compiling Rust rlib idna v1.0.3 (11 files) [for tool]; 0s disk-cache, darwin-sandbox
+(13:42:41) [32m[654 / 775][0m Compiling Rust rlib url v2.5.4 (9 files) [for tool]; 0s disk-cache, darwin-sandbox
+(13:42:42) [32m[655 / 775][0m Compiling Rust rlib cargo_util_schemas v0.3.1 (8 files) [for tool]; 0s disk-cache, darwin-sandbox
+(13:42:43) [32m[656 / 775][0m Compiling Rust bin cargo_toml_variable_extractor (1 file) [for tool]; 0s disk-cache, darwin-sandbox
+(13:42:51) [32m[657 / 775][0m [Prepa] ExtractCargoTomlEnvVars external/rules_rust~~crate~crates__num-traits-0.2.19/cargo_toml_env_vars.env [for tool] ... (3 actions, 0 running)
+(13:42:52) [32m[671 / 775][0m Running Cargo build script heapless; 0s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:42:53) [32m[674 / 775][0m Running Cargo build script num-traits; 0s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:42:54) [32m[681 / 775][0m Compiling Rust rlib byteorder v1.5.0 (3 files); 0s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:55) [32m[685 / 775][0m Compiling Rust rlib num_traits v0.2.19 (21 files); 1s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:56) [32m[688 / 775][0m Compiling Rust rlib aho_corasick v1.1.5 (32 files) [for tool]; 1s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:57) [32m[693 / 775][0m Compiling Rust rlib proc_macro2 v1.0.107 (22 files) [for tool]; 0s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:58) [32m[695 / 775][0m Compiling Rust rlib proc_macro2 v1.0.107 (22 files) [for tool]; 1s disk-cache, darwin-sandbox ... (3 actions running)
+(13:42:59) [32m[699 / 775][0m Compiling Rust rlib serde_core v1.0.229 (20 files) [for tool]; 1s disk-cache, darwin-sandbox ... (3 actions running)
+(13:43:00) [32m[704 / 775][0m Compiling Rust rlib serde_core v1.0.229 (20 files) [for tool]; 2s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:43:01) [32m[707 / 775][0m Compiling Rust rlib regex_syntax v0.8.11 (34 files) [for tool]; 1s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:43:02) [32m[711 / 775][0m Compiling Rust rlib regex_syntax v0.8.11 (34 files) [for tool]; 2s disk-cache, darwin-sandbox ... (3 actions running)
+(13:43:03) [32m[713 / 775][0m Compiling Rust rlib regex_syntax v0.8.11 (34 files) [for tool]; 3s disk-cache, darwin-sandbox ... (3 actions running)
+(13:43:04) [32m[717 / 775][0m Compiling Rust rlib regex_syntax v0.8.11 (34 files) [for tool]; 4s disk-cache, darwin-sandbox ... (3 actions running)
+(13:43:05) [32m[721 / 775][0m Compiling Rust rlib syn v2.0.119 (97 files) [for tool]; 2s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:43:06) [32m[722 / 775][0m Compiling Rust rlib syn v2.0.119 (97 files) [for tool]; 3s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:43:08) [32m[726 / 775][0m Compiling Rust rlib syn v2.0.119 (97 files) [for tool]; 4s disk-cache, darwin-sandbox ... (3 actions running)
+(13:43:09) [32m[727 / 775][0m Compiling Rust rlib syn v2.0.119 (97 files) [for tool]; 5s disk-cache, darwin-sandbox ... (3 actions running)
+(13:43:10) [32m[729 / 775][0m Compiling Rust rlib syn v2.0.119 (97 files) [for tool]; 6s disk-cache, darwin-sandbox ... (3 actions running)
+(13:43:11) [32m[731 / 775][0m Compiling Rust rlib syn v2.0.119 (97 files) [for tool]; 7s disk-cache, darwin-sandbox ... (3 actions running)
+(13:43:13) [32m[732 / 775][0m Compiling Rust rlib regex_automata v0.4.18 (100 files) [for tool]; 7s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:43:14) [32m[740 / 775][0m Compiling Rust rlib prettyplease v0.2.37 (29 files) [for tool]; 1s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:43:15) [32m[747 / 775][0m Compiling Rust rlib prettyplease v0.2.37 (29 files) [for tool]; 2s disk-cache, darwin-sandbox ... (3 actions running)
+(13:43:16) [32m[749 / 775][0m Compiling Rust rlib prettyplease v0.2.37 (29 files) [for tool]; 3s disk-cache, darwin-sandbox ... (3 actions running)
+(13:43:18) [32m[750 / 775][0m Compiling Rust rlib prettyplease v0.2.37 (29 files) [for tool]; 4s disk-cache, darwin-sandbox ... (3 actions, 2 running)
+(13:43:19) [32m[761 / 775][0m Compiling Rust proc-macro serde_derive v1.0.229 (28 files) [for tool]; 0s disk-cache, darwin-sandbox ... (2 actions running)
+(13:43:20) [32m[763 / 775][0m Compiling Rust proc-macro serde_derive v1.0.229 (28 files) [for tool]; 1s disk-cache, darwin-sandbox
+(13:43:21) [32m[764 / 775][0m [Prepa] Compiling Rust rlib serde v1.0.229 (25 files) [for tool]
+(13:43:23) [32m[765 / 775][0m Compiling Rust rlib micropb_gen v0.5.1 (14 files) [for tool]; 1s disk-cache, darwin-sandbox
+(13:43:25) [32m[766 / 775][0m [Prepa] Compiling Rust bin micropb_gen_bin (1 file) [for tool]
+(13:43:26) [32m[768 / 775][0m [Prepa] Compiling Rust rlib ledmapper_pb_fw (1 file)
+(13:43:27) [32m[768 / 775][0m Compiling Rust rlib ledmapper_pb_fw (1 file); 1s disk-cache, darwin-sandbox
+(13:43:28) [32m[769 / 775][0m [Prepa] Compiling Rust rlib player_fw (1 file)
+(13:43:30) [32mINFO: [0mFrom Compiling Rust staticlib player_ffi (6 files):
+[0m[1m[33mwarning[0m[0m[1m: method `branch` is never used[0m
+[0m   [0m[0m[1m[38;5;12m--> [0m[0mfirmware/player_app/ffi.rs:919:8[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m[1m[38;5;12m902[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mimpl FxLedTopo {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;12m--------------[0m[0m [0m[0m[1m[38;5;12mmethod in this implementation[0m
+[0m[1m[38;5;12m...[0m
+[0m[1m[38;5;12m919[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    fn branch(&self) -> bool {[0m
+[0m    [0m[0m[1m[38;5;12m|[0m[0m        [0m[0m[1m[33m^^^^^^[0m
+[0m    [0m[0m[1m[38;5;12m|[0m
+[0m    [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `#[warn(dead_code)]` on by default[0m
+
+[0m[1m[33mwarning[0m[0m[1m: 1 warning emitted[0m
+
+(13:43:30) [32m[771 / 775][0m [Prepa] Linking firmware/player_app/player_app_netstack
+(13:43:31) [32m[771 / 775][0m Linking firmware/player_app/player_app_netstack; 0s disk-cache, darwin-sandbox
+(13:43:32) [32mINFO: [0mFrom Linking firmware/player_app/player_app_netstack:
+stdout (/private/var/tmp/_bazel_kevin/e8aec63e9758729ea6d2eba9d240d281/execroot/_main/bazel-out/_tmp/actions/stdout-958) 7180285 exceeds maximum size of --experimental_ui_max_stdouterr_bytes=1048576 bytes; skipping
+(13:43:32) [32mINFO: [0mFrom Packaging //firmware/player_app:esp32c6_netstack:
+WARNING: Deprecated: Option '--flash_mode' is deprecated. Use '--flash-mode' instead.
+WARNING: Deprecated: Option '--flash_freq' is deprecated. Use '--flash-freq' instead.
+WARNING: Deprecated: Option '--flash_size' is deprecated. Use '--flash-size' instead.
+esptool v5.6.0
+Creating ESP32-C6 image...
+Merged 2 ELF sections.
+Successfully created ESP32-C6 image.
+(13:43:32) [32m[774 / 775][0m Packaging flash bundle //firmware/player_app:esp32c6_netstack_flashbundle; 0s disk-cache, darwin-sandbox
+(13:43:33) [32mINFO: [0mFrom Packaging flash bundle //firmware/player_app:esp32c6_netstack_flashbundle:
+wrote bazel-out/darwin_arm64-opt/bin/firmware/player_app/esp32c6_netstack_flashbundle.tar: chip=esp32c6 0x0->esp32c6_bootloader.bin 0x8000->partitions_huge_app.bin 0xe000->boot_app0.bin 0x10000->esp32c6_netstack.bin
+(13:43:33) [32mINFO: [0mFound 4 targets...
+(13:43:33) [32mINFO: [0mElapsed time: 354.158s, Critical Path: 73.10s
+(13:43:33) [32mINFO: [0m701 processes: 194 internal, 507 darwin-sandbox.
+(13:43:33) [32mINFO: [0mBuild completed successfully, 701 total actions
+[0mexit 0

@@ -1,0 +1,179 @@
+[link] C6 HELLO after 4069 ms
+[link] C6 front end up over SDIO, image 64eaa906 (matches)
+[fx] t=0.03 frame=0 update=ok shade_cancelled=0/250
+[ft] r0:0/0/0 w0:0/0/0 dt33 fps=30 sl=0-0
+[module] vive-tracker
+[tracker] Vive tracker on the USB OTG port; mount not set
+[player] identity from the front end: 98:A3:16:81:98:7A "PixieLamp2"
+[player-netstack] map=250 leds heap=33633268 max=33030132 min=33633180 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[net] t=5215 link rx=2/90B noise=0 tx=2/30B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 renusb: host install: ESP_OK
+der=2156 xmit=1048 logdrain=820
+[tracker] no tracker, 0 stations; IMU 0/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000); mount not set
+usb: client event 0
+usb: device 28de:2300 at addr 1, full speed
+usb: HID interface 0, IN ep 0x81, mps 64
+usb: HID interface 1, IN ep 0x83, mps 64
+usb: HID interface 2, IN ep 0x84, mps 64
+lh: Tracker (2018 / 3.0) (28de:2300)
+E (12042) USBH: Dev 1 EP 0 STALL
+E (12064) USBH: Dev 1 EP 0 STALL
+E (12084) USBH: Dev 1 EP 0 STALL
+E (12104) USBH: Dev 1 EP 0 STALL
+E (12124) USBH: Dev 1 EP 0 STALL
+E (12144) USBH: Dev 1 EP 0 STALL
+E (12164) USBH: Dev 1 EP 0 STALL
+E (12184) USBH: Dev 1 EP 0 STALL
+E (12204) USBH: Dev 1 EP 0 STALL
+E (12224) USBH: Dev 1 EP 0 STALL
+E (12244) USBH: Dev 1 EP 0 STALL
+E (12264) USBH: Dev 1 EP 0 STALL
+E (12285) USBH: Dev 1 EP 0 STALL
+E (12305) USBH: Dev 1 EP 0 STALL
+[c6] [link] p4=up v1.0 rx=14 tx=8 bad=0 full=0 fwd=0 to=0 push=0 down=0 unsent=0
+E (12325) USBH: Dev 1 EP 0 STALL
+E (12345) USBH: Dev 1 EP 0 STALL
+E (12365) USBH: Dev 1 EP 0 STALL
+E (12387) USBH: Dev 1 EP 0 STALL
+E (12407) USBH: Dev 1 EP 0 STALL
+E (12427) USBH: Dev 1 EP 0 STALL
+E (12447) USBH: Dev 1 EP 0 STALL
+E (12467) USBH: Dev 1 EP 0 STALL
+E (12489) USBH: Dev 1 EP 0 STALL
+E (12509) USBH: Dev 1 EP 0 STALL
+E (12530) USBH: Dev 1 EP 0 STALL
+E (12550) USBH: Dev 1 EP 0 STALL
+E (12570) USBH: Dev 1 EP 0 STALL
+E (12591) USBH: Dev 1 EP 0 STALL
+E (12611) USBH: Dev 1 EP 0 STALL
+[fx] t=1.04 frame=30 update=ok shade_cancelled=0/250
+[ft] r30:29001/33723/34001 w29:31612/33847/34029 dt34 fps=35 sl=26-31
+E (12631) USBH: Dev 1 EP 0 STALL
+E (12651) USBH: Dev 1 EP 0 STALL
+E (12672) USBH: Dev 1 EP 0 STALL
+E (12692) USBH: Dev 1 EP 0 STALL
+E (12712) USBH: Dev 1 EP 0 STALL
+E (12732) USBH: Dev 1 EP 0 STALL
+E (12756) USBH: Dev 1 EP 0 STALL
+E (12776) USBH: Dev 1 EP 0 STALL
+lh: VIVE Tracker 3.0 MV LHR-C6198565 configured: 20 sensors
+lh: DeviceAdded { dev: 0 }
+lh: sweep timing locked
+[fx] t=2.06 frame=67 update=ok shade_cancelled=0/250
+[ft] r37:23999/27475/29011 w37:23967/27593/29163 dt29 fps=40 sl=22-26
+[fx] t=3.06 frame=111 update=ok shade_cancelled=0/250
+[ft] r44:20987/22759/25419 w44:20975/22832/25175 dt25 fps=45 sl=19-22
+[osc] first datagram on udp/9000 (mailbox 728 B)
+lh: adopted station 699579721 at (0.747, -0.918, 0.270) from lhd
+lh: DeviceRemoved { dev: 0 }
+lh: DeviceAdded { dev: 0 }
+lh: adopted station 1416427640 at (0.476, 2.164, 1.436) from lhd
+lh: DeviceRemoved { dev: 0 }
+lh: DeviceAdded { dev: 0 }
+lh: sweep timing locked
+[fx] t=4.08 frame=164 update=ok shade_cancelled=0/250
+[ft] r53:16986/19132/22000 w53:16961/19207/21992 dt22 fps=55 sl=15-19
+[player-netstack] map=250 leds heap=33590976 max=33030132 min=33559500 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[net] t=10217 link rx=77/3491B noise=0 tx=100/1500B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=1048 logdrain=820
+[tracker] configured, 2 stations; IMU 229/s, light 2887/s, poses 0/s; pos (0.000, 0.000, 0.000); mount not set
+[fx] t=5.09 frame=226 update=ok shade_cancelled=0/250
+[ft] r62:14981/16315/18001 w62:14984/16345/18027 dt18 fps=65 sl=13-15
+[c6] [link] p4=up v1.0 rx=113 tx=93 bad=0 full=0 fwd=0 to=0 push=0 down=0 unsent=0
+[fx] t=6.10 frame=299 update=ok shade_cancelled=0/250
+[ft] r73:11999/13821/16001 w73:11988/13872/16041 dt16 fps=75 sl=10-13
+[fx] t=7.10 frame=382 update=ok shade_cancelled=0/250
+[ft] r83:11999/12072/13000 w83:11843/12070/13003 dt13 fps=80 sl=9-10
+lh: station 1416427640 in slot 1 (mode 2)
+[fx] t=8.10 frame=464 update=ok shade_cancelled=0/250
+[ft] r82:11998/12273/13002 w82:11877/12261/13035 dt13 fps=80 sl=10-10
+lh: tracking started (rms 133 urad)
+lh: station 699579721 in slot 0 (mode 1)
+[fx] t=9.10 frame=541 update=ok shade_cancelled=0/250
+[ft] r77:11999/12987/13003 w77:11748/12986/13250 dt13 fps=80 sl=9-10
+[player-netstack] map=250 leds heap=33525844 max=33030132 min=33508544 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[net] t=15221 link rx=193/8295B noise=0 tx=199/2983B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=1048 logdrain=820
+[tracker] configured, 2 stations; IMU 140/s, light 1780/s, poses 0/s; pos (0.000, 0.000, 0.000); mount not set
+[fx] t=10.10 frame=618 update=ok shade_cancelled=0/250
+[ft] r77:12001/12987/13001 w77:11732/12987/13282 dt13 fps=80 sl=9-10
+[c6] [link] p4=up v1.0 rx=218 tx=210 bad=0 full=0 fwd=0 to=0 push=0 down=0 unsent=0
+[fx] t=11.11 frame=696 update=ok shade_cancelled=0/250
+[ft] r78:11996/12871/13008 w78:11943/12880/13139 dt13 fps=80 sl=10-10
+[fx] t=12.12 frame=775 update=ok shade_cancelled=0/250
+[ft] r79:11997/12746/13402 w79:11824/12738/13340 dt13 fps=80 sl=9-10
+[fx] t=13.12 frame=853 update=ok shade_cancelled=0/250
+[ft] r78:11999/12897/13420 w78:11864/12897/13385 dt13 fps=80 sl=9-10
+lh: stations disagree by 0.085 m / 5.1 deg (1 in a row)
+[fx] t=14.12 frame=930 update=ok shade_cancelled=0/250
+[ft] r77:12000/12987/13002 w77:11791/12986/13215 dt13 fps=80 sl=9-10
+[player-netstack] map=250 leds heap=33517372 max=33030132 min=33502312 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[net] t=20225 link rx=308/13093B noise=0 tx=344/7598B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=1048 logdrain=820
+[tracker] configured, tracking, 2 stations; IMU 231/s, light 2941/s, poses 109/s; pos (-0.191, 0.345, 0.295); mount not set
+[fx] t=15.12 frame=1007 update=ok shade_cancelled=0/250
+[ft] r77:12000/12987/13007 w77:11766/12987/13233 dt13 fps=80 sl=9-10
+[c6] [link] p4=up v1.0 rx=358 tx=325 bad=0 full=0 fwd=0 to=0 push=0 down=0 unsent=0
+[fx] t=16.12 frame=1084 update=ok shade_cancelled=0/250
+[ft] r77:12001/12987/13004 w77:11803/12986/13228 dt13 fps=80 sl=9-10
+[fx] t=17.12 frame=1161 update=ok shade_cancelled=0/250
+[ft] r77:12996/13000/13004 w77:12845/12999/13182 dt13 fps=80 sl=10-10
+[fx] t=18.12 frame=1238 update=ok shade_cancelled=0/250
+[ft] r77:12996/13000/13002 w77:12828/13000/13212 dt13 fps=80 sl=10-10
+lh: stations disagree by 0.085 m / 5.1 deg (2 in a row)
+[fx] t=19.12 frame=1315 update=ok shade_cancelled=0/250
+[ft] r77:12000/12987/13015 w77:11763/12987/13241 dt13 fps=80 sl=9-10
+[player-netstack] map=250 leds heap=33512944 max=33030132 min=33501696 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[net] t=25227 link rx=423/17891B noise=0 tx=444/9098B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=1048 logdrain=820
+[tracker] configured, tracking, 2 stations; IMU 0/s, light 0/s, poses 0/s; pos (-0.191, 0.345, 0.295); mount not set
+[fx] t=20.12 frame=1392 update=ok shade_cancelled=0/250
+[ft] r77:12000/12987/13003 w77:11730/12986/13233 dt13 fps=80 sl=9-10
+[c6] [link] p4=up v1.0 rx=458 tx=439 bad=0 full=0 fwd=0 to=0 push=0 down=0 unsent=0
+[fx] t=21.12 frame=1469 update=ok shade_cancelled=0/250
+[ft] r77:12991/13000/13010 w77:12857/12999/13162 dt13 fps=80 sl=10-10
+[fx] t=22.12 frame=1546 update=ok shade_cancelled=0/250
+[ft] r77:12000/12986/13003 w77:11774/12986/13226 dt13 fps=80 sl=9-10
+[fx] t=23.13 frame=1623 update=ok shade_cancelled=0/250
+[ft] r77:12998/13000/13002 w77:12795/13000/13210 dt13 fps=80 sl=10-10
+[fx] t=24.13 frame=1700 update=ok shade_cancelled=0/250
+[ft] r77:12998/12999/13002 w77:12826/12999/13168 dt13 fps=80 sl=10-10
+[player-netstack] map=250 leds heap=33517604 max=33030132 min=33501696 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[net] t=30230 link rx=539/22757B noise=0 tx=544/10598B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=1048 logdrain=820
+[tracker] configured, tracking, 2 stations; IMU 0/s, light 0/s, poses 0/s; pos (-0.191, 0.345, 0.295); mount not set
+[fx] t=25.13 frame=1777 update=ok shade_cancelled=0/250
+[ft] r77:12998/13000/13001 w77:12877/12999/13118 dt13 fps=80 sl=10-10
+[c6] [link] p4=up v1.0 rx=558 tx=555 bad=0 full=0 fwd=0 to=0 push=0 down=0 unsent=0
+[fx] t=26.13 frame=1854 update=ok shade_cancelled=0/250
+[ft] r77:12998/13000/13002 w77:12866/13000/13136 dt13 fps=80 sl=10-10
+[fx] t=27.13 frame=1931 update=ok shade_cancelled=0/250
+[ft] r77:12998/13000/13002 w77:12870/12999/13116 dt13 fps=80 sl=10-10
+[fx] t=28.13 frame=2008 update=ok shade_cancelled=0/250
+[ft] r77:12998/13000/13002 w77:12876/13000/13132 dt13 fps=80 sl=10-10
+lh: stations disagree by 0.085 m / 5.1 deg (3 in a row)
+lh: tracking lost (StationsMoved)
+lh: calibrated (StationsMoved): 699579721 at (1.191, -0.940, 0.068) rms 53 urad; 1416427640 at (0.311, 2.023, 1.195) rms 85 urad;
+[fx] t=29.13 frame=2085 update=ok shade_cancelled=0/250
+[ft] r77:12997/13000/13002 w77:12867/12999/13134 dt13 fps=80 sl=10-10
+lh: tracking started (rms 89 urad)
+[player-netstack] map=250 leds heap=33529116 max=33030132 min=33501696 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[net] t=35232 link rx=653/27527B noise=0 tx=643/12085B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=1048 logdrain=820
+[tracker] configured, tracking, 2 stations; IMU 0/s, light 0/s, poses 0/s; pos (-0.191, 0.345, 0.295); mount not set
+[fx] t=30.13 frame=2162 update=ok shade_cancelled=0/250
+[ft] r77:12731/13000/13270 w77:12821/13000/13233 dt13 fps=80 sl=10-10
+lh: sweep timing lost (Silence)
+[c6] [link] p4=up v1.0 rx=657 tx=670 bad=0 full=0 fwd=0 to=0 push=0 down=0 unsent=0
+[fx] t=31.13 frame=2239 update=ok shade_cancelled=0/250
+[ft] r77:12996/12999/13003 w77:12846/13000/13190 dt13 fps=80 sl=10-10
+lh: sweep timing locked
+[fx] t=32.14 frame=2316 update=ok shade_cancelled=0/250
+[ft] r77:12997/13000/13003 w77:12833/12999/13175 dt13 fps=80 sl=10-10
+lh: adopted station 699579721 at (0.747, -0.918, 0.270) from lhd
+lh: DeviceRemoved { dev: 0 }
+lh: DeviceAdded { dev: 0 }
+lh: adopted station 1416427640 at (0.476, 2.164, 1.436) from lhd
+lh: DeviceRemoved { dev: 0 }
+lh: DeviceAdded { dev: 0 }
+lh: sweep timing locked

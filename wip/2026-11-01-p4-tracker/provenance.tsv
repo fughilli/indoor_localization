@@ -1,0 +1,309 @@
+path	file_mtime_local	first_written_utc	command_that_wrote_it (description from the session log)
+captures/20261027-131201_turntable-center.config.json	2026-10-27 13:12		
+captures/20261027-131201_turntable-center.json	2026-10-27 13:14		
+captures/20261027-131201_turntable-center.rec.gz	2026-10-27 13:14		
+captures/20261027-131723_turntable-r.config.json	2026-10-27 13:17		
+captures/20261027-131723_turntable-r.json	2026-10-27 14:01		
+captures/20261027-131723_turntable-r.rec.gz	2026-10-27 13:19		
+captures/20261027-132216_slider.config.json	2026-10-27 13:22		
+captures/20261027-132216_slider.json	2026-10-27 14:01		
+captures/20261027-132216_slider.rec.gz	2026-10-27 13:23		
+captures/20261027-132513_near.config.json	2026-10-27 13:25		
+captures/20261027-132513_near.json	2026-10-27 14:01		
+captures/20261027-132513_near.rec.gz	2026-10-27 13:26		
+captures/20261027-152656_button-test.config.json	2026-10-27 15:26		
+captures/20261027-152656_button-test.json	2026-10-27 15:27		
+captures/20261027-152656_button-test.rec.gz	2026-10-27 15:27		
+captures/20261027-154737_jitter.calibration.json	2026-10-27 15:47		
+captures/20261027-154737_jitter.json	2026-10-27 15:47		
+captures/20261027-154737_jitter.rec.gz	2026-10-27 15:47		
+captures/20261028-184745_linkcheck.calibration.json	2026-10-28 18:47		
+captures/20261028-184745_linkcheck.json	2026-10-28 18:47		
+captures/20261028-184745_linkcheck.rec.gz	2026-10-28 18:47		
+captures/20261028-190219_jaggies.calibration.json	2026-10-28 19:02		
+captures/20261028-190219_jaggies.json	2026-10-28 19:02		
+captures/20261028-190219_jaggies.rec.gz	2026-10-28 19:02		
+captures/20261028-193141_ab-handheld.config.json	2026-10-28 19:31		
+captures/20261028-193141_ab-handheld.json	2026-10-28 19:32		
+captures/20261028-193141_ab-handheld.rec.gz	2026-10-28 19:32		
+captures/bad/20261027-130744_turntable-center.config.json	2026-10-27 13:07		
+captures/bad/20261027-130744_turntable-center.json	2026-10-27 13:11		
+captures/bad/20261027-130744_turntable-center.rec.gz	2026-10-27 13:11		
+captures/bad/20261027-131702_turntable-r.config.json	2026-10-27 13:17		
+captures/bad/20261027-131702_turntable-r.json	2026-10-27 13:17		
+captures/bad/20261027-131702_turntable-r.rec.gz	2026-10-27 13:17		
+captures/calibration-20261027.config.json	2026-10-27 14:29		
+lighthouse_config/calibration.20261030-before-move.json	2026-10-28 20:09		
+lighthouse_config/calibration.json	2026-10-30 20:09		
+lighthouse_config/calibration.pre-move-2026-10-30.json	2026-10-30 19:59		
+lighthouse_config/calibration.stale-2026-10-30-1959.json	2026-10-30 19:07		
+lighthouse_config/calibration.stale.json	2026-10-28 20:09		
+scratchpad/ab_ev.jsonl	2026-10-28 19:33	2026-10-29 02:33Z	Replay through our pipeline and compare jitter with libsurvive
+scratchpad/ab_ev2.jsonl	2026-10-28 19:35	2026-10-29 02:33Z	Rebuild, test, and re-run the replays
+scratchpad/ab_innov.txt.xz	2026-10-28 19:33	2026-10-29 02:33Z	Replay through our pipeline and compare jitter with libsurvive
+scratchpad/ab_lh.txt.xz	2026-10-28 19:33	2026-10-29 02:33Z	Replay through our pipeline and compare jitter with libsurvive
+scratchpad/ab_lh2.txt.xz	2026-10-28 19:35	2026-10-29 02:33Z	Rebuild, test, and re-run the replays
+scratchpad/app_dbg.txt	2026-10-29 12:44		
+scratchpad/appsynth.txt	2026-10-29 12:16	2026-10-29 18:57Z	Rerun the synthetic app test with full output
+scratchpad/bin/lhd	2026-10-29 15:57	2026-10-27 22:21Z	Run lhd on a recording via replay transport
+scratchpad/bin/lhd_before	2026-10-31 11:45	2026-10-31 18:45Z	Save current lhd builds as the baseline
+scratchpad/bin/lhd_f32	2026-10-29 15:57	2026-10-29 22:57Z	Build both lhd variants and copy them, plus the pinned lhd, to scratch
+scratchpad/bin/lhd_f32_before	2026-10-31 11:45	2026-10-31 18:45Z	Save current lhd builds as the baseline
+scratchpad/bin/lhd_f32_new	2026-10-31 11:57	2026-10-31 18:47Z	Compare f32 lhd before vs after on recordings
+scratchpad/bin/lhd_new	2026-10-31 11:57	2026-10-31 18:47Z	Compare f32 lhd before vs after on recordings
+scratchpad/bin/lhd_pinned	2026-10-29 15:57	2026-10-29 22:57Z	Build both lhd variants and copy them, plus the pinned lhd, to scratch
+scratchpad/blescan.py	2026-10-29 22:07	2026-10-30 05:07Z	Scan BLE for the C6's advertisement
+scratchpad/boot_ident.log	2026-10-30 15:23	2026-10-30 22:23Z	Watch the boot for the applied identity
+scratchpad/boot_tracker.log	2026-10-30 13:00	2026-10-30 19:59Z	Capture a full boot log and summarize the tracker handshake
+scratchpad/both_on.rec.gz	2026-10-28 18:42	2026-10-29 01:41Z	Measure dongle packet rate with both trackers on
+scratchpad/bridge.log	2026-10-29 21:07	2026-10-30 00:42Z	Reflash, start bridge, run player_probe
+scratchpad/cal_pair2.json	2026-10-28 19:34		
+scratchpad/cal_pair3.json	2026-10-28 19:34		
+scratchpad/cal_rt.json	2026-10-29 13:40	2026-10-29 20:39Z	Compare lhd replay output before and after the refactor
+scratchpad/cmp_20261027-131723_turntable-r.txt	2026-10-29 15:57		
+scratchpad/cmp_20261027-132216_slider.txt	2026-10-29 15:57		
+scratchpad/cmp_20261027-132513_near.txt	2026-10-29 15:57		
+scratchpad/cmp_20261028-193141_ab-handheld.txt	2026-10-29 15:57		
+scratchpad/cmp_f32.py	2026-10-29 15:57	2026-10-29 22:52Z	Compare f64 and f32 lhd on the P4 capture and a dongle capture
+scratchpad/cmpf64_20261027-131723_turntable-r.txt	2026-10-29 15:57		
+scratchpad/cmpf64_20261027-132216_slider.txt	2026-10-29 15:57		
+scratchpad/cmpf64_20261027-132513_near.txt	2026-10-29 15:57		
+scratchpad/cmpf64_20261028-193141_ab-handheld.txt	2026-10-29 15:57		
+scratchpad/console_new.log	2026-10-30 19:36	2026-10-31 02:35Z	Capture 20 s of P4 console
+scratchpad/console_new2.log	2026-10-30 19:37	2026-10-31 02:36Z	Watch P4 tracking for 45 s
+scratchpad/drop1.log	2026-10-30 16:14	2026-10-30 23:14Z	Watch the P4 console for 25 s
+scratchpad/drop2.log	2026-10-30 16:23	2026-10-30 23:21Z	Watch the console for 75 s for the TX counters
+scratchpad/drop3.log	2026-10-30 16:29	2026-10-30 23:29Z	Check the P4's tracker, C6 OSC counters and the link
+scratchpad/drop4.log	2026-10-30 16:35	2026-10-30 23:30Z	Flash, then read the new radio counters
+scratchpad/drop5.log	2026-10-30 16:39	2026-10-30 23:38Z	Compare device send timing with what the Mac receives
+scratchpad/drop6.log	2026-10-30 16:45	2026-10-30 23:44Z	Re-measure the P4 tracker's gaps in the demo after the fix
+scratchpad/drop7.log	2026-10-30 16:49	2026-10-30 23:45Z	Flash and re-measure the gaps
+scratchpad/embedded_patches.txt	2026-10-29 13:12	2026-10-29 20:12Z	Clone embedded at the pin and apply Splanc's patches
+scratchpad/ev0.txt	2026-10-28 18:34	2026-10-29 01:34Z	Sample the viewer's live event stream
+scratchpad/flash_lag.log	2026-10-30 19:49	2026-10-31 02:46Z	Build and flash P4 with lag instrumentation + OOTX fix
+scratchpad/flash_lag2.log	2026-10-30 19:54	2026-10-31 02:51Z	Build and flash P4 with backlog fix
+scratchpad/fxbench.log	2026-10-29 17:54	2026-10-30 00:49Z	Run fx_bench against the P4 via bridge
+scratchpad/gen_p4_section.py	2026-10-29 13:32		
+scratchpad/headcheck/lighthouse/demos/splanc/.gitignore	2026-10-29 13:54	2026-10-20 17:43Z	Stop replay server and set up captures directory
+scratchpad/headcheck/lighthouse/demos/splanc/README.md	2026-10-29 13:54	2026-10-20 05:53Z	Find sim viewer serving details and ports
+scratchpad/headcheck/lighthouse/demos/splanc/app.py	2026-10-29 13:54		
+scratchpad/headcheck/lighthouse/demos/splanc/calib.py	2026-10-29 13:54		
+scratchpad/headcheck/lighthouse/demos/splanc/effects/led_pick.glsl	2026-10-29 13:54		
+scratchpad/headcheck/lighthouse/demos/splanc/effects/plane_slice.glsl	2026-10-29 13:54		
+scratchpad/headcheck/lighthouse/demos/splanc/effects/plane_slice_hue.glsl	2026-10-29 13:54		
+scratchpad/headcheck/lighthouse/demos/splanc/effects/sphere_shell.glsl	2026-10-29 13:54		
+scratchpad/headcheck/lighthouse/demos/splanc/frames.py	2026-10-29 13:54		
+scratchpad/headcheck/lighthouse/demos/splanc/ledmap.py	2026-10-29 13:54		
+scratchpad/headcheck/lighthouse/demos/splanc/osc.py	2026-10-29 13:54		
+scratchpad/headcheck/lighthouse/demos/splanc/poses.py	2026-10-29 13:54		
+scratchpad/headcheck/lighthouse/demos/splanc/probe.py	2026-10-29 13:54		
+scratchpad/headcheck/lighthouse/demos/splanc/static/index.html	2026-10-29 13:54		
+scratchpad/headcheck/lighthouse/demos/splanc/synth.py	2026-10-29 13:54		
+scratchpad/headcheck/lighthouse/demos/splanc/tests/test_app_synthetic.py	2026-10-29 13:54		
+scratchpad/headcheck/lighthouse/demos/splanc/tests/test_buttons.py	2026-10-29 13:54		
+scratchpad/headcheck/lighthouse/demos/splanc/tests/test_calib_synth.py	2026-10-29 13:54		
+scratchpad/headcheck/lighthouse/demos/splanc/tests/test_probe.py	2026-10-29 13:54		
+scratchpad/headcheck/lighthouse/demos/splanc/tests/test_units.py	2026-10-29 13:54		
+scratchpad/headflat.png	2026-10-30 12:27		
+scratchpad/innov.txt	2026-10-28 19:06	2026-10-29 02:06Z	Log per-sweep innovations and summarize their distribution
+scratchpad/innov_tt.txt	2026-10-28 19:07	2026-10-29 02:07Z	Per-sweep innovation stats on the turntable recording
+scratchpad/jag_ev.txt.xz	2026-10-28 19:02	2026-10-29 02:02Z	Capture 15 s of poses and measure the jumps
+scratchpad/jr2_ev.jsonl	2026-10-28 19:04		
+scratchpad/jr2_poses.txt.xz	2026-10-28 19:04	2026-10-29 02:04Z	Replay the capture with libsurvive's current station calibration
+scratchpad/jr3_ev.jsonl	2026-10-28 19:04		
+scratchpad/jr3_poses.txt.xz	2026-10-28 19:04	2026-10-29 02:04Z	Replay turntable recording for comparison; compare angular rates
+scratchpad/jr4.txt.xz	2026-10-28 19:06	2026-10-29 02:06Z	Log per-sweep innovations and summarize their distribution
+scratchpad/jr_ev.jsonl	2026-10-28 19:03	2026-10-29 02:03Z	Replay the jaggies capture with per-station innovation stats
+scratchpad/jr_poses.txt.xz	2026-10-28 19:03		
+scratchpad/lag1.log	2026-10-30 19:50	2026-10-31 02:49Z	Watch P4 status lines with lag counters
+scratchpad/lag2.log	2026-10-30 19:55	2026-10-31 02:51Z	Build and flash P4 with backlog fix
+scratchpad/lat/20261027-131201_turntable-center_parts.jsonl	2026-10-31 12:14	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131201_turntable-center_parts.txt.xz	2026-10-31 12:13	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131201_turntable-center_parts1S.txt.xz	2026-10-31 12:23	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131201_turntable-center_parts4.jsonl	2026-10-31 12:21	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131201_turntable-center_parts4.txt.xz	2026-10-31 12:21	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131201_turntable-center_partsF.txt.xz	2026-10-31 12:20	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131201_turntable-center_partsS.jsonl	2026-10-31 12:22	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131201_turntable-center_partsS.txt.xz	2026-10-31 12:22	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131201_turntable-center_st.json	2026-10-31 12:22	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131201_turntable-center_whole.jsonl	2026-10-31 12:14	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131201_turntable-center_whole.txt.xz	2026-10-31 12:13	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131201_turntable-center_wholeF.txt.xz	2026-10-31 12:20	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131201_turntable-center_wholeS.jsonl	2026-10-31 12:22	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131201_turntable-center_wholeS.txt.xz	2026-10-31 12:22	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_early.jsonl	2026-10-31 11:58	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_early.txt.xz	2026-10-31 11:58	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_early4.jsonl	2026-10-31 11:59	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_early4.txt.xz	2026-10-31 11:59	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_early5.jsonl	2026-10-31 11:59	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_early5.txt.xz	2026-10-31 11:59	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_late.jsonl	2026-10-31 11:58	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_late.txt.xz	2026-10-31 11:58	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_parts.jsonl	2026-10-31 12:14	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_parts.txt.xz	2026-10-31 12:15	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_parts1S.txt.xz	2026-10-31 12:23	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_parts4.jsonl	2026-10-31 12:21	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_parts4.txt.xz	2026-10-31 12:21	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_parts4d.jsonl	2026-10-31 12:21	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_parts4d.txt.xz	2026-10-31 12:21	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_partsF.txt.xz	2026-10-31 12:20	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_partsS.jsonl	2026-10-31 12:22	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_partsS.txt.xz	2026-10-31 12:22	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_st.json	2026-10-31 12:22	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_whole.jsonl	2026-10-31 12:14	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_whole.txt.xz	2026-10-31 12:15	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_wholeF.txt.xz	2026-10-31 12:16	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_wholeS.jsonl	2026-10-31 12:22	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-131723_turntable-r_wholeS.txt.xz	2026-10-31 12:22	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-132216_slider_early.jsonl	2026-10-31 11:58	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-132216_slider_early.txt.xz	2026-10-31 11:58	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-132216_slider_early4.jsonl	2026-10-31 11:59	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-132216_slider_early4.txt.xz	2026-10-31 11:59	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-132216_slider_early5.jsonl	2026-10-31 11:59	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-132216_slider_early5.txt.xz	2026-10-31 11:59	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-132216_slider_late.jsonl	2026-10-31 11:58	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-132216_slider_late.txt.xz	2026-10-31 11:58	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-132216_slider_parts.txt.xz	2026-10-31 12:13	2026-10-31 19:13Z	Replay turntable/slider with whole vs streamed sweeps
+scratchpad/lat/20261027-132216_slider_parts1S.txt.xz	2026-10-31 12:23	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-132216_slider_parts4.jsonl	2026-10-31 12:21	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-132216_slider_parts4.txt.xz	2026-10-31 12:21	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-132216_slider_partsF.jsonl	2026-10-31 12:20	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-132216_slider_partsF.txt.xz	2026-10-31 12:20	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-132216_slider_partsS.jsonl	2026-10-31 12:22	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-132216_slider_partsS.txt.xz	2026-10-31 12:22	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-132216_slider_st.json	2026-10-31 12:22	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-132216_slider_whole.txt.xz	2026-10-31 12:13	2026-10-31 19:13Z	Replay turntable/slider with whole vs streamed sweeps
+scratchpad/lat/20261027-132216_slider_wholeF.jsonl	2026-10-31 12:20	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-132216_slider_wholeF.txt.xz	2026-10-31 12:20	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-132216_slider_wholeS.jsonl	2026-10-31 12:22	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261027-132216_slider_wholeS.txt.xz	2026-10-31 12:22	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261028-193141_ab-handheld_early.jsonl	2026-10-31 11:58	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261028-193141_ab-handheld_early.txt.xz	2026-10-31 11:58	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261028-193141_ab-handheld_early4.jsonl	2026-10-31 11:59	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261028-193141_ab-handheld_early4.txt.xz	2026-10-31 11:59	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261028-193141_ab-handheld_early5.jsonl	2026-10-31 11:59	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261028-193141_ab-handheld_early5.txt.xz	2026-10-31 11:59	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261028-193141_ab-handheld_late.jsonl	2026-10-31 11:58	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261028-193141_ab-handheld_late.txt.xz	2026-10-31 11:58	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261028-193141_ab-handheld_parts4.jsonl	2026-10-31 12:21	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/20261028-193141_ab-handheld_parts4.txt.xz	2026-10-31 12:21	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/base.jsonl	2026-10-31 11:45	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/base.txt	2026-10-31 11:45	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/base_p4_wired.jsonl	2026-10-31 11:45	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/base_p4_wired.txt	2026-10-31 11:45	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/base_p4_wired2.jsonl	2026-10-31 11:45	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/base_p4_wired2.txt	2026-10-31 11:45	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/cal_hc.json	2026-10-31 12:11	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/cal_plain.json	2026-10-31 12:11	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/cal_st.json	2026-10-31 12:11	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/cal_x.json	2026-10-31 12:12	2026-10-31 19:02Z	Histogram light vs IMU report lateness on the wired dump
+scratchpad/lat/cmp.py	2026-10-31 12:12	2026-10-31 19:12Z	Compare early-quiet and streamed runs against plain
+scratchpad/lat/geom.py	2026-10-31 12:14	2026-10-31 19:14Z	Compare turntable/slider geometry whole vs streamed
+scratchpad/lat/p4_wired2_hc.jsonl.xz	2026-10-31 12:11	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/p4_wired2_plain.jsonl.xz	2026-10-31 12:11	2026-10-31 19:12Z	Experiment: one candidate per sensor per streamed sweep
+scratchpad/lat/p4_wired2_st.jsonl.xz	2026-10-31 12:11	2026-10-31 19:13Z	Revert experiment; show the offset over time
+scratchpad/lat/p4_wired2_st1.jsonl.xz	2026-10-31 12:12	2026-10-31 19:12Z	Experiment: one candidate per sensor per streamed sweep
+scratchpad/lat/p4_wired_hc.jsonl	2026-10-31 12:02	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/p4_wired_plain.jsonl	2026-10-31 12:02	2026-10-20 05:59Z	Create the two commits and confirm clean tree
+scratchpad/lat/timing.rs.bak	2026-10-31 12:12	2026-10-31 19:12Z	Experiment: one candidate per sensor per streamed sweep
+scratchpad/lat/timing.rs.bak2	2026-10-31 12:21	2026-10-31 19:21Z	Test once-per-sensor streaming on the turntable
+scratchpad/lhd.err	2026-10-28 18:35	2026-10-29 01:35Z	Run lhd with raw recording, commands from a FIFO
+scratchpad/lhd.out.xz	2026-10-28 18:46	2026-10-29 01:35Z	Run lhd with raw recording, commands from a FIFO
+scratchpad/link3.rec.gz	2026-10-28 18:38	2026-10-29 01:37Z	Measure the radio packet rate for 10 s
+scratchpad/ls_poses.txt.xz	2026-10-28 19:33	2026-10-29 02:33Z	Replay through our pipeline and compare jitter with libsurvive
+scratchpad/mapsend.log	2026-10-30 13:32	2026-10-30 20:30Z	Record the P4 console for 2 minutes during the map send
+scratchpad/mapsend2.log	2026-10-30 13:46	2026-10-30 20:44Z	Record the P4 console for 5 minutes during the map send
+scratchpad/mapsend3.log	2026-10-30 13:54	2026-10-30 20:49Z	Record the P4 console for 5 minutes during the next map send
+scratchpad/mapsend4.log	2026-10-30 14:02	2026-10-30 21:00Z	Record the P4 console for 5 minutes during the map send
+scratchpad/mapsend5.log	2026-10-30 14:07	2026-10-30 21:05Z	Record the P4 console for 5 minutes during the map send
+scratchpad/mapsend6.log	2026-10-30 14:16	2026-10-30 21:11Z	Record the P4 and C6 logs for 5 minutes during the map send
+scratchpad/mapsend7.log	2026-10-30 15:14	2026-10-30 22:12Z	Log the P4 console for 5 minutes during the map send
+scratchpad/mapsend8.log	2026-10-30 15:20	2026-10-30 22:17Z	Log the P4 console for 7 minutes for the next map send
+scratchpad/now.log	2026-10-30 17:24	2026-10-31 00:24Z	Check the P4 is reachable and what its console says
+scratchpad/osc_dbg.log	2026-10-29 12:45		
+scratchpad/p4.patch.new	2026-10-29 21:55	2026-10-30 00:37Z	Add P4 Preferences lib and regenerate patch
+scratchpad/p4_bundle.json	2026-10-29 17:54	2026-10-30 00:49Z	Run fx_bench against the P4 via bridge
+scratchpad/p4_lhd.err	2026-10-29 15:45	2026-10-29 22:45Z	Replay the P4 recording through lhd and summarize its events
+scratchpad/p4_lhd.jsonl	2026-10-29 15:45	2026-10-29 22:45Z	Replay the P4 recording through lhd and summarize its events
+scratchpad/p4_mon.py	2026-10-29 15:18	2026-10-29 22:18Z	Reset the P4 and capture 20 s of console output
+scratchpad/p4_section.BUILD	2026-10-29 13:18	2026-10-29 20:18Z	Fix define quoting and generate the P4 section
+scratchpad/p4_wired.rec.gz	2026-10-29 15:44	2026-10-29 22:44Z	Replay the raw recording and summarize kernel events
+scratchpad/p4_wired2.rec.gz	2026-10-29 19:10	2026-10-30 02:08Z	Capture fresh dump and replay through f64/f32
+scratchpad/p4_wired_events.jsonl	2026-10-29 15:45	2026-10-29 22:44Z	Replay the raw recording and summarize kernel events
+scratchpad/p4_wired_replay.csv	2026-10-29 15:44		
+scratchpad/p4_wired_replay.txt	2026-10-29 15:45		
+scratchpad/p4build.log	2026-10-29 13:23	2026-10-29 20:19Z	Build the P4 hello image
+scratchpad/p4build2.log	2026-10-29 13:43	2026-10-29 20:37Z	Wire the patches in and build P4 hello plus the C6 image
+scratchpad/p4fx/tracker_fx.fx	2026-10-29 19:17	2026-10-30 02:17Z	Load tracker effect and read uniforms back
+scratchpad/p4fx/tracker_fx.fx.fxb	2026-10-29 19:18	2026-10-30 02:17Z	Load tracker effect and read uniforms back
+scratchpad/p4fx/uniforms.py	2026-10-29 19:17	2026-10-30 02:17Z	Load tracker effect and read uniforms back
+scratchpad/pair2.rec.gz	2026-10-28 18:41	2026-10-29 20:39Z	Compare lhd replay output before and after the refactor
+scratchpad/pair3.rec.gz	2026-10-28 18:46		
+scratchpad/pair_test.rec.gz	2026-10-28 18:36	2026-10-29 01:35Z	Run lhd with raw recording, commands from a FIFO
+scratchpad/pair_test2.rec.gz	2026-10-28 18:37	2026-10-29 01:36Z	Finalize the raw recording and peek at its format
+scratchpad/patch_probe_app.py	2026-10-29 11:11		
+scratchpad/ping_conc.log	2026-10-30 16:23	2026-10-30 23:23Z	Record poses and pings together for 30 s
+scratchpad/plane_slice_pose.fxb	2026-10-29 23:54		
+scratchpad/posewatch.log	2026-10-30 13:18	2026-10-30 20:16Z	Log the P4's pose for 2.5 minutes while the user moves the lamp
+scratchpad/posewatch.sh	2026-10-30 13:16	2026-10-30 20:16Z	Log the P4's pose for 2.5 minutes while the user moves the lamp
+scratchpad/ref_esf/esf.tar.gz	2026-10-29 21:45	2026-10-30 04:45Z	Download esp-serial-flasher source for reference
+scratchpad/regress.log	2026-10-29 18:00	2026-10-30 00:57Z	Build C6/C3 images and run player host tests
+scratchpad/replay_pair2.out.xz	2026-10-28 18:59		
+scratchpad/replay_pair3.out.xz	2026-10-28 18:59		
+scratchpad/reset1.log	2026-10-30 17:26	2026-10-31 00:25Z	Reset the P4 and watch it come back
+scratchpad/retry.log	2026-10-30 13:18	2026-10-30 20:16Z	Record the P4 console for 2.5 minutes while the user retries
+scratchpad/sc.txt.xz	2026-10-28 19:07	2026-10-29 02:06Z	Score pose jitter on the moving tracker across filter settings
+scratchpad/sc_ev.jsonl	2026-10-28 19:07	2026-10-29 02:07Z	Relate jitter spikes to hits used, gated and timing
+scratchpad/scan.txt.xz	2026-10-28 19:05		
+scratchpad/scan2.txt.xz	2026-10-28 19:05	2026-10-29 02:05Z	Scan IMU time offset vs innovation RMS on both recordings
+scratchpad/smooth.py	2026-10-28 19:06	2026-10-29 02:06Z	Score pose jitter on the moving tracker across filter settings
+scratchpad/smooth2.py	2026-10-28 19:33	2026-10-29 02:33Z	Replay through our pipeline and compare jitter with libsurvive
+scratchpad/sphere_shell_pose.fxb	2026-10-29 23:54		
+scratchpad/stale_cal.json	2026-10-28 18:58	2026-10-29 01:58Z	Replay a real recording against the stale calibration
+scratchpad/stub/esp32c6.json	2026-10-29 21:51	2026-10-30 04:51Z	Fetch C6 stub JSON and inspect
+scratchpad/stuck_tracker.log	2026-10-30 17:25	2026-10-31 00:25Z	Reset the P4 and watch it come back
+scratchpad/tdp.fxb	2026-10-31 03:18	2026-10-31 10:18Z	Compile the combined effect offline
+scratchpad/tracker.dis	2026-10-29 15:57	2026-10-29 22:53Z	Find kernel functions still calling soft-float double helpers
+scratchpad/tt.txt.xz	2026-10-28 19:07	2026-10-29 02:07Z	Compare jitter vs accel_noise on turntable and today's capture
+scratchpad/tt_poses.txt.xz	2026-10-28 19:05	2026-10-29 02:04Z	Replay turntable recording for comparison; compare angular rates
+scratchpad/untracked.txt	2026-10-29 12:59	2026-10-29 19:59Z	List untracked files by directory and scan for secrets
+scratchpad/ut.log	2026-10-31 03:21	2026-10-31 10:20Z	Rerun tests capturing full log
+scratchpad/vive_pdf/g10.pdf	2026-10-28 10:59	2026-10-28 17:59Z	Download the Tracker 3.0 developer guidelines PDF
+scratchpad/vive_pdf/g10.txt	2026-10-28 10:59		
+scratchpad/vive_pdf/hi-18.png	2026-10-28 10:59		
+scratchpad/vive_pdf/hi-19.png	2026-10-28 10:59		
+scratchpad/vive_pdf/hi-20.png	2026-10-28 10:59		
+scratchpad/vive_pdf/hi-21.png	2026-10-28 10:59		
+scratchpad/vive_pdf/pg-15.png	2026-10-28 10:59		
+scratchpad/vive_pdf/pg-16.png	2026-10-28 10:59		
+scratchpad/vive_pdf/pg-17.png	2026-10-28 10:59		
+scratchpad/vive_pdf/pg-18.png	2026-10-28 10:59		
+scratchpad/vive_pdf/pg-19.png	2026-10-28 10:59		
+scratchpad/ws/a.png	2026-10-29 15:24	2026-10-20 17:41Z	Check for headless browser automation tools
+scratchpad/ws/b.png	2026-10-29 15:24	2026-10-20 17:41Z	Check for headless browser automation tools
+scratchpad/ws/bbox.html	2026-10-29 15:24	2026-10-29 22:24Z	Render the schematic and locate USB labels on the page
+scratchpad/ws/c.png	2026-10-29 15:24	2026-10-20 17:41Z	Check for headless browser automation tools
+scratchpad/ws/d.png	2026-10-29 15:24	2026-10-20 17:41Z	Check for headless browser automation tools
+scratchpad/ws/page-1.png	2026-10-29 15:24	2026-10-20 17:41Z	Check for headless browser automation tools
+scratchpad/ws/page-2.png	2026-10-29 15:24	2026-10-20 17:41Z	Check for headless browser automation tools
+scratchpad/ws/page-3.png	2026-10-29 15:24	2026-10-20 17:41Z	Check for headless browser automation tools
+scratchpad/ws/sch.pdf	2026-10-29 15:24	2026-10-29 22:24Z	Download the board schematic and grep its USB nets
+scratchpad/ws/t3.txt	2026-10-29 15:42	2026-10-29 22:42Z	Download the Tracker 3.0 developer guidelines and grep the USB parts
+scratchpad/ws/vive_tracker3.pdf	2026-10-29 15:42	2026-10-29 22:42Z	Download the Tracker 3.0 developer guidelines and grep the USB parts
+scratchpad/ws_sch/c6.png	2026-10-29 20:11		
+scratchpad/ws_sch/dsi.png	2026-10-29 20:11		
+scratchpad/ws_sch/full-1.png	2026-10-29 20:10		
+scratchpad/ws_sch/full-2.png	2026-10-29 20:10		
+scratchpad/ws_sch/full-3.png	2026-10-29 20:10		
+scratchpad/ws_sch/hi-1.png	2026-10-29 20:11		
+scratchpad/ws_sch/iface.png	2026-10-29 20:11		
+scratchpad/ws_sch/p4l.png	2026-10-29 20:11		
+scratchpad/ws_sch/p4r.png	2026-10-29 20:11		
+scratchpad/ws_sch/sch.pdf	2026-10-29 20:10	2026-10-29 22:24Z	Download the board schematic and grep its USB nets
+scratchpad/ws_sch/sch.txt.xz	2026-10-29 20:10	2026-10-30 03:10Z	Download the Waveshare schematic
+scratchpad/ws_sch/uart.png	2026-10-29 20:11		
+third_party_refs/embedded-clone.txt	2026-11-01 01:11		
+third_party_refs/embedded-esp32p4-target.patch	2026-11-01 01:11		
+third_party_refs/esp32-arduino-libs.ls	2026-11-01 01:11		
+third_party_refs/esptool-venv.cfg	2026-11-01 01:11		
+third_party_refs/libs.zip.sha256	2026-11-01 01:11		

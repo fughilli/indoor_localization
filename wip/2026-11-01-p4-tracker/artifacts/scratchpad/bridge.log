@@ -1,0 +1,726 @@
+[bridge] serving ws://127.0.0.1:8081/ws -> /dev/cu.usbmodem5CF71536071 @ 2000000
+[bridge] P4 link up: v1.0, MTU 4096
+[p4] [boot] reset_reason=POWERON (1)
+[p4] [led] capacity 512 LEDs (configured 0+0, tx buffer 512) = 15992 B; heap 33872984 before, max 2048 LEDs
+[p4] [led] ws2812 backend=parlio channels=2 ch0_err=0x0 ch1_err=0x0
+[p4] littlefs: restored /lfs/map.pb (3860 B, streamed)
+[p4] littlefs: restored /lfs/topo.pb (928 B, streamed)
+[p4] littlefs: restored /lfs/fx.pb (429 B)
+[p4] [cc] LUT ready (seq=1, flash)
+[p4] [player] identity E8:F6:0A:E8:1B:2C / "Led Widget 8C672E" ap "Led Widget 8C672E-AP" host Led-Widget-8C672E.local build 2c493fc0-dirty
+[p4] [hw] boot gpio=20/21 order=GRB/GRB leds=0/0
+[p4] [wifi] policy auto (cap 60s, every 300s, decay 0h -> 900s)
+[p4 raw] usb: host install: ESP_OK
+[p4 raw] usb: client event 0
+usb: device 28de:2300 at addr 1, full speed
+usb: HID interface 0, IN ep 0x81, mps 64
+usb: HID interface 1, IN ep 0x83, mps 64
+usb: HID interface 2, IN ep 0x84, mps 64
+lh: Tracker (2018 / 3.0) (28de:2300)
+E (2003) USBH: Dev 1 EP 0 STALL
+E (2024) USBH: Dev 1 EP 0 STALL
+E (2045) USBH: Dev 1 EP 0 STALL
+E (2065) USBH: Dev 1 EP 0 STALL
+[p4 raw] E (2085) USBH: Dev 1 EP 0 STALL
+E (2105) USBH: Dev 1 EP 0 STALL
+E (2125) USBH: Dev 1 EP 0 STALL
+E (2145) USBH: Dev 1 EP 0 STALL
+E (2165) USBH: Dev 1 EP 0 STALL
+[p4 raw] E (2185) USBH: Dev 1 EP 0 STALL
+E (2205) USBH: Dev 1 EP 0 STALL
+E (2225) USBH: Dev 1 EP 0 STALL
+E (2245) USBH: Dev 1 EP 0 STALL
+E (2265) USBH: Dev 1 EP 0 STALL
+[p4 raw] E (2285) USBH: Dev 1 EP 0 STALL
+E (2305) USBH: Dev 1 EP 0 STALL
+[p4] [fx] t=0.76 frame=22 update=ok shade_cancelled=0/64
+[p4] [ft] r22:32860/32993/33000 w21:32168/32958/33005 dt33 fps=30 sl=32-33
+[p4 raw] E (2325) USBH: Dev 1 EP 0 STALL
+E (2345) USBH: Dev 1 EP 0 STALL
+E (2365) USBH: Dev 1 EP 0 STALL
+[p4 raw] E (2385) USBH: Dev 1 EP 0 STALL
+E (2405) USBH: Dev 1 EP 0 STALL
+E (2425) USBH: Dev 1 EP 0 STALL
+E (2445) USBH: Dev 1 EP 0 STALL
+E (2465) USBH: Dev 1 EP 0 STALL
+[p4 raw] E (2485) USBH: Dev 1 EP 0 STALL
+E (2505) USBH: Dev 1 EP 0 STALL
+E (2525) USBH: Dev 1 EP 0 STALL
+E (2545) USBH: Dev 1 EP 0 STALL
+E (2565) USBH: Dev 1 EP 0 STALL
+[p4 raw] E (2585) USBH: Dev 1 EP 0 STALL
+E (2605) USBH: Dev 1 EP 0 STALL
+E (2625) USBH: Dev 1 EP 0 STALL
+E (2645) USBH: Dev 1 EP 0 STALL
+E (2665) USBH: Dev 1 EP 0 STALL
+[p4 raw] E (2689) USBH: Dev 1 EP 0 STALL
+E (2709) USBH: Dev 1 EP 0 STALL
+lh: VIVE Tracker 3.0 MV LHR-10F97524 configured: 20 sensors
+lh: DeviceAdded { dev: 0 }
+lh: sweep timing locked
+[p4] [fx] t=1.78 frame=57 update=ok shade_cancelled=0/64
+[p4] [ft] r35:27589/29057/34000 w35:27586/29200/33693 dt34 fps=35 sl=28-33
+[p4] [fx] t=2.78 frame=98 update=ok shade_cancelled=0/64
+[p4] [ft] r41:21576/24512/28593 w41:21580/24648/28405 dt29 fps=45 sl=22-28
+[p4] [fx] t=3.78 frame=146 update=ok shade_cancelled=0/64
+[p4] [ft] r48:19589/20895/22590 w48:19590/20937/22571 dt23 fps=50 sl=20-22
+[p4] [player-netstack] map=64 leds heap=33528928 max=33030132 min=33496040 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=5002 link rx=47/761B noise=1 tx=57/2020B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=1040 logdrain=1072
+[p4] [tracker] configured, 0 stations; IMU 1076/s, light 15064/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=4.78 frame=204 update=ok shade_cancelled=0/64
+[p4] [ft] r58:15576/17234/20411 w58:15577/17310/20535 dt20 fps=60 sl=16-20
+[p4] [fx] t=5.79 frame=273 update=ok shade_cancelled=0/64
+[p4] [ft] r69:12591/14527/16001 w69:12594/14571/16109 dt16 fps=75 sl=13-16
+[p4] [fx] t=6.80 frame=355 update=ok shade_cancelled=0/64
+[p4] [ft] r82:11576/12324/13577 w82:11576/12336/13437 dt14 fps=80 sl=12-13
+[p4] [fx] t=7.81 frame=439 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11998/12000/12001 w84:11865/12000/12136 dt12 fps=80 sl=12-12
+[p4] [fx] t=8.81 frame=523 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11576/12000/12424 w84:11575/12000/12424 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33528652 max=33030132 min=33495736 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=10002 link rx=96/1545B noise=1 tx=114/3952B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=1024 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 3465/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=9.82 frame=607 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11589/12000/12425 w84:11591/12005/12426 dt12 fps=80 sl=12-12
+[p4] [fx] t=10.83 frame=691 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11589/11999/12411 w84:11590/11999/12410 dt12 fps=80 sl=12-12
+[p4] [fx] t=11.84 frame=775 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11589/12000/12411 w84:11592/12000/12408 dt12 fps=80 sl=12-12
+[p4] [fx] t=12.85 frame=859 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11589/12004/12410 w84:11591/11995/12407 dt12 fps=80 sl=12-12
+[p4] [fx] t=13.85 frame=943 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11594/12007/13000 w84:11597/12016/12869 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=15003 link rx=146/2345B noise=1 tx=171/5888B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=1024 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 2271/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=14.86 frame=1027 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11594/12004/12405 w84:11598/12000/12405 dt12 fps=80 sl=12-12
+[p4] [fx] t=15.87 frame=1111 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11588/12007/12589 w84:11592/12011/12469 dt13 fps=80 sl=12-12
+[p4] [fx] t=16.88 frame=1195 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11588/12004/12411 w84:11593/11999/12407 dt12 fps=80 sl=12-12
+[p4] [fx] t=17.89 frame=1279 update=ok shade_cancelled=0/64
+[p4] [ft] r84:12000/12011/13000 w84:11999/12011/12860 dt13 fps=80 sl=12-12
+[p4] [fx] t=18.90 frame=1363 update=ok shade_cancelled=0/64
+[p4] [ft] r84:12000/12011/13000 w84:11993/12011/12869 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=20004 link rx=195/3129B noise=1 tx=228/7831B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=1024 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 488/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=19.91 frame=1447 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11995/12011/12582 w84:11965/12011/12454 dt13 fps=80 sl=12-12
+[p4] [fx] t=20.91 frame=1531 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11996/12006/12446 dt13 fps=80 sl=12-12
+[p4] [fx] t=21.92 frame=1615 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12000/12001 w84:11868/12000/12132 dt12 fps=80 sl=12-12
+[p4] [fx] t=22.93 frame=1699 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11865/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=23.94 frame=1783 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11996/12006/12448 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=25005 link rx=245/3929B noise=1 tx=285/9773B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=1024 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=24.95 frame=1867 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11868/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=25.96 frame=1951 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11992/12006/12577 w84:11989/12006/12446 dt13 fps=80 sl=12-12
+[p4] [fx] t=26.96 frame=2035 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11866/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=27.97 frame=2119 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11996/12006/12583 w84:11989/12006/12454 dt13 fps=80 sl=12-12
+[p4] [fx] t=28.98 frame=2203 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12004/12418 w84:11867/12004/12418 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=30006 link rx=294/4713B noise=1 tx=342/11713B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=1024 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=29.99 frame=2287 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11995/12006/12576 w84:11992/12006/12447 dt13 fps=80 sl=12-12
+[p4] [fx] t=31.00 frame=2371 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11869/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=32.01 frame=2455 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11996/12006/12449 dt13 fps=80 sl=12-12
+[p4] [fx] t=33.02 frame=2539 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11871/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=34.02 frame=2623 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11997/12006/12447 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=35007 link rx=344/5513B noise=1 tx=398/13638B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=1024 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=35.03 frame=2707 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12000/12001 w84:11868/12000/12133 dt12 fps=80 sl=12-12
+[p4] [fx] t=36.04 frame=2791 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12423 w84:11868/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=37.05 frame=2875 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12582 w84:11987/12006/12456 dt13 fps=80 sl=12-12
+[p4] [fx] t=38.06 frame=2959 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11584/12004/12418 w84:11589/12004/12417 dt12 fps=80 sl=12-12
+[p4] [fx] t=39.07 frame=3043 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11999/12006/12450 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=40008 link rx=393/6297B noise=1 tx=455/15579B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=1024 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=40.07 frame=3127 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11868/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=41.08 frame=3211 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11994/12006/12448 dt13 fps=80 sl=12-12
+[p4] [fx] t=42.09 frame=3295 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11868/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=43.10 frame=3379 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11998/12006/12447 dt13 fps=80 sl=12-12
+[p4] [fx] t=44.11 frame=3463 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12423 w84:11868/12005/12423 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=45009 link rx=443/7097B noise=1 tx=512/17520B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=1024 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=45.12 frame=3547 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12582 w84:11994/12006/12454 dt13 fps=80 sl=12-12
+[p4] [fx] t=46.13 frame=3631 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12000/12001 w84:11872/12000/12134 dt12 fps=80 sl=12-12
+[p4] [fx] t=47.13 frame=3715 update=ok shade_cancelled=0/64
+[p4] [ft] r84:12000/12004/12418 w84:11868/12004/12418 dt12 fps=80 sl=12-12
+[p4] [fx] t=48.14 frame=3799 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11990/12006/12449 dt13 fps=80 sl=12-12
+[p4] [fx] t=49.15 frame=3883 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12423 w84:11866/12005/12423 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=50010 link rx=492/7881B noise=1 tx=569/19461B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=1024 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=50.16 frame=3967 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11988/12006/12448 dt13 fps=80 sl=12-12
+[p4] [fx] t=51.17 frame=4051 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12423 w84:11867/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=52.18 frame=4135 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11998/12006/12577 w84:11996/12006/12451 dt13 fps=80 sl=12-12
+[p4] [fx] t=53.19 frame=4219 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11867/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=54.19 frame=4303 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12582 w84:11989/12006/12454 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=55011 link rx=541/8665B noise=1 tx=626/21402B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=1024 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=55.20 frame=4387 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11997/12004/12418 w84:11867/12004/12417 dt12 fps=80 sl=12-12
+[p4] [fx] t=56.21 frame=4471 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11997/12006/12448 dt13 fps=80 sl=12-12
+[p4] [fx] t=57.22 frame=4555 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12423 w84:11865/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=58.23 frame=4639 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11989/12006/12449 dt13 fps=80 sl=12-12
+[p4] [fx] t=59.24 frame=4723 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12000/12001 w84:11867/12000/12133 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=60013 link rx=591/9465B noise=1 tx=683/23343B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=1024 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=60.25 frame=4807 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11868/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=61.25 frame=4891 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11997/12006/12450 dt13 fps=80 sl=12-12
+[p4] [fx] t=62.26 frame=4975 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11865/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=63.27 frame=5059 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12582 w84:11986/12006/12454 dt13 fps=80 sl=12-12
+[p4] [fx] t=64.28 frame=5143 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12004/12418 w84:11867/12004/12417 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=65014 link rx=640/10249B noise=1 tx=740/25284B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=1024 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=65.29 frame=5227 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11996/12006/12576 w84:11964/12006/12446 dt13 fps=80 sl=12-12
+[p4] [fx] t=66.30 frame=5311 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12423 w84:11867/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=67.31 frame=5395 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11999/12006/12449 dt13 fps=80 sl=12-12
+[p4] [fx] t=68.31 frame=5479 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11868/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=69.32 frame=5563 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11994/12006/12576 w84:11990/12006/12448 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=70015 link rx=690/11049B noise=1 tx=797/27226B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=1024 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=70.33 frame=5647 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11868/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=71.34 frame=5731 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12582 w84:11995/12006/12453 dt13 fps=80 sl=12-12
+[p4] [fx] t=72.35 frame=5815 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12000/12001 w84:11865/11999/12133 dt12 fps=80 sl=12-12
+[p4] [fx] t=73.36 frame=5899 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12004/12418 w84:11875/12004/12418 dt12 fps=80 sl=12-12
+[p4] [fx] t=74.37 frame=5983 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11997/12006/12450 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=75016 link rx=739/11833B noise=1 tx=854/29168B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=1024 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=75.37 frame=6067 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11866/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=76.38 frame=6151 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11992/12006/12448 dt13 fps=80 sl=12-12
+[p4] [fx] t=77.39 frame=6235 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11869/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=78.40 frame=6319 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11983/12006/12450 dt13 fps=80 sl=12-12
+[p4] [fx] t=79.41 frame=6403 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11867/12005/12424 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=80017 link rx=789/12633B noise=1 tx=911/31110B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=80.42 frame=6487 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12582 w84:11999/12006/12455 dt13 fps=80 sl=12-12
+[p4] [fx] t=81.43 frame=6571 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12004/12418 w84:11866/12004/12418 dt12 fps=80 sl=12-12
+[p4] [fx] t=82.43 frame=6655 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11993/12006/12449 dt13 fps=80 sl=12-12
+[p4] [fx] t=83.44 frame=6739 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11868/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=84.45 frame=6823 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11999/12006/12448 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=85018 link rx=838/13417B noise=1 tx=968/33051B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=85.46 frame=6907 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11998/12000/12003 w84:11866/11999/12133 dt12 fps=80 sl=12-12
+[p4] [fx] t=86.47 frame=6991 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12423 w84:11867/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=87.48 frame=7075 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11998/12006/12451 dt13 fps=80 sl=12-12
+[p4] [fx] t=88.48 frame=7159 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11868/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=89.49 frame=7243 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12582 w84:11993/12006/12455 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=90019 link rx=888/14217B noise=1 tx=1025/34992B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=90.50 frame=7327 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11997/12004/12418 w84:11867/12004/12418 dt12 fps=80 sl=12-12
+[p4] [fx] t=91.51 frame=7411 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11999/12006/12447 dt13 fps=80 sl=12-12
+[p4] [fx] t=92.52 frame=7495 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11867/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=93.53 frame=7579 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11996/12006/12448 dt13 fps=80 sl=12-12
+[p4] [fx] t=94.54 frame=7663 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11870/12005/12423 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=95020 link rx=937/15001B noise=1 tx=1082/36934B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=95.55 frame=7747 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11994/12006/12576 w84:11992/12006/12449 dt13 fps=80 sl=12-12
+[p4] [fx] t=96.55 frame=7831 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12423 w84:11867/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=97.56 frame=7915 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12583 w84:11989/12006/12454 dt13 fps=80 sl=12-12
+[p4] [fx] t=98.57 frame=7999 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12000/12001 w84:11868/12000/12132 dt12 fps=80 sl=12-12
+[p4] [fx] t=99.58 frame=8083 update=ok shade_cancelled=0/64
+[p4] [ft] r84:12000/12004/12418 w84:11868/12004/12418 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=100021 link rx=987/15801B noise=1 tx=1139/38876B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=100.59 frame=8167 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11997/12006/12450 dt13 fps=80 sl=12-12
+[p4] [fx] t=101.60 frame=8251 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12423 w84:11867/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=102.60 frame=8335 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11994/12006/12448 dt13 fps=80 sl=12-12
+[p4] [fx] t=103.61 frame=8419 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11867/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=104.62 frame=8503 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11999/12006/12448 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=105022 link rx=1036/16585B noise=1 tx=1196/40824B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=105.63 frame=8587 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12423 w84:11866/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=106.64 frame=8671 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12582 w84:11999/12006/12452 dt13 fps=80 sl=12-12
+[p4] [fx] t=107.65 frame=8755 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12004/12418 w84:11867/12004/12418 dt12 fps=80 sl=12-12
+[p4] [fx] t=108.66 frame=8839 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11992/12006/12448 dt13 fps=80 sl=12-12
+[p4] [fx] t=109.66 frame=8923 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12423 w84:11865/12005/12423 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=110023 link rx=1085/17369B noise=1 tx=1253/42773B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=110.67 frame=9007 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11995/12006/12447 dt13 fps=80 sl=12-12
+[p4] [fx] t=111.68 frame=9091 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/11999/12001 w84:11865/11999/12135 dt12 fps=80 sl=12-12
+[p4] [fx] t=112.69 frame=9175 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11867/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=113.70 frame=9259 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11988/12006/12447 dt13 fps=80 sl=12-12
+[p4] [fx] t=114.71 frame=9343 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12423 w84:11867/12005/12423 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=115024 link rx=1135/18169B noise=1 tx=1310/44722B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=115.72 frame=9427 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12582 w84:11993/12006/12453 dt13 fps=80 sl=12-12
+[p4] [fx] t=116.72 frame=9511 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12004/12418 w84:11871/12004/12417 dt12 fps=80 sl=12-12
+[p4] [fx] t=117.73 frame=9595 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11996/12006/12447 dt13 fps=80 sl=12-12
+[p4] [fx] t=118.74 frame=9679 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11866/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=119.75 frame=9763 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11988/12006/12447 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=120025 link rx=1184/18953B noise=1 tx=1367/46671B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=120.76 frame=9847 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11871/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=121.77 frame=9931 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11997/12006/12449 dt13 fps=80 sl=12-12
+[p4] [fx] t=122.78 frame=10015 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11868/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=123.78 frame=10099 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12582 w84:11993/12006/12456 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=125026 link rx=1234/19753B noise=1 tx=1423/48479B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=124.79 frame=10183 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12000/12001 w84:11861/11999/12138 dt12 fps=80 sl=12-12
+[p4] [fx] t=125.80 frame=10267 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12004/12418 w84:11865/12004/12418 dt12 fps=80 sl=12-12
+[p4] [fx] t=126.81 frame=10351 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11992/12006/12446 dt13 fps=80 sl=12-12
+[p4] [fx] t=127.82 frame=10435 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11865/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=128.83 frame=10519 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11998/12006/12447 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=130027 link rx=1283/20537B noise=1 tx=1480/50433B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=129.83 frame=10603 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11578/12005/12424 w84:11579/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=130.84 frame=10687 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11996/12006/12447 dt13 fps=80 sl=12-12
+[p4] [fx] t=131.85 frame=10771 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12423 w84:11866/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=132.86 frame=10855 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12582 w84:11999/12006/12452 dt13 fps=80 sl=12-12
+[p4] [fx] t=133.87 frame=10939 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12004/12418 w84:11866/12004/12418 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=135028 link rx=1333/21337B noise=1 tx=1537/52387B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=134.87 frame=11023 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11995/12006/12447 dt13 fps=80 sl=12-12
+[p4] [fx] t=135.88 frame=11107 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11865/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=136.89 frame=11191 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11999/12006/12444 dt13 fps=80 sl=12-12
+[p4] [fx] t=137.90 frame=11275 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/11999/12001 w84:11854/11999/12146 dt12 fps=80 sl=12-12
+[p4] [fx] t=138.91 frame=11359 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11866/12005/12424 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=140029 link rx=1382/22121B noise=1 tx=1594/54341B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=139.91 frame=11443 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11996/12006/12451 dt13 fps=80 sl=12-12
+[p4] [fx] t=140.92 frame=11527 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11866/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=141.93 frame=11611 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12583 w84:11999/12007/12452 dt13 fps=80 sl=12-12
+[p4] [fx] t=142.94 frame=11695 update=ok shade_cancelled=0/64
+[p4] [ft] r84:12000/12004/12418 w84:11866/12004/12417 dt12 fps=80 sl=12-12
+[p4] [fx] t=143.95 frame=11779 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11996/12006/12447 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=145030 link rx=1432/22921B noise=1 tx=1651/56295B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=144.95 frame=11863 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11993/12005/12423 w84:11867/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=145.96 frame=11947 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11998/12006/12447 dt13 fps=80 sl=12-12
+[p4] [fx] t=146.97 frame=12031 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11866/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=147.98 frame=12115 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11990/12006/12445 dt13 fps=80 sl=12-12
+[p4] [fx] t=148.98 frame=12199 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11866/12005/12424 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=150031 link rx=1481/23705B noise=1 tx=1708/58249B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=149.99 frame=12283 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12582 w84:11996/12006/12452 dt13 fps=80 sl=12-12
+[p4] [fx] t=151.00 frame=12367 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12000/12001 w84:11865/12000/12135 dt12 fps=80 sl=12-12
+[p4] [fx] t=152.01 frame=12451 update=ok shade_cancelled=0/64
+[p4] [ft] r84:12000/12004/12418 w84:11870/12004/12418 dt12 fps=80 sl=12-12
+[p4] [fx] t=153.02 frame=12535 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11999/12006/12449 dt13 fps=80 sl=12-12
+[p4] [fx] t=154.02 frame=12619 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11867/12005/12424 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=155032 link rx=1530/24489B noise=1 tx=1765/60203B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=155.03 frame=12703 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11997/12006/12576 w84:11987/12006/12447 dt13 fps=80 sl=12-12
+[p4] [fx] t=156.04 frame=12787 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11865/12005/12426 dt12 fps=80 sl=12-12
+[p4] [fx] t=157.05 frame=12871 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11991/12006/12448 dt13 fps=80 sl=12-12
+[p4] [fx] t=158.06 frame=12955 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11866/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=159.06 frame=13039 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12582 w84:11993/12006/12459 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=160033 link rx=1580/25289B noise=1 tx=1822/62157B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=160.07 frame=13123 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12004/12417 w84:11867/12004/12417 dt12 fps=80 sl=12-12
+[p4] [fx] t=161.08 frame=13207 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11996/12006/12446 dt13 fps=80 sl=12-12
+[p4] [fx] t=162.09 frame=13291 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11866/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=163.10 frame=13375 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11990/12006/12450 dt13 fps=80 sl=12-12
+[p4] [fx] t=164.10 frame=13459 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12000/12001 w84:11868/12000/12133 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=165034 link rx=1629/26073B noise=1 tx=1879/64111B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=165.11 frame=13543 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12423 w84:11867/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=166.12 frame=13627 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11993/12006/12446 dt13 fps=80 sl=12-12
+[p4] [fx] t=167.13 frame=13711 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11867/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=168.14 frame=13795 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11997/12006/12582 w84:11993/12006/12453 dt13 fps=80 sl=12-12
+[p4] [fx] t=169.14 frame=13879 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11994/12004/12418 w84:11866/12005/12418 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=170035 link rx=1679/26873B noise=1 tx=1936/66065B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=170.15 frame=13963 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11998/12006/12446 dt13 fps=80 sl=12-12
+[p4] [fx] t=171.16 frame=14047 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12423 w84:11864/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=172.17 frame=14131 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11998/12006/12449 dt13 fps=80 sl=12-12
+[p4] [fx] t=173.17 frame=14215 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11865/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=174.18 frame=14299 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11999/12006/12447 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=175036 link rx=1728/27657B noise=1 tx=1993/68019B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=175.19 frame=14383 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11996/12005/12423 w84:11859/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=176.20 frame=14467 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12583 w84:11993/12006/12450 dt13 fps=80 sl=12-12
+[p4] [fx] t=177.21 frame=14551 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12000/12001 w84:11867/12000/12134 dt12 fps=80 sl=12-12
+[p4] [fx] t=178.21 frame=14635 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11584/12004/12418 w84:11589/12004/12417 dt12 fps=80 sl=12-12
+[p4] [fx] t=179.22 frame=14719 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11993/12006/12453 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=180037 link rx=1778/28457B noise=1 tx=2050/69973B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=180.23 frame=14803 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12423 w84:11865/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=181.24 frame=14887 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11997/12006/12447 dt13 fps=80 sl=12-12
+[p4] [fx] t=182.25 frame=14971 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11869/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=183.25 frame=15055 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11987/12006/12446 dt13 fps=80 sl=12-12
+[p4] [fx] t=184.26 frame=15139 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11864/12005/12423 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=185038 link rx=1827/29241B noise=1 tx=2107/71927B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=185.27 frame=15223 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12582 w84:11989/12006/12452 dt13 fps=80 sl=12-12
+[p4] [fx] t=186.28 frame=15307 update=ok shade_cancelled=0/64
+[p4] [ft] r84:12000/12004/12418 w84:11865/12004/12418 dt12 fps=80 sl=12-12
+[p4] [fx] t=187.29 frame=15391 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11996/12006/12448 dt13 fps=80 sl=12-12
+[p4] [fx] t=188.29 frame=15475 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11869/12005/12425 dt12 fps=80 sl=12-12
+[p4] [fx] t=189.30 frame=15559 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11998/12006/12447 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=190039 link rx=1877/30041B noise=1 tx=2164/73881B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=190.31 frame=15643 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12000/12001 w84:11864/11999/12136 dt12 fps=80 sl=12-12
+[p4] [fx] t=191.32 frame=15727 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11869/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=192.33 frame=15811 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11999/12006/12446 dt13 fps=80 sl=12-12
+[p4] [fx] t=193.33 frame=15895 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12423 w84:11869/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=194.34 frame=15979 update=ok shade_cancelled=0/64
+[p4] [ft] r84:12000/12006/12582 w84:11992/12006/12456 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=195040 link rx=1926/30825B noise=1 tx=2221/75835B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=195.35 frame=16063 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12004/12418 w84:11869/12004/12414 dt12 fps=80 sl=12-12
+[p4] [fx] t=196.36 frame=16147 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11999/12006/12444 dt13 fps=80 sl=12-12
+[p4] [fx] t=197.36 frame=16231 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11865/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=198.37 frame=16315 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11989/12006/12446 dt13 fps=80 sl=12-12
+[p4] [fx] t=199.38 frame=16399 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11866/12005/12424 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=200041 link rx=1976/31625B noise=1 tx=2278/77789B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=200.39 frame=16483 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11998/12006/12576 w84:11966/12006/12446 dt13 fps=80 sl=12-12
+[p4] [fx] t=201.40 frame=16567 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11865/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=202.40 frame=16651 update=ok shade_cancelled=0/64
+[p4] [ft] r84:12000/12006/12582 w84:11994/12006/12453 dt13 fps=80 sl=12-12
+[p4] [fx] t=203.41 frame=16735 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12000/12001 w84:11868/12000/12133 dt12 fps=80 sl=12-12
+[p4] [fx] t=204.42 frame=16819 update=ok shade_cancelled=0/64
+[p4] [ft] r84:12000/12004/12418 w84:11866/12004/12418 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=205042 link rx=2025/32409B noise=1 tx=2335/79743B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=205.43 frame=16903 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11988/12006/12448 dt13 fps=80 sl=12-12
+[p4] [fx] t=206.44 frame=16987 update=ok shade_cancelled=0/64
+[p4] [ft] r84:12000/12005/12424 w84:11868/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=207.44 frame=17071 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11999/12006/12449 dt13 fps=80 sl=12-12
+[p4] [fx] t=208.45 frame=17155 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11870/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=209.46 frame=17239 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11996/12006/12447 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=210043 link rx=2074/33193B noise=1 tx=2392/81697B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=210.47 frame=17323 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11998/12005/12424 w84:11865/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=211.48 frame=17407 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12582 w84:11995/12006/12453 dt13 fps=80 sl=12-12
+[p4] [fx] t=212.48 frame=17491 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12004/12418 w84:11865/12004/12418 dt12 fps=80 sl=12-12
+[p4] [fx] t=213.49 frame=17575 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11996/12006/12446 dt13 fps=80 sl=12-12
+[p4] [fx] t=214.50 frame=17659 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12423 w84:11866/12005/12423 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=215044 link rx=2124/33993B noise=1 tx=2449/83651B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=215.51 frame=17743 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11998/12006/12448 dt13 fps=80 sl=12-12
+[p4] [fx] t=216.51 frame=17827 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12000/12001 w84:11866/12000/12134 dt12 fps=80 sl=12-12
+[p4] [fx] t=217.52 frame=17911 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12423 w84:11864/12005/12423 dt12 fps=80 sl=12-12
+[p4] [fx] t=218.53 frame=17995 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11999/12006/12447 dt13 fps=80 sl=12-12
+[p4] [fx] t=219.54 frame=18079 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11865/12005/12423 dt12 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=220045 link rx=2173/34777B noise=1 tx=2506/85605B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=220.55 frame=18163 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11992/12006/12583 w84:11989/12006/12459 dt13 fps=80 sl=12-12
+[p4] [fx] t=221.55 frame=18247 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12004/12418 w84:11865/12004/12418 dt12 fps=80 sl=12-12
+[p4] [fx] t=222.56 frame=18331 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12577 w84:11989/12006/12447 dt13 fps=80 sl=12-12
+[p4] [fx] t=223.57 frame=18415 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12423 w84:11866/12005/12424 dt12 fps=80 sl=12-12
+[p4] [fx] t=224.58 frame=18499 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12006/12576 w84:11992/12006/12447 dt13 fps=80 sl=12-12
+[p4] [player-netstack] map=64 leds heap=33529180 max=33030132 min=33495708 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0xa2/2/0/0
+[p4] [net] t=225046 link rx=2223/35577B noise=1 tx=2563/87559B msgs=0 big=0 host=up session=0 mtx_wait_max=0us handle_max=0us
+[p4] [stack] free loopTask=6088 render=2148 xmit=944 logdrain=976
+[p4] [tracker] configured, 0 stations; IMU 250/s, light 0/s, poses 0/s; pos (0.000, 0.000, 0.000)
+[p4] [fx] t=225.59 frame=18583 update=ok shade_cancelled=0/64
+[p4] [ft] r84:11999/12005/12424 w84:11869/12005/12423 dt12 fps=80 sl=12-12
+Exception in thread Thread-1 (reader):
+Traceback (most recent call last):
+  File "/opt/homebrew/lib/python3.11/site-packages/serial/serialposix.py", line 575, in read
+    buf = os.read(self.fd, size - len(read))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 6] Device not configured
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.11/3.11.12/Frameworks/Python.framework/Versions/3.11/lib/python3.11/threading.py", line 1045, in _bootstrap_inner
+    self.run()
+  File "/opt/homebrew/Cellar/python@3.11/3.11.12/Frameworks/Python.framework/Versions/3.11/lib/python3.11/threading.py", line 982, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/kevin/Projects/splanc-p4/tools/p4_link_bridge.py", line 71, in reader
+    data = self.ser.read(4096)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/lib/python3.11/site-packages/serial/serialposix.py", line 581, in read
+    raise SerialException('read failed: {}'.format(e))
+serial.serialutil.SerialException: read failed: [Errno 6] Device not configured
+Task exception was never retrieved
+future: <Task finished name='Task-2' coro=<Bridge.heartbeat() done, defined at /Users/kevin/Projects/splanc-p4/tools/p4_link_bridge.py:119> exception=SerialException('write failed: [Errno 6] Device not configured')>
+Traceback (most recent call last):
+  File "/opt/homebrew/lib/python3.11/site-packages/serial/serialposix.py", line 621, in write
+    n = os.write(self.fd, d)
+        ^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 6] Device not configured
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/kevin/Projects/splanc-p4/tools/p4_link_bridge.py", line 123, in heartbeat
+    self.send_link(L.OP_HEARTBEAT)
+  File "/Users/kevin/Projects/splanc-p4/tools/p4_link_bridge.py", line 66, in send_link
+    self.send(L.Frame(L.LINK, bytes([op]) + body))
+  File "/Users/kevin/Projects/splanc-p4/tools/p4_link_bridge.py", line 62, in send
+    self.ser.write(L.encode(frame))
+  File "/opt/homebrew/lib/python3.11/site-packages/serial/serialposix.py", line 655, in write
+    raise SerialException('write failed: {}'.format(e))
+serial.serialutil.SerialException: write failed: [Errno 6] Device not configured

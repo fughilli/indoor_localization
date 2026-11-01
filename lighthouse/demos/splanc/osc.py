@@ -30,6 +30,15 @@ def message(addr, *floats):
         struct.pack(">f", float(f)) for f in floats)
 
 
+def message_typed(addr, *args):
+    """One OSC message with int32 (Python int) and float32 arguments, e.g. the P4
+    tracker module's /lh/station ,iffffff f (station id, then its pose)."""
+    tags = "," + "".join("i" if isinstance(a, int) and not isinstance(a, bool) else "f" for a in args)
+    body = b"".join(struct.pack(">i" if t == "i" else ">f", (a if a < 2**31 else a - 2**32) if t == "i" else float(a))
+                    for t, a in zip(tags[1:], args))
+    return _pad(addr.encode()) + _pad(tags.encode()) + body
+
+
 def bundle(*messages):
     """#bundle with an 'immediately' time tag."""
     out = _pad(b"#bundle") + struct.pack(">Q", 1)
@@ -75,7 +84,22 @@ class UdpTransport:
     def __init__(self, host, port=OSC_PORT):
         self.addr = (host, int(port))
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.bind(("0.0.0.0", 0))  # a fixed source port: the fixture answers to it
         self.warned = False
+        self.received = 0
+
+    def on_receive(self, callback):
+        """Datagrams the fixture sends back (a Splanc P4 player's /lh/pose ...) go to
+        callback(bytes), on a thread of their own."""
+        def run():
+            while True:
+                try:
+                    data, _ = self.sock.recvfrom(4096)
+                except OSError:
+                    return
+                self.received += 1
+                callback(data)
+        threading.Thread(target=run, daemon=True, name="osc-in").start()
 
     def send(self, data):
         try:

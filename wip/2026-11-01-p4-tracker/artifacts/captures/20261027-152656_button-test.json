@@ -1,0 +1,50 @@
+{
+ "name": "button-test",
+ "notes": "User clicks the tracker power/system button a few times (short clicks) to see whether presses come through anywhere in the raw HID stream.",
+ "start_ht": 1793140016.072696,
+ "survive_args": [
+  "--lighthouse-gen",
+  "1"
+ ],
+ "lighthouses_at_start": [
+  {
+   "id": "1416427640",
+   "mode": 2,
+   "p": [
+    0.872555,
+    -0.287391,
+    0.485061
+   ],
+   "q": [
+    -0.528233,
+    -0.561451,
+    -0.454249,
+    -0.446542
+   ],
+   "t": 16.854058
+  },
+  {
+   "id": "699579721",
+   "mode": 1,
+   "p": [
+    -0.000737,
+    0.477042,
+    0.524564
+   ],
+   "q": [
+    -0.029638,
+    -0.040511,
+    0.701702,
+    0.7107
+   ],
+   "t": 16.976996
+  }
+ ],
+ "files": {
+  "recording": "20261027-152656_button-test.rec.gz",
+  "config": "20261027-152656_button-test.config.json"
+ },
+ "stop_ht": 1793140045.222069,
+ "seconds": 29.15,
+ "lines": 158522
+}

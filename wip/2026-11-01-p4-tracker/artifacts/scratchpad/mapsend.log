@@ -1,0 +1,336 @@
+[fx] t=73.64 frame=5925 update=ok shade_cancelled=0/0
+[ft] r84:11564/12000/12420 w84:11398/12000/12601 dt12 fps=80 sl=12-12
+[fx] t=74.65 frame=6009 update=ok shade_cancelled=0/0
+[ft] r84:11574/11994/12427 w84:11421/11999/12576 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33547092 max=33030132 min=33532348 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=93627 link rx=1641/67708B noise=0 tx=2104/102105B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 251/s, light 3350/s, poses 121/s; pos (-0.232, 0.243, 0.224); mount not set
+[fx] t=75.66 frame=6093 update=ok shade_cancelled=0/0
+[ft] r84:11583/12005/12426 w84:11583/12004/12430 dt12 fps=80 sl=12-12
+[fx] t=76.67 frame=6177 update=ok shade_cancelled=0/0
+[ft] r84:11993/12000/12011 w84:11792/12000/12211 dt12 fps=80 sl=12-12
+[fx] t=77.67 frame=6261 update=ok shade_cancelled=0/0
+[ft] r84:11572/11994/12426 w84:11560/11995/12437 dt12 fps=80 sl=12-12
+[fx] t=78.68 frame=6345 update=ok shade_cancelled=0/0
+[ft] r84:11571/12004/12429 w84:11568/11999/12443 dt12 fps=80 sl=12-12
+[fx] t=79.69 frame=6429 update=ok shade_cancelled=0/0
+[ft] r84:11576/11999/12426 w84:11559/12005/12616 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33543528 max=33030132 min=33532348 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=98629 link rx=1755/72415B noise=0 tx=2254/109555B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 230/s, light 3055/s, poses 110/s; pos (-0.232, 0.243, 0.224); mount not set
+[fx] t=80.70 frame=6513 update=ok shade_cancelled=0/0
+[ft] r84:11992/12000/12008 w84:11784/12000/12215 dt12 fps=80 sl=12-12
+[fx] t=81.71 frame=6597 update=ok shade_cancelled=0/0
+[ft] r84:11574/12000/12426 w84:11574/12000/12451 dt12 fps=80 sl=12-12
+[fx] t=82.72 frame=6681 update=ok shade_cancelled=0/0
+[ft] r84:11577/11995/12424 w84:11501/11999/12443 dt12 fps=80 sl=12-12
+[fx] t=83.72 frame=6765 update=ok shade_cancelled=0/0
+[ft] r84:11586/12004/12415 w84:11561/12000/12442 dt12 fps=80 sl=12-12
+[fx] t=84.73 frame=6849 update=ok shade_cancelled=0/0
+[ft] r84:11582/12000/12412 w84:11578/12000/12413 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33560156 max=33030132 min=33532348 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=103630 link rx=1868/77094B noise=0 tx=2398/116597B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 216/s, light 2865/s, poses 103/s; pos (-0.232, 0.243, 0.224); mount not set
+[fx] t=85.74 frame=6933 update=ok shade_cancelled=0/0
+[ft] r84:11572/12007/13000 w84:11592/12011/12779 dt13 fps=80 sl=12-12
+[fx] t=86.75 frame=7017 update=ok shade_cancelled=0/0
+[ft] r84:11588/12004/12412 w84:11567/11999/12433 dt12 fps=80 sl=12-12
+[fx] t=87.76 frame=7101 update=ok shade_cancelled=0/0
+[ft] r84:11579/11995/12421 w84:11577/11995/12421 dt12 fps=80 sl=12-12
+[fx] t=88.76 frame=7185 update=ok shade_cancelled=0/0
+[ft] r84:11572/12005/12427 w84:11559/12004/12453 dt12 fps=80 sl=12-12
+[fx] t=89.77 frame=7269 update=ok shade_cancelled=0/0
+[ft] r84:11989/12000/12011 w84:11810/12000/12190 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33544100 max=33030132 min=33532348 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=108632 link rx=1981/81773B noise=0 tx=2552/124319B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 305/s, light 4056/s, poses 146/s; pos (-0.232, 0.244, 0.224); mount not set
+[fx] t=90.78 frame=7353 update=ok shade_cancelled=0/0
+[ft] r84:11576/11995/12421 w84:11570/11994/12445 dt12 fps=80 sl=12-12
+[fx] t=91.79 frame=7437 update=ok shade_cancelled=0/0
+[ft] r84:11580/12005/12424 w84:11579/12000/12443 dt12 fps=80 sl=12-12
+[fx] t=92.80 frame=7521 update=ok shade_cancelled=0/0
+[ft] r84:11577/11999/12423 w84:11570/12004/12534 dt12 fps=80 sl=12-12
+[fx] t=93.81 frame=7605 update=ok shade_cancelled=0/0
+[ft] r84:11993/12000/12008 w84:11817/12000/12176 dt12 fps=80 sl=12-12
+[fx] t=94.81 frame=7689 update=ok shade_cancelled=0/0
+[ft] r84:11577/11994/12424 w84:11554/11994/12450 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33547620 max=33030132 min=33532348 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=113632 link rx=2094/86452B noise=0 tx=2705/132028B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 250/s, light 3325/s, poses 120/s; pos (-0.232, 0.244, 0.223); mount not set
+[fx] t=95.82 frame=7773 update=ok shade_cancelled=0/0
+[ft] r84:11582/12005/12427 w84:11582/12004/12446 dt12 fps=80 sl=12-12
+[fx] t=96.83 frame=7857 update=ok shade_cancelled=0/0
+[ft] r84:11590/11999/12414 w84:11570/12001/12426 dt12 fps=80 sl=12-12
+[fx] t=97.84 frame=7941 update=ok shade_cancelled=0/0
+[ft] r84:11994/12011/12582 w84:11974/12011/12426 dt13 fps=80 sl=12-12
+[fx] t=98.85 frame=8025 update=ok shade_cancelled=0/0
+[ft] r84:11589/11999/12422 w84:11569/12000/12438 dt12 fps=80 sl=12-12
+[fx] t=99.85 frame=8109 update=ok shade_cancelled=0/0
+[ft] r84:11541/12000/12415 w84:11513/11999/12437 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33547108 max=33030132 min=33532348 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=118634 link rx=2210/91215B noise=0 tx=2863/140022B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 250/s, light 3325/s, poses 120/s; pos (-0.232, 0.244, 0.223); mount not set
+[fx] t=100.86 frame=8193 update=ok shade_cancelled=0/0
+[ft] r84:11573/12000/12429 w84:11559/12000/12462 dt12 fps=80 sl=12-12
+[fx] t=101.87 frame=8277 update=ok shade_cancelled=0/0
+[ft] r84:11583/12000/12419 w84:11581/11999/12435 dt12 fps=80 sl=12-12
+[fx] t=102.88 frame=8361 update=ok shade_cancelled=0/0
+[ft] r84:11589/11995/12411 w84:11587/11999/12413 dt12 fps=80 sl=12-12
+[fx] t=103.89 frame=8445 update=ok shade_cancelled=0/0
+[ft] r84:11567/11999/12426 w84:11566/11995/12435 dt12 fps=80 sl=12-12
+[fx] t=104.90 frame=8529 update=ok shade_cancelled=0/0
+[ft] r84:11570/12000/12431 w84:11568/12005/12452 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33547092 max=33030132 min=33532348 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=123635 link rx=2323/95894B noise=0 tx=3020/147948B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 250/s, light 3322/s, poses 120/s; pos (-0.232, 0.244, 0.223); mount not set
+[fx] t=105.90 frame=8613 update=ok shade_cancelled=0/0
+[ft] r84:11582/12004/12419 w84:11570/11999/12439 dt12 fps=80 sl=12-12
+[fx] t=106.91 frame=8697 update=ok shade_cancelled=0/0
+[ft] r84:11591/11995/12408 w84:11568/11995/12431 dt12 fps=80 sl=12-12
+[fx] t=107.92 frame=8781 update=ok shade_cancelled=0/0
+[ft] r84:11549/11999/12431 w84:11552/11999/12439 dt12 fps=80 sl=12-12
+[fx] t=108.93 frame=8865 update=ok shade_cancelled=0/0
+[ft] r84:11582/12004/12421 w84:11561/12005/12449 dt12 fps=80 sl=12-12
+[fx] t=109.94 frame=8949 update=ok shade_cancelled=0/0
+[ft] r84:11589/12000/12413 w84:11560/11999/12434 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33544012 max=33030132 min=33532348 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=128636 link rx=2435/100524B noise=0 tx=3173/155602B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 237/s, light 3145/s, poses 114/s; pos (-0.232, 0.244, 0.223); mount not set
+[fx] t=110.94 frame=9033 update=ok shade_cancelled=0/0
+[ft] r84:11992/12000/12007 w84:11818/12000/12182 dt12 fps=80 sl=12-12
+[fx] t=111.95 frame=9117 update=ok shade_cancelled=0/0
+[ft] r84:11564/12000/12439 w84:11537/11999/12446 dt12 fps=80 sl=12-12
+[fx] t=112.96 frame=9201 update=ok shade_cancelled=0/0
+[ft] r84:11581/12000/12419 w84:11391/11999/12449 dt12 fps=80 sl=12-12
+[fx] t=113.97 frame=9285 update=ok shade_cancelled=0/0
+[ft] r84:11570/12011/12990 w84:11567/12007/12786 dt13 fps=80 sl=12-12
+[fx] t=114.98 frame=9369 update=ok shade_cancelled=0/0
+[ft] r84:11581/12000/12424 w84:11417/12005/12589 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33562916 max=33030132 min=33532344 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=133637 link rx=2548/105203B noise=0 tx=3313/162372B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 216/s, light 2862/s, poses 103/s; pos (-0.232, 0.244, 0.223); mount not set
+[fx] t=115.99 frame=9453 update=ok shade_cancelled=0/0
+[ft] r84:11508/12006/13000 w84:11507/12006/12796 dt13 fps=80 sl=12-12
+[fx] t=116.99 frame=9537 update=ok shade_cancelled=0/0
+[ft] r84:11574/12005/12432 w84:11554/12005/12445 dt12 fps=80 sl=12-12
+[fx] t=118.00 frame=9621 update=ok shade_cancelled=0/0
+[ft] r84:11588/12011/13001 w84:11576/12011/12785 dt13 fps=80 sl=12-12
+[fx] t=119.01 frame=9705 update=ok shade_cancelled=0/0
+[ft] r84:11576/12000/12420 w84:11574/12000/12423 dt12 fps=80 sl=12-12
+[fx] t=120.02 frame=9789 update=ok shade_cancelled=0/0
+[ft] r84:11588/12000/12420 w84:11583/12000/12420 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33556020 max=33030132 min=33532344 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=138638 link rx=2662/109910B noise=0 tx=3463/169822B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 299/s, light 3969/s, poses 143/s; pos (-0.233, 0.244, 0.223); mount not set
+[fx] t=121.03 frame=9873 update=ok shade_cancelled=0/0
+[ft] r84:11565/11995/12419 w84:11565/11995/12421 dt12 fps=80 sl=12-12
+[fx] t=122.04 frame=9957 update=ok shade_cancelled=0/0
+[ft] r84:11582/11999/12418 w84:11563/11999/12434 dt12 fps=80 sl=12-12
+[fx] t=123.04 frame=10041 update=ok shade_cancelled=0/0
+[ft] r84:11582/12004/12415 w84:11582/12004/12438 dt12 fps=80 sl=12-12
+[fx] t=124.05 frame=10125 update=ok shade_cancelled=0/0
+[ft] r84:11995/12000/12004 w84:11798/12000/12203 dt12 fps=80 sl=12-12
+[fx] t=125.06 frame=10209 update=ok shade_cancelled=0/0
+[ft] r84:11589/12000/12420 w84:11588/12000/12420 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33545116 max=33030132 min=33532344 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=143639 link rx=2775/114589B noise=0 tx=3603/176592B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 249/s, light 3319/s, poses 120/s; pos (-0.233, 0.244, 0.223); mount not set
+[fx] t=126.07 frame=10293 update=ok shade_cancelled=0/0
+[ft] r84:11585/11999/12415 w84:11565/11999/12436 dt12 fps=80 sl=12-12
+[fx] t=127.08 frame=10377 update=ok shade_cancelled=0/0
+[ft] r84:11579/12000/12423 w84:11404/11999/12421 dt12 fps=80 sl=12-12
+[fx] t=128.09 frame=10461 update=ok shade_cancelled=0/0
+[ft] r84:11987/12011/12998 w84:11966/12011/12775 dt13 fps=80 sl=12-12
+[fx] t=129.09 frame=10545 update=ok shade_cancelled=0/0
+[ft] r84:11996/12000/12004 w84:11822/12000/12180 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33547340 max=33030132 min=33532344 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=148640 link rx=2888/119268B noise=0 tx=3725/182138B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 251/s, light 3342/s, poses 121/s; pos (-0.233, 0.244, 0.223); mount not set
+[fx] t=130.10 frame=10629 update=ok shade_cancelled=0/0
+[ft] r84:11584/11995/12420 w84:11553/11999/12420 dt12 fps=80 sl=12-12
+[fx] t=131.11 frame=10713 update=ok shade_cancelled=0/0
+[ft] r84:11584/12004/12422 w84:11577/11999/12433 dt12 fps=80 sl=12-12
+[fx] t=132.11 frame=10797 update=ok shade_cancelled=0/0
+[ft] r84:11584/12000/12417 w84:11568/12000/12422 dt12 fps=80 sl=12-12
+[fx] t=133.12 frame=10881 update=ok shade_cancelled=0/0
+[ft] r84:11993/12000/12008 w84:11800/12000/12200 dt12 fps=80 sl=12-12
+[fx] t=134.13 frame=10965 update=ok shade_cancelled=0/0
+[ft] r84:11583/11999/12421 w84:11582/11998/12446 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33535256 max=33030132 min=33532344 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=153641 link rx=3002/123975B noise=0 tx=3864/188895B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 249/s, light 3315/s, poses 119/s; pos (-0.233, 0.244, 0.223); mount not set
+[fx] t=135.14 frame=11049 update=ok shade_cancelled=0/0
+[ft] r84:11580/11995/12422 w84:11559/11996/12448 dt12 fps=80 sl=12-12
+[fx] t=136.14 frame=11133 update=ok shade_cancelled=0/0
+[ft] r84:11580/12005/12421 w84:11579/12004/12454 dt12 fps=80 sl=12-12
+[fx] t=137.15 frame=11217 update=ok shade_cancelled=0/0
+[ft] r84:11993/12000/12007 w84:11812/12000/12188 dt12 fps=80 sl=12-12
+[fx] t=138.16 frame=11301 update=ok shade_cancelled=0/0
+[ft] r84:11997/11999/12004 w84:11804/11999/12178 dt12 fps=80 sl=12-12
+[fx] t=139.17 frame=11385 update=ok shade_cancelled=0/0
+[ft] r84:11992/12000/12011 w84:11839/12000/12184 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33547356 max=33030132 min=33532344 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=158641 link rx=3114/128605B noise=0 tx=3938/191177B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 251/s, light 3343/s, poses 121/s; pos (-0.233, 0.244, 0.223); mount not set
+[fx] t=140.17 frame=11469 update=ok shade_cancelled=0/0
+[ft] r84:11580/11995/12421 w84:11579/12000/12421 dt12 fps=80 sl=12-12
+[fx] t=141.18 frame=11553 update=ok shade_cancelled=0/0
+[ft] r84:11589/11999/12413 w84:11563/11994/12414 dt12 fps=80 sl=12-12
+[fx] t=142.19 frame=11637 update=ok shade_cancelled=0/0
+[ft] r84:11589/12004/12416 w84:11593/12004/12416 dt12 fps=80 sl=12-12
+[fx] t=143.20 frame=11721 update=ok shade_cancelled=0/0
+[ft] r84:11585/11995/12423 w84:11584/11996/12441 dt12 fps=80 sl=12-12
+[fx] t=144.20 frame=11805 update=ok shade_cancelled=0/0
+[ft] r84:11582/12002/12422 w84:11565/12003/12446 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33535284 max=33030132 min=33532344 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=163643 link rx=3227/133284B noise=0 tx=4097/199239B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 250/s, light 3325/s, poses 120/s; pos (-0.233, 0.244, 0.223); mount not set
+[fx] t=145.21 frame=11889 update=ok shade_cancelled=0/0
+[ft] r84:11564/12001/12416 w84:11566/11999/12443 dt12 fps=80 sl=12-12
+[fx] t=146.22 frame=11973 update=ok shade_cancelled=0/0
+[ft] r84:11574/12000/12428 w84:11571/12000/12445 dt12 fps=80 sl=12-12
+[fx] t=147.23 frame=12057 update=ok shade_cancelled=0/0
+[ft] r84:11593/11999/12282 w84:11620/12000/12323 dt12 fps=80 sl=12-12
+[fx] t=148.23 frame=12141 update=ok shade_cancelled=0/0
+[ft] r84:11585/11999/12415 w84:11581/12000/12437 dt12 fps=80 sl=12-12
+[fx] t=149.24 frame=12225 update=ok shade_cancelled=0/0
+[ft] r84:11574/11996/12426 w84:11565/11995/12434 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33546268 max=33030132 min=33532344 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=168644 link rx=3340/137963B noise=0 tx=4258/207437B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 250/s, light 3331/s, poses 120/s; pos (-0.233, 0.244, 0.223); mount not set
+[fx] t=150.25 frame=12309 update=ok shade_cancelled=0/0
+[ft] r84:11574/12005/12426 w84:11550/12004/12452 dt12 fps=80 sl=12-12
+[fx] t=151.26 frame=12393 update=ok shade_cancelled=0/0
+[ft] r84:11993/12000/12004 w84:11851/12000/12149 dt12 fps=80 sl=12-12
+[fx] t=152.26 frame=12477 update=ok shade_cancelled=0/0
+[ft] r84:11587/11999/12413 w84:11561/12000/12430 dt12 fps=80 sl=12-12
+[fx] t=153.27 frame=12561 update=ok shade_cancelled=0/0
+[ft] r84:11573/11995/12427 w84:11424/11995/12443 dt12 fps=80 sl=12-12
+[fx] t=154.28 frame=12645 update=ok shade_cancelled=0/0
+[ft] r84:11580/12000/12420 w84:11582/11999/12445 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33568468 max=33030132 min=33532344 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=173645 link rx=3454/142670B noise=0 tx=4402/214479B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 216/s, light 2867/s, poses 103/s; pos (-0.233, 0.244, 0.223); mount not set
+[fx] t=155.29 frame=12729 update=ok shade_cancelled=0/0
+[ft] r84:11589/12004/12418 w84:11589/12004/12430 dt12 fps=80 sl=12-12
+[fx] t=156.29 frame=12813 update=ok shade_cancelled=0/0
+[ft] r84:11574/11994/12429 w84:11569/11994/12435 dt12 fps=80 sl=12-12
+[fx] t=157.30 frame=12897 update=ok shade_cancelled=0/0
+[ft] r84:11572/12000/12427 w84:11550/12005/12450 dt12 fps=80 sl=12-12
+[fx] t=158.31 frame=12981 update=ok shade_cancelled=0/0
+[ft] r84:11581/12004/12420 w84:11561/11999/12436 dt12 fps=80 sl=12-12
+[fx] t=159.32 frame=13065 update=ok shade_cancelled=0/0
+[ft] r84:11584/12000/12442 w84:11584/11999/12441 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33560788 max=33030132 min=33532344 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=178646 link rx=3567/147349B noise=0 tx=4547/221589B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 216/s, light 2868/s, poses 103/s; pos (-0.233, 0.244, 0.223); mount not set
+[fx] t=160.32 frame=13149 update=ok shade_cancelled=0/0
+[ft] r84:11693/12000/12311 w84:11674/12000/12302 dt12 fps=80 sl=12-12
+[fx] t=161.33 frame=13233 update=ok shade_cancelled=0/0
+[ft] r84:11577/11999/12421 w84:11576/11999/12447 dt12 fps=80 sl=12-12
+[fx] t=162.34 frame=13317 update=ok shade_cancelled=0/0
+[ft] r84:11586/12000/12417 w84:11557/12000/12437 dt12 fps=80 sl=12-12
+[fx] t=163.35 frame=13401 update=ok shade_cancelled=0/0
+[ft] r84:11574/12000/12429 w84:11448/11999/12437 dt12 fps=80 sl=12-12
+[fx] t=164.35 frame=13485 update=ok shade_cancelled=0/0
+[ft] r84:11989/12000/12009 w84:11828/12000/12172 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33554868 max=33030132 min=33532316 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=183647 link rx=3681/152056B noise=0 tx=4678/227747B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 216/s, light 2866/s, poses 103/s; pos (-0.233, 0.244, 0.223); mount not set
+[fx] t=165.36 frame=13569 update=ok shade_cancelled=0/0
+[ft] r84:11975/12011/12996 w84:11964/12012/12801 dt13 fps=80 sl=12-12
+[fx] t=166.37 frame=13653 update=ok shade_cancelled=0/0
+[ft] r84:11580/12000/12421 w84:11583/11999/12443 dt12 fps=80 sl=12-12
+[fx] t=167.38 frame=13737 update=ok shade_cancelled=0/0
+[ft] r84:11581/11999/12424 w84:11553/11999/12435 dt12 fps=80 sl=12-12
+[fx] t=168.38 frame=13821 update=ok shade_cancelled=0/0
+[ft] r84:11992/12000/12008 w84:11826/12000/12175 dt12 fps=80 sl=12-12
+[fx] t=169.39 frame=13905 update=ok shade_cancelled=0/0
+[ft] r84:11992/12000/12008 w84:11807/12000/12195 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33546744 max=33030132 min=33532316 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=188648 link rx=3793/156686B noise=0 tx=4804/233565B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 353/s, light 4696/s, poses 169/s; pos (-0.233, 0.244, 0.223); mount not set
+[fx] t=170.40 frame=13989 update=ok shade_cancelled=0/0
+[ft] r84:11580/11996/12428 w84:11558/11999/12430 dt12 fps=80 sl=12-12
+[fx] t=171.41 frame=14073 update=ok shade_cancelled=0/0
+[ft] r84:11580/12003/12423 w84:11575/11999/12445 dt12 fps=80 sl=12-12
+[fx] t=172.41 frame=14157 update=ok shade_cancelled=0/0
+[ft] r84:11583/11999/12419 w84:11584/12000/12420 dt12 fps=80 sl=12-12
+[fx] t=173.42 frame=14241 update=ok shade_cancelled=0/0
+[ft] r84:11992/12000/12011 w84:11819/12000/12188 dt12 fps=80 sl=12-12
+[fx] t=174.43 frame=14325 update=ok shade_cancelled=0/0
+[ft] r84:11573/11999/12429 w84:11565/11999/12448 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33547304 max=33030132 min=33532316 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=193648 link rx=3906/161365B noise=0 tx=4946/240471B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 252/s, light 3354/s, poses 121/s; pos (-0.233, 0.244, 0.223); mount not set
+[fx] t=175.44 frame=14409 update=ok shade_cancelled=0/0
+[ft] r84:11587/12000/12414 w84:11560/11999/12440 dt12 fps=80 sl=12-12
+[fx] t=176.44 frame=14493 update=ok shade_cancelled=0/0
+[ft] r84:11574/11999/12433 w84:11572/11999/12448 dt12 fps=80 sl=12-12
+[fx] t=177.45 frame=14577 update=ok shade_cancelled=0/0
+[ft] r84:11577/12000/12428 w84:11577/11995/12425 dt12 fps=80 sl=12-12
+[fx] t=178.46 frame=14661 update=ok shade_cancelled=0/0
+[ft] r84:11585/12011/12998 w84:11564/12016/12786 dt13 fps=80 sl=12-12
+[fx] t=179.47 frame=14745 update=ok shade_cancelled=0/0
+[ft] r84:11573/11999/12429 w84:11377/11995/12433 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33546436 max=33030132 min=33532312 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=198650 link rx=4020/166072B noise=0 tx=5108/248737B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 249/s, light 3312/s, poses 119/s; pos (-0.233, 0.244, 0.223); mount not set
+[fx] t=180.47 frame=14829 update=ok shade_cancelled=0/0
+[ft] r84:11573/11999/12426 w84:11462/12004/12598 dt12 fps=80 sl=12-12
+[fx] t=181.48 frame=14913 update=ok shade_cancelled=0/0
+[ft] r84:11993/12000/12007 w84:11825/12000/12174 dt12 fps=80 sl=12-12
+[fx] t=182.49 frame=14997 update=ok shade_cancelled=0/0
+[ft] r84:11575/12000/12424 w84:11554/12000/12447 dt12 fps=80 sl=12-12
+[fx] t=183.50 frame=15081 update=ok shade_cancelled=0/0
+[ft] r84:11578/11994/12421 w84:11546/11995/12439 dt12 fps=80 sl=12-12
+[fx] t=184.50 frame=15165 update=ok shade_cancelled=0/0
+[ft] r84:11583/12004/12422 w84:11558/12004/12451 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33543984 max=33030132 min=33532312 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=203651 link rx=4133/170751B noise=0 tx=5243/255222B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 224/s, light 2980/s, poses 107/s; pos (-0.233, 0.244, 0.223); mount not set
+[fx] t=185.51 frame=15249 update=ok shade_cancelled=0/0
+[ft] r84:11992/12000/12008 w84:11812/12000/12191 dt12 fps=80 sl=12-12
+[fx] t=186.52 frame=15333 update=ok shade_cancelled=0/0
+[ft] r84:11571/11994/12427 w84:11550/11994/12452 dt12 fps=80 sl=12-12
+[fx] t=187.53 frame=15417 update=ok shade_cancelled=0/0
+[ft] r84:11576/12005/12426 w84:11552/12003/12459 dt12 fps=80 sl=12-12
+[fx] t=188.53 frame=15501 update=ok shade_cancelled=0/0
+[ft] r84:11559/12000/12412 w84:11558/12001/12414 dt12 fps=80 sl=12-12
+[fx] t=189.54 frame=15585 update=ok shade_cancelled=0/0
+[ft] r84:11588/12000/12414 w84:11585/12000/12442 dt12 fps=80 sl=12-12
+[player-netstack] map=0 leds heap=33561656 max=33030132 min=33532312 rekeys=0 tls=0/0 slots=0/0 big=0 fb=0 mode=0x2a/8/0/0
+[net] t=208652 link rx=4246/175430B noise=0 tx=5383/261992B msgs=21 big=0 host=up session=1 mtx_wait_max=0us handle_max=0us
+[stack] free loopTask=6060 render=2156 xmit=952 logdrain=796
+[tracker] configured, tracking, 2 stations; IMU 216/s, light 2875/s, poses 103/s; pos (-0.233, 0.244, 0.223); mount not set
+[fx] t=190.55 frame=15669 update=ok shade_cancelled=0/0
+[ft] r84:11588/12011/13000 w84:11566/12011/12792 dt13 fps=80 sl=12-12
+[fx] t=191.56 frame=15753 update=ok shade_cancelled=0/0
+[ft] r84:11579/11994/12421 w84:11559/12000/12433 dt12 fps=80 sl=12-12
+[fx] t=192.56 frame=15837 update=ok shade_cancelled=0/0
+[ft] r84:11572/12000/12426 w84:11575/11994/12424 dt12 fps=80 sl=12-12
+[fx] t=193.57 frame=15921 update=ok shade_cancelled=0/0
+[ft] r
