@@ -45,7 +45,13 @@ constexpr uint16_t kBroadcast = 0xFFFF;
 // rank among the ids it hears (incl. itself), and timing follows the
 // lowest-id node in range. 6 slots x 5 ms = 30 ms: each node initiates ~33
 // times a second; with 4 nodes every pair ranges ~22 times a second.
-constexpr int kSlots = 6;
+// SWARM_SLOTS must be at least the number of nodes: a node owns slot (rank % kSlots),
+// so more nodes than slots share a slot and collide. The default 6 keeps 4-node
+// meshes ranging at full rate; a 10-node fleet builds with --copt=-DSWARM_SLOTS=12.
+#ifndef SWARM_SLOTS
+#define SWARM_SLOTS 6
+#endif
+constexpr int kSlots = SWARM_SLOTS;
 constexpr int64_t kSlotUs = 5000;
 constexpr int64_t kSuperframeUs = kSlots * kSlotUs;
 // POLL goes out this long after the slot starts (guard for sync error).

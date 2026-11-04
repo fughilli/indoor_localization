@@ -215,3 +215,23 @@ py_test(
         "@pypi//numpy",
     ],
 )
+
+# Clock agreement between nodes from the firmware's sync log (docs/uwb-sync-experiment.md).
+py_library(
+    name = "sync_residual_lib",
+    srcs = ["sync_residual.py"],
+    deps = ["@pypi//numpy"],
+)
+
+py_binary(
+    name = "sync_residual",
+    srcs = ["sync_residual.py"],
+    main = "sync_residual.py",
+    deps = [":sync_residual_lib"],
+)
+
+py_test(
+    name = "sync_residual_test",
+    srcs = ["sync_residual_test.py"],
+    deps = [":sync_residual_lib"],
+)

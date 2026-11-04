@@ -51,6 +51,12 @@ uint16_t g_rr_last = 0;  // last peer this node initiated with
 // abort any frame already arriving, so Listen leaves an armed receiver alone.
 bool g_rx_armed = false;
 
+// Sync log (SetSyncLog): which frames to report, and how often.
+volatile bool g_sync_log = false;
+volatile uint16_t g_sync_mask = 1 << kPoll;
+volatile uint8_t g_sync_every = 1;
+uint32_t g_sync_count = 0;
+
 // swarm_net glue: calls from other tasks, packets for the app.
 NetHooks g_hooks;
 bool g_running = false;
@@ -246,6 +252,41 @@ void EmitAdvert(uint16_t from, int64_t t, const uint8_t *frame, int len)
   xQueueSend(g_events, &ev, 0);
 }
 
+// The frame just received, stamped `ts`. Call before anything else uses the receiver:
+// the clock-offset and power registers describe the *last* frame.
+void LogHeard(const Header *h, uint64_t ts)
+{
+  if (!g_sync_log || !(g_sync_mask & (1u << h->type)) || (g_sync_count++ % g_sync_every))
+    return;
+  RadioEvent ev = {};
+  ev.kind = RadioEvent::kHeard;
+  ev.peer = h->src;
+  ev.dst = h->dst;
+  ev.ftype = h->type;
+  ev.seq = h->seq;
+  ev.t_us = Now();
+  ev.ts = ts;
+  ev.clk = DWM3000.getRawClockOffset();
+  ev.rssi = DWM3000.getSignalStrength();
+  ev.fp_rssi = DWM3000.getFirstPathSignalStrength();
+  xQueueSend(g_events, &ev, 0);
+}
+
+// A frame this node sent to `dst`, stamped `ts` by the transmitter.
+void LogSent(uint8_t type, uint16_t dst, uint8_t seq, uint64_t ts)
+{
+  if (!g_sync_log || !(g_sync_mask & (1u << type)))
+    return;
+  RadioEvent ev = {};
+  ev.kind = RadioEvent::kSent;
+  ev.peer = dst;
+  ev.ftype = type;
+  ev.seq = seq;
+  ev.t_us = Now();
+  ev.ts = ts;
+  xQueueSend(g_events, &ev, 0);
+}
+
 void EmitRange(uint16_t peer, bool initiator, float range_m, float rssi, float fp)
 {
   RadioEvent ev = {};
@@ -267,12 +308,14 @@ void Initiate(uint16_t peer)
   if (!WaitTxDone())
     return;
   uint64_t t1 = DWM3000.readTXTimestamp();
+  LogSent(kPoll, peer, seq, t1);
   g_stats.polls_tx++;
 
   int resp_len = Expect(rx, kResponse, peer, seq);
   if (!resp_len)
     return;
   uint64_t t4 = DWM3000.readRXTimestamp();
+  LogHeard((const Header *)rx, t4);
   int clock_offset = DWM3000.getRawClockOffset();
   float rssi = DWM3000.getSignalStrength();
   float fp = DWM3000.getFirstPathSignalStrength();
@@ -283,6 +326,7 @@ void Initiate(uint16_t peer)
   if (!WaitTxDone())
     return;
   uint64_t t5 = DWM3000.readTXTimestamp();
+  LogSent(kFinal, peer, seq, t5);
 
   if (!Expect(rx, kReport, peer, seq))
     return;
@@ -314,10 +358,12 @@ void Respond(const Header *poll, uint64_t t2)
   if (!WaitTxDone())
     return;
   uint64_t t3 = DWM3000.readTXTimestamp();
+  LogSent(kResponse, peer, seq, t3);
 
   if (!Expect(rx, kFinal, peer, seq))
     return;
   uint64_t t6 = DWM3000.readRXTimestamp();
+  LogHeard((const Header *)rx, t6);
   float rssi = DWM3000.getSignalStrength();
   float fp = DWM3000.getFirstPathSignalStrength();
 
@@ -540,6 +586,7 @@ void Listen(int64_t until)
     int64_t t = Now();
     uint64_t ts = DWM3000.readRXTimestamp();
     const Header *h = (const Header *)rx;
+    LogHeard(h, ts);
     Heard(h->src, t);
     if (h->type == kPoll)
     {
@@ -569,6 +616,8 @@ void Beacon()
   uint8_t tx[kMaxFrame];
   Tx(tx, BuildWithAdvert(tx, kPoll, kBroadcast, ++g_seq), false);
   WaitTxDone();
+  if (g_sync_log)
+    LogSent(kPoll, kBroadcast, g_seq, DWM3000.readTXTimestamp());
   g_stats.beacons++;
 }
 
@@ -721,6 +770,13 @@ void Start(uint16_t id, QueueHandle_t events, const NetHooks &hooks)
   g_hooks = hooks;
   g_running = true;
   xTaskCreatePinnedToCore(Task, "radio", 12288, nullptr, 20, nullptr, 0);
+}
+
+void SetSyncLog(bool on, uint16_t mask, uint8_t every)
+{
+  g_sync_mask = mask;
+  g_sync_every = every ? every : 1;
+  g_sync_log = on;
 }
 
 void SetAntennaDelay(int delay) { g_new_antenna_delay = delay; }

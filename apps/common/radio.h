@@ -20,6 +20,8 @@ struct RadioEvent
   {
     kAdvert,  // a peer's advertisement (data/len) heard at t_us
     kRange,   // a completed exchange with `peer`
+    kHeard,   // sync log: a frame heard (peer = sender; dst, ftype, seq, ts, clk, rssi)
+    kSent,    // sync log: a frame this node sent (peer = destination; ftype, seq, ts)
   } kind;
   int8_t initiator;  // kRange: 1 if this node initiated
   uint16_t peer;
@@ -29,6 +31,12 @@ struct RadioEvent
   float fp_rssi;
   uint8_t len;
   uint8_t data[proto::kMaxAdvert];
+  // kHeard / kSent
+  uint16_t dst;
+  uint8_t ftype;   // proto::Type
+  uint8_t seq;
+  uint64_t ts;     // DW3000 device time of the RX/TX timestamp (40 bits, 15.65 ps units)
+  int32_t clk;     // kHeard: raw carrier-integrator clock offset of that frame
 };
 
 // A mesh packet for the app (ports >= 16, settings reports).
@@ -110,6 +118,11 @@ void Start(uint16_t id, QueueHandle_t events, const NetHooks &hooks);
 // Latest encoded advertisement to carry in POLL / RESPONSE frames (len 0:
 // none, e.g. the loader).
 void SetAdvert(const uint8_t *data, int len);
+// Sync log (an experiment): emit a kSent event for every frame this node sends and a
+// kHeard event for every frame it receives whose type is in `mask` (bit n = proto::Type
+// n), every `every`th of them. The host joins them across nodes to see how well the
+// nodes' clocks agree. Costs a few SPI reads per logged frame.
+void SetSyncLog(bool on, uint16_t mask, uint8_t every);
 // Antenna delay change (settings), applied by the radio task.
 void SetAntennaDelay(int delay);
 // Run `call` on the radio task; returns its result (bool as 0/1, or a

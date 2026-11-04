@@ -311,6 +311,18 @@ void HandleCommand(const char *line)
     g_capture = on != 0;
     Ack("capture", true);
   }
+  else if (IsCmd(line, "sync_log"))
+  {
+    // {"cmd":"sync_log","on":1,"mask":2,"every":1}: log frames sent, and frames of the
+    // types in `mask` (bit n = proto type n; 2 = POLL) heard, every `every`th. See
+    // swarm/tools/sync_residual.py.
+    float on = 1, mask = 1 << proto::kPoll, every = 1;
+    netcmd::Number(line, "on", &on);
+    netcmd::Number(line, "mask", &mask);
+    netcmd::Number(line, "every", &every);
+    radio::SetSyncLog(on != 0, (uint16_t)mask, (uint8_t)every);
+    Ack("sync_log", true);
+  }
   else if (IsCmd(line, "reboot_loader"))
   {
     store::WriteU32(store::kStayInLoader, 1);
@@ -446,6 +458,19 @@ void FusionTask(void *)
       if (ev.kind == RadioEvent::kAdvert)
       {
         swarm_node_advert_rx(ev.t_us, ev.data, ev.len);
+      }
+      else if (ev.kind == RadioEvent::kHeard)
+      {
+        // Sync log: the DW3000 timestamp of a frame heard, with its clock offset and power.
+        EMITF("{\"t\":%.4f,\"type\":\"rx\",\"from\":%u,\"to\":%u,\"ft\":%u,\"seq\":%u,"
+              "\"ts\":%llu,\"clk\":%ld,\"rssi\":%.1f,\"fp_rssi\":%.1f}\n",
+              Secs(ev.t_us), ev.peer, ev.dst, ev.ftype, ev.seq, (unsigned long long)ev.ts, (long)ev.clk,
+              ev.rssi, ev.fp_rssi);
+      }
+      else if (ev.kind == RadioEvent::kSent)
+      {
+        EMITF("{\"t\":%.4f,\"type\":\"tx\",\"to\":%u,\"ft\":%u,\"seq\":%u,\"ts\":%llu}\n",
+              Secs(ev.t_us), ev.peer, ev.ftype, ev.seq, (unsigned long long)ev.ts);
       }
       else
       {
