@@ -212,10 +212,12 @@ class Channel:
             out.append((d1 + d2, a, m, k))
         return out
 
-    def observe(self, t, tx_id, rx_id, tx, rx, R_rx, believed, ex):
+    def observe(self, t, tx_id, rx_id, tx, rx, R_rx, believed, ex, sync_len=0.0):
         """One frame from tx received at rx (true world poses). `believed` =
         (p_tx, p_rx, R_rx) in the mesh frame. Returns a LinkObs, or None if no
-        path was detected (an exchange that times out)."""
+        path was detected (an exchange that times out). `sync_len` (m) is the receiver's
+        clock error against the transmitter's, which a one-way (broadcast) timestamp
+        carries into every path length and a two-way exchange cancels."""
         rd, rng = self.radio, self.rng
         d = float(np.linalg.norm(tx - rx))
         if d > rd.max_range:
@@ -260,7 +262,7 @@ class Channel:
         label = np.empty(n, int)
         for i, (Li, a, s, src, lab, boost) in enumerate(merged):
             sl = 10 ** (s / 20)
-            L[i] = Li + e_shared + rng.normal(0, math.hypot(rd.sigma_floor, rd.k_len / sl))
+            L[i] = Li + e_shared + sync_len + rng.normal(0, math.hypot(rd.sigma_floor, rd.k_len / sl))
             snr[i] = s + rng.normal(0, rd.sigma_amp_db)
             label[i] = lab
             if ex.pair >= 0:
@@ -293,10 +295,20 @@ class MeshError:
     """How wrong the mesh's idea of its own geometry is."""
     pos_sigma: float = 0.10        # m, constant per node (the swarm's residual shape error)
     jitter: float = 0.03           # m, per observation
-    yaw_sigma: float = 0.05        # rad, constant per node
+    yaw_sigma: float = 0.05        # rad, constant per node (nodes with an IMU)
+    noimu_yaw_sigma: float = 0.30  # rad: a node with no IMU, placed by eye (see landmarks.calibrate_yaw)
     bias_tau: float = 0.0          # s: per-node shape error decorrelates over this time (0 = constant)
     gauge_drift: float = 0.0       # m/sqrt(s): the mesh frame wanders against the world
     gauge_yaw_drift: float = 0.0   # rad/sqrt(s)
+
+
+@dataclasses.dataclass
+class SyncModel:
+    """Residual clock error between nodes after whatever sync the firmware does,
+    in metres of path (1 ns = 0.30 m). Per node, correlated over `tau` seconds (an
+    OU process), so it is not averaged away by taking more frames."""
+    sigma: float = 0.0
+    tau: float = 5.0
 
 
 def rot_z(a):
@@ -306,62 +318,113 @@ def rot_z(a):
 
 class MeshSampler:
     """Standalone harness: widgets follow their closed-form trajectories
-    (world.TruthWidget), ranging round-robin over all pairs; each exchange
-    is observed at both ends. The mesh's frame is the world frame moved by a
-    gauge transform world = Rg(t) p_mesh + tg(t) (random walk), plus per-node shape
-    error; `gauge_at(t)` is the truth the P2 solve is scored against."""
+    (world.TruthWidget). Each TDMA slot is either a pairwise two-way exchange
+    (mode "pairwise": round-robin over pairs, observed at both ends, clock errors
+    cancel) or a broadcast (mode "broadcast": round-robin over transmitters, every
+    other node in range receives it, and each carries the transmitter-receiver
+    clock error `sync` into its path lengths). The mesh's frame is the world frame
+    moved by a gauge transform world = Rg(t) p_mesh + tg(t) (random walk), plus
+    per-node shape error; `gauge_at()` is the truth the P2 solve is scored against.
+
+    Static widgets have no IMU: their attitude is whatever they were placed with
+    (`face`: they point their patches at that point), known only to
+    `MeshError.noimu_yaw_sigma`."""
 
     def __init__(self, specs, channel, schedule=(Exchange(),), mesh=None, slot_rate=100.0,
-                 gauge0=(0.0, 0.0, 0.0, 0.0), seed=1):
+                 gauge0=(0.0, 0.0, 0.0, 0.0), seed=1, mode="pairwise", sync=None, face=None):
         from swarm.sim import world
         self.truth = [world.TruthWidget(s) for s in specs]
         self.ids = [s.wid for s in specs]
         self.ch, self.schedule = channel, list(schedule)
         self.mesh = mesh or MeshError()
         self.slot_rate = slot_rate
+        self.mode = mode
+        self.sync = sync or SyncModel()
         self.rng = np.random.default_rng(seed + 7919)
         n = len(specs)
+        self.has_imu = [s.kind != "static" for s in specs]
+        self.static_yaw = {}
+        for i, s in enumerate(specs):
+            if s.kind == "static" and face is not None:
+                p = np.asarray(s.center, float)       # body +y toward `face`
+                self.static_yaw[i] = math.atan2(p[0] - face[0], face[1] - p[1])
         self.pos_bias = self.rng.normal(0, self.mesh.pos_sigma, (n, 3))
-        self.yaw_bias = self.rng.normal(0, self.mesh.yaw_sigma, n)
+        sig = np.where(self.has_imu, self.mesh.yaw_sigma, self.mesh.noimu_yaw_sigma)
+        self.yaw_bias = self.rng.normal(0, 1, n) * sig
+        self.clock = self.rng.normal(0, self.sync.sigma, n)
         self.pairs = [(i, j) for i in range(n) for j in range(i + 1, n)]
         self.gauge = np.array(gauge0, float)        # tx, ty, tz, yaw
         self.counter = {}
+        self.slot = 0
         self.window_gauge = self.gauge.copy()     # mean gauge over the last run()
 
     def gauge_at(self):
         return self.gauge.copy()
 
+    def no_imu(self):
+        """Ids of the nodes whose attitude the mesh does not measure."""
+        return {self.ids[i] for i, h in enumerate(self.has_imu) if not h}
+
     def _to_mesh(self, p_w, R_w):
         Rg = rot_z(self.gauge[3])
         return Rg.T @ (p_w - self.gauge[:3]), Rg.T @ R_w
 
+    def _pose(self, i, t):
+        R = rot_z(self.static_yaw[i]) if i in self.static_yaw else self.truth[i].rot(t)
+        return self.truth[i].pos(t), R
+
+    def _believed(self, x, p_w, R_w):
+        p_m, R_m = self._to_mesh(p_w, R_w)
+        return (p_m + self.pos_bias[x] + self.rng.normal(0, self.mesh.jitter, 3),
+                rot_z(self.yaw_bias[x]) @ R_m)
+
     def run(self, seconds, t0=0.0):
         obs, dt = [], 1.0 / self.slot_rate
-        m = self.mesh
+        m, sy = self.mesh, self.sync
         trace = []
         for step in range(int(seconds * self.slot_rate)):
             t = t0 + step * dt
             if m.bias_tau > 0:      # slowly varying shape error: OU with the same stationary sigma
                 a = dt / m.bias_tau
                 self.pos_bias += -a * self.pos_bias + m.pos_sigma * math.sqrt(2 * a) * self.rng.normal(size=self.pos_bias.shape)
+            if sy.sigma > 0:
+                a = dt / sy.tau
+                self.clock += -a * self.clock + sy.sigma * math.sqrt(2 * a) * self.rng.normal(size=self.clock.shape)
             self.gauge[:3] += self.rng.normal(0, m.gauge_drift * math.sqrt(dt), 3) * [1, 1, 0]
             self.gauge[3] += self.rng.normal(0, m.gauge_yaw_drift * math.sqrt(dt))
             trace.append(self.gauge.copy())
-            i, j = self.pairs[step % len(self.pairs)]
-            k = self.counter[(i, j)] = self.counter.get((i, j), -1) + 1
-            ex = self.schedule[k % len(self.schedule)]
-            pw = [self.truth[x].pos(t) for x in (i, j)]
-            Rw = [self.truth[x].rot(t) for x in (i, j)]
-            bel = []
-            for q, x in enumerate((i, j)):
-                p_m, R_m = self._to_mesh(pw[q], Rw[q])
-                bel.append((p_m + self.pos_bias[x] + self.rng.normal(0, m.jitter, 3),
-                            rot_z(self.yaw_bias[x]) @ R_m))
-            for tx, rx in ((0, 1), (1, 0)):
-                o = self.ch.observe(t, self.ids[(i, j)[tx]], self.ids[(i, j)[rx]], pw[tx], pw[rx], Rw[rx],
-                                    (bel[tx][0], bel[rx][0], bel[rx][1]), ex)
-                if o is not None:
-                    obs.append(o)
+            if self.mode == "broadcast":
+                self._broadcast_slot(t, obs)
+            else:
+                self._pairwise_slot(t, step, obs)
+            self.slot += 1
         if trace:
             self.window_gauge = np.mean(trace, axis=0)
         return obs
+
+    def _pairwise_slot(self, t, step, obs):
+        i, j = self.pairs[step % len(self.pairs)]
+        k = self.counter[(i, j)] = self.counter.get((i, j), -1) + 1
+        ex = self.schedule[k % len(self.schedule)]
+        pose = [self._pose(x, t) for x in (i, j)]
+        bel = [self._believed(x, *pose[q]) for q, x in enumerate((i, j))]
+        for tx, rx in ((0, 1), (1, 0)):
+            o = self.ch.observe(t, self.ids[(i, j)[tx]], self.ids[(i, j)[rx]], pose[tx][0], pose[rx][0],
+                                pose[rx][1], (bel[tx][0], bel[rx][0], bel[rx][1]), ex)
+            if o is not None:
+                obs.append(o)
+
+    def _broadcast_slot(self, t, obs):
+        n = len(self.truth)
+        tx = self.slot % n
+        ex = self.schedule[(self.slot // n) % len(self.schedule)]      # one channel per slot, all rx use it
+        poses = [self._pose(x, t) for x in range(n)]
+        bel = [self._believed(x, *poses[x]) for x in range(n)]
+        for rx in range(n):
+            if rx == tx:
+                continue
+            o = self.ch.observe(t, self.ids[tx], self.ids[rx], poses[tx][0], poses[rx][0], poses[rx][1],
+                                (bel[tx][0], bel[rx][0], bel[rx][1]), ex,
+                                sync_len=float(self.clock[rx] - self.clock[tx]))
+            if o is not None:
+                obs.append(o)

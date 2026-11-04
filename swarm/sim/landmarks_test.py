@@ -239,5 +239,82 @@ class GaugeTest(unittest.TestCase):
         np.testing.assert_allclose(g, g0)
 
 
+class BroadcastTest(unittest.TestCase):
+    def setUp(self):
+        self.scene = mp.Scene([mp.Reflector((5.0, 8.0, 1.5))])
+        self.arr = [mp.pair_for(5, 0, boresight=(0, 1, 0)), mp.pair_for(9, 2, boresight=(0, 1, 0))]
+
+    def fleet(self, n=5, **kw):
+        specs = [world.WidgetSpec(wid=i, kind="static", center=(2.0 * i, 0.5 * (i % 2), 1.5), yaw_rate=0.0)
+                 for i in range(n)]
+        ch = mp.Channel(self.scene, CLEAN, self.arr, seed=2)
+        return mp.MeshSampler(specs, ch, [mp.Exchange(5, 0), mp.Exchange(9, 1)], mesh=mp.MeshError(0, 0, 0, noimu_yaw_sigma=0.0),
+                              seed=2, **kw)
+
+    def test_a_broadcast_slot_is_heard_by_everyone_else(self):
+        smp = self.fleet(mode="broadcast")
+        obs = smp.run(0.05)                                  # 5 slots
+        self.assertEqual(len(obs), 5 * 4)
+        self.assertEqual({o.tx for o in obs[:4]}, {0})
+        self.assertEqual({o.rx for o in obs[:4]}, {1, 2, 3, 4})
+        self.assertEqual({o.pair for o in obs[:4]}, {0})     # one channel per slot, all receivers on it
+
+    def test_a_pairwise_slot_is_two_observations(self):
+        self.assertEqual(len(self.fleet(mode="pairwise").run(0.05)), 5 * 2)
+
+    def test_clock_error_shifts_every_path_of_a_one_way_frame_equally(self):
+        ch = mp.Channel(self.scene, CLEAN, self.arr, seed=1)
+        tx, rx = np.array([0.0, 0, 1.5]), np.array([10.0, 0, 1.5])
+        a = ch.observe(0, 0, 1, tx, rx, EYE, (tx, rx, EYE), mp.Exchange(5, -1), sync_len=0.0)
+        b = ch.observe(0, 0, 1, tx, rx, EYE, (tx, rx, EYE), mp.Exchange(5, -1), sync_len=0.7)
+        np.testing.assert_allclose(b.L - a.L, 0.7, atol=1e-9)
+        self.assertAlmostEqual(b.rng - a.rng, 0.7, places=9)
+
+    def test_excess_delay_ignores_clock_error_and_absolute_does_not(self):
+        ch = mp.Channel(self.scene, CLEAN, [], seed=1)
+        tx, rx = np.array([0.0, 0, 1.5]), np.array([10.0, 0, 1.5])
+        mk = lambda sync: [ch.observe(0, 0, 1, tx, rx, EYE, (tx, rx, EYE), mp.Exchange(5, -1), sync_len=sync)]
+        cfg = fast_cfg(use_phase=False, use_excess=True, sigma_sync=1.0)
+        L0 = lm.build_detections(mk(0.0), cfg, []).L
+        L1 = lm.build_detections(mk(0.8), cfg, []).L
+        self.assertEqual(len(L0), 1)
+        np.testing.assert_allclose(L1, L0, atol=1e-9)
+        ab = fast_cfg(use_phase=False, use_excess=False, sigma_sync=1.0)
+        self.assertAlmostEqual(float(lm.build_detections(mk(0.8), ab, []).L[0] - lm.build_detections(mk(0.0), ab, []).L[0]), 0.8, places=9)
+
+    def test_a_large_sync_error_is_not_taken_for_a_reflection(self):
+        # With 1 m of clock error the line of sight reads 1 m long: it must not become a landmark.
+        ch = mp.Channel(mp.Scene(), CLEAN, [], seed=1)
+        tx, rx = np.array([0.0, 0, 1.5]), np.array([10.0, 0, 1.5])
+        o = [ch.observe(0, 0, 1, tx, rx, EYE, (tx, rx, EYE), mp.Exchange(5, -1), sync_len=1.0)]
+        self.assertEqual(len(lm.build_detections(o, fast_cfg(use_phase=False, sigma_sync=0.0), [])), 1)   # blind: a ghost
+        self.assertEqual(len(lm.build_detections(o, fast_cfg(use_phase=False, sigma_sync=1.0), [])), 0)   # aware: none
+
+    def test_yaw_of_a_node_without_an_imu_is_recovered_from_the_line_of_sight(self):
+        smp = self.fleet(mode="broadcast", face=(4.0, 3.0))
+        smp.yaw_bias[:] = 0.0
+        smp.yaw_bias[2] = 0.3                                # node 2 was placed 0.3 rad off
+        obs = smp.run(1.0)
+        got = lm.calibrate_yaw(obs, self.arr, {smp.ids[2]}, fast_cfg())
+        self.assertAlmostEqual(got[smp.ids[2]], -0.3, delta=0.03)
+        fixed = lm.apply_yaw(obs, got)
+        mine = [o for o in fixed if o.rx == smp.ids[2]][0]
+        truth = [o for o in obs if o.rx == smp.ids[2]][0]
+        self.assertFalse(np.allclose(mine.R_rx, truth.R_rx))
+
+    def test_expected_snr_is_corrected_for_the_patch_pattern(self):
+        # A line of sight arriving 80 degrees off a patch's boresight reads ~12 dB down;
+        # that is the antenna, not a fader.
+        arr = [mp.pair_for(5, 0, boresight=(0, 1, 0))]
+        ch = mp.Channel(mp.Scene(), CLEAN, arr, seed=1)
+        tx, rx = np.array([10.0, math.cos(math.radians(80)) * 10, 1.5]), np.array([0.0, 0, 1.5])
+        o = [ch.observe(0, 0, 1, tx, rx, EYE, (tx, rx, EYE), mp.Exchange(5, 0))]
+        cfg = lm.SolveConfig(snr1_db=CLEAN.snr1_db)
+        naive = lm.link_attenuation(o, cfg, [])
+        aware = lm.link_attenuation(o, cfg, arr)
+        self.assertGreater(float(naive.y[0]), 5.0)
+        self.assertLess(abs(float(aware.y[0])), 0.5)
+
+
 if __name__ == "__main__":
     unittest.main()

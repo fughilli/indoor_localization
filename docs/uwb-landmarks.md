@@ -135,38 +135,74 @@ the gauge averaged over the window; mesh drifting 0.03 m/√s and 0.004 rad/√s
 - Wiring into `World`'s live estimator loop: `MeshSampler` reuses the same widget
   trajectories but is standalone. A `World` hook needs the Rust build to test.
 
+## Broadcast, and the 10-node fleet
+
+The sim now has a **broadcast** slot (`MeshSampler(mode="broadcast")`): one
+transmitter per slot, every other node hears it and logs its own CIR and PDoA, against
+the pairwise two-way exchange (one pair, both ends). For 10 nodes that is 9
+observations per slot instead of 2 (4.5×, measured). Fleet: 4 mobile nodes with IMUs
+and 6 static ones without, placed by eye facing the room centre. Receivers' clock
+errors (`SyncModel`: per-node, correlated over 5 s, in metres of path) enter every
+length of a *one-way* frame and cancel in a two-way exchange.
+
+Because a static node has no IMU, its attitude is unknown to ~0.3 rad, and PDoA is
+useless without it. `landmarks.calibrate_yaw` recovers it from the PDoA of the line
+of sight to peers at known mesh positions: 0.3 rad → 0.016–0.020 rad on all 6 nodes.
+(It assumes the node is level.)
+
+Reflector P1, weak reflectors (rho 0.5), equal airtime, 3 seeds, 9 reflectors found
+per row:
+
+| Exchange | 1 s: horiz / vert | 4 s: horiz / vert |
+|---|---|---|
+| pairwise two-way | 0.07 / 0.20 m | 0.07 / 0.16 m |
+| broadcast, clocks perfect | 0.07 / 0.13 | 0.06 / 0.14 |
+| broadcast, sync 0.3 m, absolute lengths | 0.17 / 0.15 | 0.12 / 0.13 |
+| broadcast, sync 0.3 m, excess delay | 0.09 / 0.19 | 0.09 / 0.21 |
+| broadcast, sync 1.0 m, absolute lengths | 0.60 / 0.79 | 0.45 / 0.58 |
+| broadcast, sync 1.0 m, excess delay | 0.09 / 0.19 | 0.09 / 0.16 |
+
+- **For static reflectors, broadcast does not beat pairwise.** Ten nodes find all nine
+  within 1 s of slots pairwise already (and the scene is easy: every row finds 9/9).
+- **Absolute lengths from a broadcast need sync better than ~0.1 m** to match
+  pairwise (0.3 m of residual already costs 2× in horizontal error).
+- **Excess delay (each later path relative to the first, the line of sight) is
+  sync-free** and lands at about pairwise accuracy at any sync error. This needed the
+  line-of-sight gate to widen with the sync uncertainty (`landmarks.los_gate`): at
+  first I let a clock-shifted line of sight pass as a "reflection" and got false
+  landmarks, which the study caught.
+- **Fader mapping is where more observations per slot help**, and it needs no clock
+  sync at all (it uses link power). On the fleet, all 8 faders found in every case;
+  at 4 s of slots the horizontal error is 1.60 m pairwise vs 0.41 m broadcast, at 12 s
+  0.36 vs 0.31 m; broadcast gave 2–4 false faders in 4 seeds where pairwise gave 0.
+  Two things had to be right for this: the expected line-of-sight SNR is corrected for
+  the receiving patch's gain (otherwise a grazing link looks shadowed), and the static
+  nodes' yaw is calibrated first (otherwise that correction is wrong).
+- Not run: P2 (tracking the gauge) with broadcast; whether its shorter windows would
+  help against the drift lag is the open question there.
+
+**Verdict:** not a clear win. Broadcast buys airtime, and airtime is not what limits
+static-reflector mapping here. It is useful for faders and probably for anything that
+must converge fast, and the sync-free forms (excess delay, link power) get that
+without solving clock sync. The number that decides whether absolute TDoA is worth
+pursuing is the real clock residual, which
+[uwb-sync-experiment.md](uwb-sync-experiment.md) measures on the boards you have.
+
 ## Clock sync and TDoA
 
 Today the mesh does **pairwise DS-TWR only**: one exchange per TDMA slot, 100 slots/s
-network-wide (design §5.3). The POLL is overheard by everyone, but only to refresh
-adverts; no receive timestamps are combined across nodes, and a "clock sync budget"
-is still listed as future work (§9). The sim matches. I have **not simulated TDoA**;
-what follows is reasoning, not a result.
-
-- **The multipath evidence needs no sync.** A reflection's *excess* delay over the
-  first path at the same receiver comes from one CIR on one clock, so it is immune to
-  clock offset. With the LOS as the first path (and the node positions from the
-  mesh), the reflector constraints and PDoA phase are sync-free. Sync error only
-  corrupts the absolute path length, which in the sim is mostly the shared error
-  (`sigma_shared`, 0.07 m) of an exchange.
-- **What TDoA would buy is airtime, not new observability.** One transmission
-  heard by N−1 nodes gives up to N−1 CIRs per slot instead of the one or two a
-  pairwise exchange gives. That matters because AoA needs one pair on one channel at
-  a time, so each exchange yields one baseline.
-- **What it costs:** a common time base good to ~0.25 ns (7 cm) to match today's
-  shared range error, 1 ns being 30 cm. The DW3000 reports a per-frame clock offset
-  and the DS-TWR exchanges give pairwise offsets, so ppm drift can be corrected; the
-  residual timing jitter after that, on this hardware, is a number to measure.
-
-Cheap next experiment, if you want it: a broadcast exchange type (one transmitter,
-all other nodes receive, each with its own CIR and PDoA) with a sync-error knob, to
-measure how much faster P1 converges per second of airtime and where sync error
-starts to hurt.
+network-wide (design §5.3). The POLL is already overheard by everyone (to refresh
+adverts), but no receive timestamps are combined across nodes, and a "clock sync
+budget" is still listed as future work (§9). The multipath evidence itself needs no
+sync: a reflection's excess delay over the first path at the same receiver comes from
+one CIR on one clock. What sync buys is absolute path lengths from a single
+transmission, at ~0.25 ns (7 cm) to match today's shared range error; 1 ns is 30 cm.
 
 ## Run it
 
 ```sh
-python3 -m unittest swarm.sim.landmarks_test          # ~10 s
+python3 -m unittest swarm.sim.landmarks_test          # ~10 s, 28 tests
+python3 -m swarm.sim.landmarks_run --broadcast --rho 0.5 --airtimes 1 4   # fleet study, ~15 min
 python3 -m swarm.sim.landmarks_run                    # P1 over the tiers
 python3 -m swarm.sim.landmarks_run --p2 --study       # P2 error budget, ~5 min
 ```

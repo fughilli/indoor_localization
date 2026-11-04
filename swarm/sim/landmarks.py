@@ -44,6 +44,8 @@ class SolveConfig:
     sigma_phase0: float = 0.05
     k_phase: float = 1.0
     sigma_mesh: float = 0.15       # m: the mesh's own position error, in a path length
+    sigma_sync: float = 0.0        # m: residual clock error of a one-way (broadcast) length
+    use_excess: bool = False       # use delays relative to the first path when it is the LOS (sync-free)
     sigma_att: float = 0.05        # rad: its attitude error (and PDoA calibration), in a phase
     sigma_first: float = 0.5       # m: a first-arrival-only range that read long
     los_gate: float = 0.6          # m: a path this much longer than |a-b| is not the LOS
@@ -95,9 +97,22 @@ class Detections:
         return np.isfinite(self.phi)
 
 
-def sigma_len(cfg, snr_db):
-    return np.hypot(cfg.sigma_mesh, np.hypot(cfg.sigma_shared,
-                    np.hypot(cfg.sigma_floor, cfg.k_len / 10 ** (np.asarray(snr_db) / 20))))
+def los_gate(cfg):
+    """How far a path may read from the mesh's own |a-b| and still be taken for the line
+    of sight: wider when one-way timestamps carry clock error."""
+    return cfg.los_gate + 3.0 * cfg.sigma_sync
+
+
+def sigma_len(cfg, snr_db, lead_snr_db=None):
+    """Length noise of a path (m). Absolute: the mesh's own error, the exchange's
+    shared error, the clock error of a one-way frame and the path's delay noise.
+    Relative to a first path (lead_snr_db given): the shared and clock errors cancel,
+    the lead path's delay noise joins."""
+    own = np.hypot(cfg.sigma_floor, cfg.k_len / 10 ** (np.asarray(snr_db) / 20))
+    if lead_snr_db is None:
+        return np.hypot(cfg.sigma_mesh, np.hypot(np.hypot(cfg.sigma_shared, cfg.sigma_sync), own))
+    lead = np.hypot(cfg.sigma_floor, cfg.k_len / 10 ** (np.asarray(lead_snr_db) / 20))
+    return np.hypot(cfg.sigma_mesh, np.hypot(own, lead))
 
 
 def sigma_phase(cfg, snr_db):
@@ -108,8 +123,14 @@ def build_detections(obs, cfg, array):
     rows = []
     for o in obs:
         d = float(np.linalg.norm(o.p_tx - o.p_rx))
-        if cfg.use_cir:
-            sel = np.nonzero(o.L - d > cfg.los_gate)[0]
+        lengths, lead_snr = o.L, None
+        if cfg.use_cir and cfg.use_excess and abs(o.L[0] - d) < los_gate(cfg):
+            # The first path is the line of sight, whose true length the mesh knows
+            # from its own geometry: every later path is that plus its excess delay.
+            lengths, lead_snr = d + (o.L - o.L[0]), float(o.snr[0])
+            sel = np.nonzero(lengths - d > cfg.los_gate)[0]
+        elif cfg.use_cir:
+            sel = np.nonzero(o.L - d > los_gate(cfg))[0]
         else:
             # First arrival only: the one range, and only when the radio says the
             # line of sight is gone and the range read long.
@@ -118,8 +139,8 @@ def build_detections(obs, cfg, array):
             ph = o.phase[i] if (cfg.use_cir and cfg.use_phase and o.pair >= 0) else np.nan
             snr = o.snr[i] if cfg.use_cir else 0.0
             pr = array[o.pair] if o.pair >= 0 else None
-            rows.append((o.p_tx, o.p_rx, o.R_rx, o.L[i],
-                         sigma_len(cfg, snr) if cfg.use_cir else cfg.sigma_first,
+            rows.append((o.p_tx, o.p_rx, o.R_rx, lengths[i],
+                         sigma_len(cfg, snr, lead_snr) if cfg.use_cir else cfg.sigma_first,
                          ph, sigma_phase(cfg, snr) if np.isfinite(ph) else np.nan,
                          np.asarray(pr.baseline) if pr else np.zeros(3),
                          2 * math.pi / mp.wavelength(pr.channel) if pr else 0.0,
@@ -275,14 +296,19 @@ class LinkAtten:
     censored: np.ndarray   # True: y is only a lower bound (the line of sight was lost)
 
 
-def link_attenuation(obs, cfg):
-    """Per-frame estimate of how much the line of sight was shadowed."""
+def link_attenuation(obs, cfg, array=()):
+    """Per-frame estimate of how much the line of sight was shadowed. The expected SNR
+    is corrected for the receiving patches' gain toward the transmitter (their pattern
+    and the receiver's own attitude are known), or a grazing link would read as shadowed."""
     A, B, Y, C = [], [], [], []
     for o in obs:
         d = float(np.linalg.norm(o.p_tx - o.p_rx))
         if cfg.use_cir:
             expect = cfg.snr1_db - 20 * math.log10(max(d, 0.1))
-            hit = np.nonzero(np.abs(o.L - d) < cfg.los_gate)[0]
+            if o.pair >= 0 and len(array) > o.pair:
+                u_b = o.R_rx.T @ ((o.p_tx - o.p_rx) / max(d, 1e-9))
+                expect += mp.patch_gain_db(float(np.asarray(array[o.pair].boresight) @ u_b))
+            hit = np.nonzero(np.abs(o.L - d) < los_gate(cfg))[0]
             if len(hit):
                 y, c = expect - float(o.snr[hit[0]]), False
             else:
@@ -305,11 +331,11 @@ def _atten_res(la, pred):
     return np.where(la.censored, np.minimum(d, 0.0), d) / la.sigma
 
 
-def map_faders(obs, cfg, bounds=None, max_faders=4):
+def map_faders(obs, cfg, array=(), bounds=None, max_faders=4):
     """P1 for faders: greedy tomography. Each pass grid-searches the sphere centre
     that most reduces the attenuation misfit (loss amplitude by least squares),
     then refines centre and loss together."""
-    la = link_attenuation(obs, cfg)
+    la = link_attenuation(obs, cfg, array)
     rng = np.random.default_rng(cfg.seed)
     sub = np.sort(rng.choice(len(la.y), min(len(la.y), cfg.fader_sample), replace=False))
     lo, hi = bounds or node_bounds(obs, 2.0)
@@ -338,7 +364,8 @@ def map_faders(obs, cfg, bounds=None, max_faders=4):
         for f in found:
             prior += _pred_atten(f[0], f[1], la, r)
         fun = lambda x: _atten_res(la, prior + _pred_atten(x[:3], x[3], la, r))
-        sol = least_squares(fun, np.append(best, loss0), loss="soft_l1", f_scale=1.5)
+        sol = least_squares(fun, np.append(best, loss0), loss="soft_l1", f_scale=1.5,
+                            bounds=([-np.inf] * 3 + [0.0], [np.inf] * 4))      # a fader doesn't amplify
         cov = np.linalg.pinv(sol.jac.T @ sol.jac)
         found.append((sol.x[:3], float(sol.x[3]), cov[:3, :3]))
         resid = la.y - prior - _pred_atten(sol.x[:3], sol.x[3], la, r)
@@ -436,3 +463,46 @@ def solve_gauge(obs, refs, cfg, array, g0, prior_sigma=(5.0, 5.0, 5.0, 0.5), ite
         g = sol.x
         cov = np.linalg.pinv(sol.jac.T @ sol.jac)
     return g, cov, n_used
+
+
+# --- attitude of nodes without an IMU ---------------------------------------------------------
+
+def calibrate_yaw(obs, array, nodes, cfg, snr_min=20.0, min_obs=10):
+    """Yaw correction (rad) per node without an IMU, from the PDoA phase of the line
+    of sight to peers whose mesh positions are known: the correction delta such that
+    rot_z(delta) @ R_believed makes the CH-pair phases fit. Static nodes placed by
+    eye are only good to ~0.3 rad; the phases pin them to a few hundredths. Nodes
+    with too few strong line-of-sight phases are left out. Assumes the node is level."""
+    from scipy.optimize import minimize_scalar
+    out = {}
+    for node in nodes:
+        rows = []
+        for o in obs:
+            if o.rx != node or o.pair < 0:
+                continue
+            d = float(np.linalg.norm(o.p_tx - o.p_rx))
+            hit = np.nonzero(np.abs(o.L - d) < los_gate(cfg))[0]
+            if not len(hit) or o.snr[hit[0]] < snr_min or not np.isfinite(o.phase[hit[0]]):
+                continue
+            pr = array[o.pair]
+            rows.append(((o.p_tx - o.p_rx) / d, o.R_rx, np.asarray(pr.baseline),
+                         2 * math.pi / mp.wavelength(pr.channel), o.phase[hit[0]], sigma_phase(cfg, o.snr[hit[0]])))
+        if len(rows) < min_obs:
+            continue
+        U, R, B, K, PH, S = (np.array(c) for c in zip(*rows))
+
+        def cost(delta):
+            u = (mp.rot_z(delta).T @ U.T).T
+            ub = np.einsum("nji,nj->ni", R, u)
+            r = mp.wrap(K * np.einsum("ni,ni->n", B, ub) - PH) / S
+            return float(np.minimum(r * r, 9.0).sum())
+
+        grid = np.linspace(-math.pi, math.pi, 315, endpoint=False)
+        best = grid[int(np.argmin([cost(g) for g in grid]))]
+        out[node] = float(minimize_scalar(cost, bounds=(best - 0.05, best + 0.05), method="bounded").x)
+    return out
+
+
+def apply_yaw(obs, deltas):
+    """Observations with each calibrated receiver's believed attitude corrected."""
+    return [dataclasses.replace(o, R_rx=mp.rot_z(deltas[o.rx]) @ o.R_rx) if o.rx in deltas else o for o in obs]

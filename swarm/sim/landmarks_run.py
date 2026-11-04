@@ -35,10 +35,10 @@ TIERS = {
 }
 
 
-def default_scene():
+def default_scene(rho=1.5):
     return mp.Scene(
-        reflectors=[mp.Reflector((1.0, 15.0, 2.0)), mp.Reflector((18.5, 2.0, 1.0)),
-                    mp.Reflector((12.0, 19.0, 3.0))],
+        reflectors=[mp.Reflector((1.0, 15.0, 2.0), rho), mp.Reflector((18.5, 2.0, 1.0), rho),
+                    mp.Reflector((12.0, 19.0, 3.0), rho)],
         faders=[mp.Fader((10.0, 10.0, 1.5), 0.4, 20.0), mp.Fader((6.0, 13.0, 1.2), 0.4, 20.0)])
 
 
@@ -58,7 +58,7 @@ def p1(tier, seed, seconds, **kw):
     # The map is in the mesh frame, which here is the world frame (no gauge offset).
     t0 = time.time()
     refl, D = lm.map_reflectors(obs, cfg, t["array"])
-    faders = lm.map_faders(obs, cfg)
+    faders = lm.map_faders(obs, cfg, t["array"])
     truth_r = np.array([r.pos for r in scene.reflectors])
     truth_f = np.array([f.pos for f in scene.faders])
     est_r = np.array([l.pos for l in refl]).reshape(-1, 3)
@@ -88,13 +88,76 @@ def fmt(e):
         len(ok), len(e), np.sqrt((ok[:, :2] ** 2).sum(1).mean()), np.sqrt((ok[:, 2] ** 2).mean()))
 
 
+# --- the 10-node fleet: 4 mobile with IMUs, 6 static without ------------------------------------
+
+STATIC_SPOTS = [(2.0, 2.0, 0.5), (18.0, 3.0, 2.0), (17.0, 17.0, 1.0), (3.0, 17.0, 2.5), (10.0, 1.0, 1.5),
+                (9.0, 18.0, 0.8)]
+
+
+def fleet10():
+    specs = world.default_swarm(4, 0, 0, 20.0)
+    specs += [world.WidgetSpec(wid=4 + i, kind="static", center=p, yaw_rate=0.0, has_alt=False)
+              for i, p in enumerate(STATIC_SPOTS)]
+    return specs
+
+
+def fleet_p1(mode, seconds, seed, sync=0.0, excess=False, mount="upright", sync_tau=5.0, rho=1.5):
+    """P1 for the fleet: the same airtime (slots) either as pairwise two-way exchanges
+    or as broadcasts, with a clock-sync residual `sync` (m) that only broadcasts feel.
+    Static nodes get their yaw calibrated from line-of-sight PDoA first."""
+    array = MOUNTS[mount]
+    scene = default_scene(rho)
+    ch = mp.Channel(scene, array=array, seed=seed)
+    smp = mp.MeshSampler(fleet10(), ch, [mp.Exchange(5, 0), mp.Exchange(9, 1)], mesh=mp.MeshError(),
+                         seed=seed, mode=mode, sync=mp.SyncModel(sync, sync_tau), face=(10.0, 10.0))
+    t0 = time.time()
+    obs = smp.run(seconds)
+    cfg = lm.SolveConfig(use_cir=True, use_phase=True, seed=seed, use_excess=excess,
+                         sigma_sync=0.0 if mode == "pairwise" else sync)
+    deltas = lm.calibrate_yaw(obs, array, smp.no_imu(), cfg)
+    yaw_err = [abs(deltas[smp.ids[i]] + smp.yaw_bias[i]) for i in range(len(smp.ids))
+               if smp.ids[i] in deltas]
+    obs = lm.apply_yaw(obs, deltas)
+    refl, D = lm.map_reflectors(obs, cfg, array)
+    truth_r = np.array([x.pos for x in scene.reflectors])
+    est_r = np.array([l.pos for l in refl]).reshape(-1, 3)
+    ir, extra = lm.match(est_r, truth_r)
+    return dict(frames=len(obs), dets=len(D), dr=errors(est_r, ir, truth_r), false_r=len(extra),
+                yaw_err=yaw_err, calibrated=len(deltas), secs=time.time() - t0)
+
+
+def broadcast_study(args):
+    print("Broadcast vs pairwise, 10 nodes (4 mobile + 6 static), equal airtime, %d seeds" % args.seeds)
+    print("%-44s %-8s %-9s %-44s %s" % ("exchange", "airtime", "obs", "reflectors", "static-yaw cal"))
+    configs = [("pairwise two-way", dict(mode="pairwise")),
+               ("broadcast, sync 0 m", dict(mode="broadcast", sync=0.0)),
+               ("broadcast, sync 0.3 m, absolute", dict(mode="broadcast", sync=0.3)),
+               ("broadcast, sync 0.3 m, excess delay", dict(mode="broadcast", sync=0.3, excess=True)),
+               ("broadcast, sync 1.0 m, absolute", dict(mode="broadcast", sync=1.0)),
+               ("broadcast, sync 1.0 m, excess delay", dict(mode="broadcast", sync=1.0, excess=True))]
+    for airtime in args.airtimes:
+        for label, kw in configs:
+            dr, fr, nobs, yaw = [], 0, 0, []
+            for s in range(args.seeds):
+                x = fleet_p1(seconds=airtime, seed=s + 1, rho=args.rho, **kw)
+                dr.append(x["dr"]); fr += x["false_r"]; nobs += x["frames"]; yaw += x["yaw_err"]
+            print("%-44s %-8s %-9d %-44s %s" % (
+                label, "%.0f s" % airtime, nobs // args.seeds, fmt(np.concatenate(dr)) + (" +%d false" % fr if fr else ""),
+                "%.3f rad (%d nodes)" % (np.sqrt(np.mean(np.square(yaw))), len(yaw) // args.seeds) if yaw else "-"), flush=True)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--seeds", type=int, default=3)
     ap.add_argument("--seconds", type=float, default=60.0)
+    ap.add_argument("--rho", type=float, default=1.5, help="reflector strength for --broadcast")
+    ap.add_argument("--broadcast", action="store_true", help="the broadcast-vs-pairwise study")
+    ap.add_argument("--airtimes", type=float, nargs="+", default=[4.0, 12.0], help="seconds of slots")
     ap.add_argument("--p2", action="store_true")
     ap.add_argument("--study", action="store_true", help="with --p2: the error-budget / motion study")
     args = ap.parse_args()
+    if args.broadcast:
+        return broadcast_study(args)
     if args.p2:
         return p2_main(args)
     print("P1: landmark positions in the mesh frame (3 reflectors, 2 faders), %d seeds x %.0f s" %
