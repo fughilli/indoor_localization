@@ -50,3 +50,31 @@ cc_test(
     copts = ["-std=c++17", "-Wall", "-Wextra", "-Werror", "-fno-exceptions", "-fno-rtti"],
     deps = [":widget_views"],
 )
+
+# swarm.v1: every node-to-node / node-to-host structure (swarm_wire.proto). C++ reads the link
+# layer in place with pbview, Python with protoc, Rust (swarm_net) with micropb; see
+# docs/swarm-wire.md.
+exports_files(["swarm_wire.proto"])
+
+proto_fdset(
+    name = "swarm_wire_fdset",
+    proto = "swarm_wire.proto",
+)
+
+pbview_cc_library(
+    name = "swarm_wire_views",
+    fdset = ":swarm_wire_fdset",
+    header = "swarm_wire_views.h",
+)
+
+proto_py_gen(
+    name = "swarm_wire_py_gen",
+    proto = "swarm_wire.proto",
+)
+
+py_library(
+    name = "swarm_wire_py_proto",
+    srcs = [":swarm_wire_py_gen"],
+    imports = ["."],
+    deps = ["@pypi//protobuf"],
+)
