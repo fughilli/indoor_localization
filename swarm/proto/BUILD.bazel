@@ -4,7 +4,9 @@
 # codegen base (hermetic protoc, micropb runtime + generator) comes from the
 # embedded module: @firmware//proto.
 load("@rules_python//python:defs.bzl", "py_library")
-load("@firmware//proto:micropb.bzl", "micropb_rust_library", "proto_py_gen")
+load("@firmware//proto:micropb.bzl", "micropb_rust_library", "proto_fdset", "proto_py_gen")
+load("@pbview//:defs.bzl", "pbview_cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -27,4 +29,24 @@ micropb_rust_library(
     gen_main = "gen_main.rs",
     profile = "host",
     proto = "widget_config.proto",
+)
+
+# The same schema as zero-copy C++ views for the C++ firmware (pbview): parse a received
+# buffer in place, no decoded struct. See docs/pbview.md.
+proto_fdset(
+    name = "widget_config_fdset",
+    proto = "widget_config.proto",
+)
+
+pbview_cc_library(
+    name = "widget_views",
+    fdset = ":widget_config_fdset",
+    header = "widget_config_views.h",
+)
+
+cc_test(
+    name = "widget_views_test",
+    srcs = ["widget_views_test.cc"],
+    copts = ["-std=c++17", "-Wall", "-Wextra", "-Werror", "-fno-exceptions", "-fno-rtti"],
+    deps = [":widget_views"],
 )
