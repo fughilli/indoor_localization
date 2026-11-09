@@ -23,7 +23,7 @@ local_path_override(
 bazel_dep(name = "pbview", version = "0.1.0")
 git_override(
     module_name = "pbview",
-    commit = "11a07b7b567a98ac3f460188864fc190179fdead",
+    commit = "b03fbf6615e8e460c93792ac5ccd0cd5c0ef57a3",
     remote = "https://github.com/fughilli/pbview.git",
 )
 
