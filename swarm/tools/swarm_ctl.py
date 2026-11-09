@@ -229,7 +229,12 @@ def push_swarm_layer(node, head, regs, changes, a):
             layer[reg["id"]] = raw
     st = load_state()
     gen = next_counter(st, "generation", head["generation"])
-    bundle = w.make_bundle(layer, gen, hmac_key())
+    try:
+        # The whole tagged Bundle (protobuf, <= 1024 bytes) goes to the node, which splits it
+        # into BundleFragments (72 data bytes each) when it spreads it.
+        bundle = w.make_bundle(layer, gen, hmac_key())
+    except ValueError as e:
+        raise SystemExit("cannot build the swarm layer: %s" % e)
     node.call({"cmd": "bundle", "hex": bundle.hex()})
     save_state(st)
     print("swarm generation %d: %d settings, spreading through the swarm" % (gen, len(layer)))
@@ -315,14 +320,16 @@ def cmd_push(a):
     node = Node(a.port)
     st = load_state()
     version = a.version or st.get("fw_version", 0) + 1
+    # A serialized Manifest {body, signature}, <= 114 bytes; the node broadcasts it as its own
+    # link frame type. Re-offering the manifest that's already staged resumes a push.
     manifest = w.sign_manifest(version, image, pem)
-    # Re-offering the manifest that's already staged resumes a push.
     start = 0
     status = node_status(node)
     if status and status["fw"]["staged"] == version and status["fw"]["status"] == "receiving":
         start = status["fw"]["pages"]
         # A resumed push must carry the identical image (ECDSA signatures
-        # differ per signing, but the node matches the whole manifest).
+        # differ per signing, but the node matches the whole manifest: re-send the identical
+        # serialized bytes, never a re-encoding).
         manifest = bytes.fromhex(st.get("fw_manifest_hex", "")) or manifest
         print("resuming at page %d" % start)
     node.call({"cmd": "fw_manifest", "hex": manifest.hex()})

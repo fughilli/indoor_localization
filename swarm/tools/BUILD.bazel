@@ -178,12 +178,21 @@ py_library(
     name = "swarm_wire_lib",
     srcs = ["swarm_wire.py"],
     imports = ["."],
+    deps = [
+        "//swarm/proto:swarm_wire_py_proto",
+        "@pypi//cryptography",
+        "@pypi//protobuf",
+    ],
 )
 
 py_test(
     name = "swarm_wire_test",
     srcs = ["swarm_wire_test.py"],
-    deps = [":swarm_wire_lib"],
+    data = ["//swarm/proto:testdata/swarm_wire_golden.txt"],
+    deps = [
+        ":swarm_wire_lib",
+        "@pypi//cryptography",
+    ],
 )
 
 # Vive Tracker ground truth (host-run: `python3 swarm/tools/vive_truth.py`,
