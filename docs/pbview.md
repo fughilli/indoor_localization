@@ -49,5 +49,5 @@ nested `Foo.Bar` is `Foo_BarView`; a oneof `kind` has `kind_case()`. Field acces
   timing budget (`kReplyTimeoutUs`, a 125-byte frame limit); measure before moving them.
 - The C++ output has only been compiled on the host (this repo's `cc_test`), not under the
   xtensa toolchain.
-- pbview is consumed through `local_path_override(path = "../pbview")` in `MODULE.bazel` until
-  the repo is published; then switch to a `git_override` pinned by commit.
+- pbview is a `git_override` in `MODULE.bazel`, pinned by commit; for co-development use
+  `bazel --override_module=pbview=/path/to/pbview`.
