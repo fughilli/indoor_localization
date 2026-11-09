@@ -31,16 +31,18 @@ scarce is each node's ~2.5 ms of spare airtime per 30 ms superframe (about
 
 ### Mesh packets
 
-A protobuf `MeshPacket` (see [swarm-wire.md](swarm-wire.md) for the byte budgets):
+A mesh packet is a `MeshPacket` protobuf message (`swarm/proto/swarm_wire.proto`; byte
+budgets in [swarm-wire.md](swarm-wire.md)):
 
 | Field | |
 |---|---|
 | origin | node that created the packet |
 | id | per-origin counter; (origin, id) identifies the packet |
 | dest | node id; absent for broadcast |
-| hop_limit, hop_start | remaining hops, and the origin's initial hop limit |
-| port | which service: settings, report, bundle, … (the firmware manifest has its own link frame type) |
-| flags, attempt | want-ack, is-ack (bits 0, 1); retry number |
+| hop_limit, hop_start | remaining and initial hop limit |
+| flags | bit 0 want-ack, bit 1 is-ack |
+| attempt | retry number of the origin's transmission |
+| port | which service: settings, report, ack, app … |
 | payload | ≤ 88 bytes |
 
 **Managed flooding**, as in Meshtastic:
@@ -202,17 +204,19 @@ main:
 ### Image, manifest, signature
 
 The host builds the node image as today, then a signing step produces a
-**manifest** that fits in one UWB frame (a protobuf `Manifest {body, signature}`, at most
-114 bytes; the signature covers the exact serialized `body` bytes):
+**manifest** that fits in one UWB frame: a `Manifest` envelope `{body, signature}`
+(up to 114 bytes). `body` is a serialized `ManifestBody`:
 
-| `ManifestBody` field | |
+| Field | |
 |---|---|
 | version | monotonically increasing; nodes ignore older images |
 | size | image bytes |
-| sha256 | of the image (32 bytes) |
-| flags | bit 0: loader image (reserved) |
+| sha256 | 32 bytes, of the image |
+| flags | bit 0: loader image (reserved; keep 0, a set flag can push the manifest over a frame) |
 
-`signature` is ECDSA P-256 (r‖s, 64 bytes) over SHA-256 of the serialized body.
+and `signature` is ECDSA P-256 (r‖s, 64 bytes) over SHA-256 of the `body` bytes exactly as
+the signer serialized them. Nodes keep and re-serve the envelope as received. Staging
+sector 0 holds `varint(length) || Manifest`.
 
 The image is verified by streaming SHA-256 over the staged bytes and
 comparing with the signed digest. The private key never enters the repo
@@ -232,9 +236,9 @@ exchange (a slot is 5 ms; an exchange takes ~2.5 ms; the rest carries up to
 
 - `FW_SUMMARY` (in every POLL/RESPONSE advert): `version`, `pages_complete`,
   `pages_total`. Zero cost to discover who needs what.
-- The signed manifest travels as a link broadcast of its own frame type
-  (`FRAME_TYPE_FW_MANIFEST`, never relayed); a node that hears a neighbour
-  summary with an older version re-offers it the same way.
+- The signed manifest travels in a link frame of its own (`FW_MANIFEST`,
+  broadcast, never relayed); a node that hears a neighbour summary with an
+  older version offers it again.
 - `FW_REQUEST`: `version`, `page`, a 43-bit bitmap of chunks still missing.
   Sent by a node that is behind, addressed to the most advanced neighbour.
 - `FW_DATA`: `version`, `page`, `chunk`, 96 data bytes. Broadcast, so every

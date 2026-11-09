@@ -8,20 +8,29 @@ use core::ffi::c_void;
 
 use crate::crypto::{HMAC_KEY_LEN, P256_PUBLIC_KEY_LEN};
 use crate::manifest::{self, Manifest};
-use crate::net::{FrameKind, Net, SUMMARY_LEN};
+use crate::net::{FrameKind, Net, SUMMARY_LEN_MAX};
 use crate::update::{Flash, Status};
 
-pub const SWARM_NET_SUMMARY_LEN: usize = 16;
-const _: () = assert!(SWARM_NET_SUMMARY_LEN == SUMMARY_LEN);
-/// Largest frame payload swarm_net_next_tx writes (a mesh packet).
-pub const SWARM_NET_MAX_FRAME: usize = 117;
+/// Longest encoded Summary (swarm.v1 `Summary`, variable length): what a POLL carries.
+/// `swarm_net_summary` never writes more.
+pub const SWARM_NET_SUMMARY_MAX: usize = 26;
+const _: () = assert!(SWARM_NET_SUMMARY_MAX == SUMMARY_LEN_MAX);
+/// Largest link payload swarm_net_next_tx writes: the manifest frame, 114 bytes (a mesh
+/// packet is at most 112, a firmware data chunk 110, a request 19).
+pub const SWARM_NET_MAX_FRAME: usize = 114;
 // Literal for cbindgen (it parses this file alone); pinned to the source.
 const _: () = assert!(SWARM_NET_MAX_FRAME == crate::net::MAX_FRAME_PAYLOAD);
-pub const SWARM_NET_MANIFEST_LEN: usize = 108;
-const _: () = assert!(SWARM_NET_MANIFEST_LEN == manifest::ENCODED_LEN);
+/// Longest serialized Manifest (swarm.v1 `Manifest` envelope): 114 bytes.
+pub const SWARM_NET_MANIFEST_MAX: usize = 114;
+const _: () = assert!(SWARM_NET_MANIFEST_MAX == manifest::MAX_ENCODED);
+/// Mesh payload limit for swarm_net_send / swarm_net_next_app.
+pub const SWARM_NET_MAX_PAYLOAD: usize = 88;
+const _: () = assert!(SWARM_NET_MAX_PAYLOAD == crate::mesh::MAX_PAYLOAD);
 pub const SWARM_NET_KIND_MESH: i32 = 1;
 pub const SWARM_NET_KIND_FW_REQUEST: i32 = 2;
 pub const SWARM_NET_KIND_FW_DATA: i32 = 3;
+/// A signed manifest, link broadcast (FRAME_TYPE_FW_MANIFEST), never relayed.
+pub const SWARM_NET_KIND_FW_MANIFEST: i32 = 4;
 pub const SWARM_NET_CHANGED_SWARM: u32 = 1;
 pub const SWARM_NET_CHANGED_OVERRIDES: u32 = 2;
 pub const SWARM_NET_CHANGED_FW_READY: u32 = 4;
@@ -104,13 +113,40 @@ pub unsafe extern "C" fn swarm_net_set_hmac_key(key: *const u8) {
     with_net(|n, _| n.settings.set_key(k));
 }
 
+/// This node's encoded swarm.v1 Summary (for the POLL's `summary` field) into `out`
+/// (`cap` >= SWARM_NET_SUMMARY_MAX): its length (variable, 0..=SWARM_NET_SUMMARY_MAX), or 0
+/// if the stack is not initialized or `cap` is too small.
 #[no_mangle]
-pub unsafe extern "C" fn swarm_net_summary(out: *mut u8) {
-    if let Some(s) = with_net(|n, _| n.summary()) {
-        core::ptr::copy_nonoverlapping(s.as_ptr(), out, SUMMARY_LEN);
+pub unsafe extern "C" fn swarm_net_summary(out: *mut u8, cap: usize) -> usize {
+    match with_net(|n, _| n.summary()) {
+        Some((b, len)) if len <= cap => {
+            core::ptr::copy_nonoverlapping(b.as_ptr(), out, len);
+            len
+        }
+        _ => 0,
     }
 }
 
+/// This node's own summary, decoded (what UpdateServers needs: no byte parsing).
+#[repr(C)]
+#[derive(Clone, Copy, Default)]
+pub struct SwarmNetSummary {
+    pub running: u32,
+    pub staged: u32,
+    pub pages: u16,
+    pub total: u16,
+    pub generation: u32,
+}
+
+/// Fill `out` with this node's own summary (zeros if the stack is not initialized).
+#[no_mangle]
+pub unsafe extern "C" fn swarm_net_own_summary(out: *mut SwarmNetSummary) {
+    let s = with_net(|n, _| n.own_summary()).unwrap_or_default();
+    *out = SwarmNetSummary { running: s.running, staged: s.staged, pages: s.pages, total: s.total, generation: s.generation };
+}
+
+/// A neighbour's POLL `summary` bytes (a swarm.v1 Summary, any length up to
+/// SWARM_NET_SUMMARY_MAX; malformed ones are ignored). `from`: the POLL's `src`.
 #[no_mangle]
 pub unsafe extern "C" fn swarm_net_on_summary(t_us: i64, from: u16, data: *const u8, len: usize) {
     let b = slice(data, len);
@@ -129,6 +165,16 @@ pub unsafe extern "C" fn swarm_net_on_fw_request(t_us: i64, data: *const u8, len
     with_net(|n, _| n.on_fw_request(t_us, b));
 }
 
+/// A FRAME_TYPE_FW_MANIFEST link frame's payload (a swarm.v1 Manifest, <=
+/// SWARM_NET_MANIFEST_MAX bytes): adopted if its signature checks, it is newer than what runs
+/// and is staged, and it fits. Never relay it.
+#[no_mangle]
+pub unsafe extern "C" fn swarm_net_on_fw_manifest(t_us: i64, data: *const u8, len: usize) {
+    let _ = t_us; // accepted for symmetry with the other rx entry points
+    let b = slice(data, len);
+    with_net(|n, f| n.on_fw_manifest(b, f));
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn swarm_net_on_fw_data(t_us: i64, data: *const u8, len: usize) {
     let b = slice(data, len);
@@ -145,9 +191,10 @@ pub extern "C" fn swarm_net_poll(t_us: i64) {
     with_net(|n, f| n.poll(t_us, f));
 }
 
-/// Next frame for this slot into `out` (SWARM_NET_MAX_FRAME bytes): its
-/// length, or 0. `kind`: SWARM_NET_KIND_*; `dest`: link destination
-/// (0xFFFF for broadcast).
+/// Next frame for this slot into `out` (`cap` >= SWARM_NET_MAX_FRAME): its
+/// length, or 0. `kind`: SWARM_NET_KIND_*; `dest`: link destination (0xFFFF for
+/// broadcast, i.e. leave LinkFrame.dst absent). The bytes are the LinkFrame `payload` of
+/// type MESH / FW_REQUEST / FW_DATA / FW_MANIFEST respectively.
 #[no_mangle]
 pub unsafe extern "C" fn swarm_net_next_tx(t_us: i64, out: *mut u8, cap: usize, kind: *mut i32, dest: *mut u16) -> usize {
     let buf = core::slice::from_raw_parts_mut(out, cap);
@@ -157,6 +204,7 @@ pub unsafe extern "C" fn swarm_net_next_tx(t_us: i64, out: *mut u8, cap: usize, 
                 FrameKind::Mesh => (SWARM_NET_KIND_MESH, 0xFFFF),
                 FrameKind::FwRequest { dest } => (SWARM_NET_KIND_FW_REQUEST, dest),
                 FrameKind::FwData => (SWARM_NET_KIND_FW_DATA, 0xFFFF),
+                FrameKind::FwManifest => (SWARM_NET_KIND_FW_MANIFEST, 0xFFFF),
             };
             *kind = kc;
             *dest = d;
@@ -179,7 +227,8 @@ pub extern "C" fn swarm_net_take_changes() -> u32 {
 }
 
 /// A packet for the firmware/host (app ports, settings reports): payload
-/// into `out`, its length; -1 if none.
+/// (at most SWARM_NET_MAX_PAYLOAD bytes) into `out`, its length; -1 if none. A settings
+/// report's payload is a swarm.v1 SettingsReport.
 #[no_mangle]
 pub unsafe extern "C" fn swarm_net_next_app(origin: *mut u16, dest: *mut u16, port: *mut u8, hops: *mut u8,
                                             rssi: *mut f32, out: *mut u8, cap: usize) -> i32 {
@@ -206,6 +255,8 @@ pub extern "C" fn swarm_net_local_override(key: u16, value: u32, set: bool) {
     with_net(|n, _| n.local_override(key, if set { Some(value) } else { None }));
 }
 
+/// A signed manifest from the host (USB): the serialized swarm.v1 Manifest, up to
+/// SWARM_NET_MANIFEST_MAX bytes. True if adopted (or already staged).
 #[no_mangle]
 pub unsafe extern "C" fn swarm_net_host_manifest(data: *const u8, len: usize) -> bool {
     let b = slice(data, len);
@@ -218,7 +269,8 @@ pub unsafe extern "C" fn swarm_net_host_chunk(t_us: i64, page: u16, chunk: u8, d
     with_net(|n, f| n.host_chunk(t_us, page, chunk, b, f));
 }
 
-/// Queue a mesh packet; its id, or -1 if the outbox is full.
+/// Queue a mesh packet (`len` <= SWARM_NET_MAX_PAYLOAD, `port` <= 127); its id, or -1 if the
+/// outbox is full or an argument is out of range.
 #[no_mangle]
 pub unsafe extern "C" fn swarm_net_send(dest: u16, port: u8, data: *const u8, len: usize, want_ack: bool) -> i32 {
     let b = slice(data, len);
@@ -277,12 +329,17 @@ pub unsafe extern "C" fn swarm_net_layer_get(key: u16, swarm: *mut u32, over: *m
 
 // ---- firmware image
 
-/// The staged image's manifest into `out` (SWARM_NET_MANIFEST_LEN bytes).
+/// The staged image's version, size and SHA-256 (from its signed manifest), replacing the
+/// fixed-offset reads of the old packed manifest. False (outputs untouched) if nothing is
+/// staged. This says what is staged, not that the image is complete: see
+/// swarm_net_verify_staged.
 #[no_mangle]
-pub unsafe extern "C" fn swarm_net_staged_manifest(out: *mut u8) -> bool {
+pub unsafe extern "C" fn swarm_net_staged_manifest_info(version: *mut u32, size: *mut u32, sha256_out: *mut u8) -> bool {
     match with_net(|n, _| n.updater.manifest()).flatten() {
         Some(m) => {
-            core::ptr::copy_nonoverlapping(m.encode().as_ptr(), out, manifest::ENCODED_LEN);
+            *version = m.version;
+            *size = m.size;
+            core::ptr::copy_nonoverlapping(m.sha256.as_ptr(), sha256_out, 32);
             true
         }
         None => false,
@@ -303,10 +360,11 @@ pub extern "C" fn swarm_net_verify_staged() -> bool {
     with_net(|n, f| n.updater.manifest().is_some() && n.updater.verify_image(f)).unwrap_or(false)
 }
 
-/// Check a manifest's signature (e.g. one read back from flash).
+/// Check a serialized Manifest's signature (e.g. one received over USB): `data`/`len` the
+/// envelope (<= SWARM_NET_MANIFEST_MAX), `fw_key` the 65-byte public key.
 #[no_mangle]
-pub unsafe extern "C" fn swarm_net_manifest_ok(data: *const u8, fw_key: *const u8) -> bool {
-    let Some(m) = Manifest::decode(slice(data, manifest::ENCODED_LEN)) else { return false };
+pub unsafe extern "C" fn swarm_net_manifest_ok(data: *const u8, len: usize, fw_key: *const u8) -> bool {
+    let Some(m) = Manifest::decode(slice(data, len)) else { return false };
     let mut pk = [0u8; P256_PUBLIC_KEY_LEN];
     pk.copy_from_slice(core::slice::from_raw_parts(fw_key, P256_PUBLIC_KEY_LEN));
     m.verify(&pk)

@@ -23,8 +23,9 @@ pub const P256_SIGNATURE_LEN: usize = 64;
 pub const DOMAIN_BUNDLE: u8 = b'B';
 pub const DOMAIN_OVERRIDE: u8 = b'O';
 
-/// Longest message a tag covers (domain byte + content).
-pub const TAG_MSG_MAX: usize = 640;
+/// Longest message a tag covers (domain byte + content): a full swarm bundle body is ~970
+/// bytes (docs/swarm-wire.md).
+pub const TAG_MSG_MAX: usize = 1024;
 
 #[cfg(feature = "mbedtls")]
 mod backend {

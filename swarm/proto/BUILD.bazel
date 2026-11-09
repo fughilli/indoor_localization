@@ -5,7 +5,7 @@
 # embedded module: @firmware//proto.
 load("@rules_python//python:defs.bzl", "py_library")
 load("@firmware//proto:micropb.bzl", "micropb_rust_library", "proto_fdset", "proto_py_gen")
-load("@pbview//:defs.bzl", "pbview_cc_library")
+load("@pbview//:defs.bzl", "pbview_cc_library", "pbview_library")
 load("@rules_cc//cc:defs.bzl", "cc_test")
 
 package(default_visibility = ["//visibility:public"])
@@ -80,4 +80,20 @@ py_library(
     srcs = [":swarm_wire_py_gen"],
     imports = ["."],
     deps = ["@pypi//protobuf"],
+)
+
+# swarm.v1 for Rust (swarm_net): zero-copy pbview views to decode, pbview's encoder to build.
+pbview_library(
+    name = "swarm_wire_rs",
+    bounds = "swarm_wire_bounds.txt",
+    crate_name = "swarm_wire_rs",
+    fdset = ":swarm_wire_fdset",
+)
+
+exports_files(["swarm_wire_bounds.txt"])
+
+# The golden vectors for swarm_net's tests (read at run time through $SWARM_WIRE_GOLDEN).
+filegroup(
+    name = "swarm_wire_golden_rs",
+    srcs = ["testdata/swarm_wire_golden.txt"],
 )
