@@ -83,30 +83,24 @@ struct Body
   pbv::Bytes summary;
 };
 
-// Encode a frame into buf (kMaxFrame bytes at most). Returns its length, 0 if it does not
-// fit. Absent means default: dst for a broadcast, seq 0, no slot.
+// Encode a frame into buf (kMaxFrame bytes at most) with the typed encoder generated from
+// swarm_wire.proto (guardrails and the swarm_wire_bounds.txt limits apply). Returns its length,
+// 0 if it does not fit or a limit is exceeded. Absent means default: dst for a broadcast, seq 0,
+// no slot; fields are set in field-number order.
 inline int Build(uint8_t *buf, FrameType type, uint16_t src, uint16_t dst, uint8_t seq, const Body &b)
 {
-  pbv::Writer w(buf, kMaxFrame);
-  bool ok = w.Enum(1, (int32_t)type) && w.Uint32(2, src);
-  if (dst != kBroadcast)
-    ok = ok && w.Uint32(3, dst);
-  if (seq)
-    ok = ok && w.Uint32(4, seq);
-  if (b.slot > 0)
-    ok = ok && w.Uint32(5, (uint32_t)b.slot);
-  if (b.payload.size)
-    ok = ok && w.BytesField(6, b.payload);
-  if (b.report)
-    ok = ok && w.Fixed32(8, b.t_round_b) && w.Fixed32(9, b.t_reply_b);
-  if (b.result)
-    ok = ok && w.Sint32(10, b.range_mm);
-  if (b.advert.size)
-    ok = ok && w.BytesField(11, b.advert);
-  if (b.summary.size)
-    ok = ok && w.BytesField(12, b.summary);
-  ok = ok && w.Uint32(15, kVersion);
-  return ok ? (int)w.size() : 0;
+  auto r = swarm::v1::LinkFrameEnc::Encode(buf, kMaxFrame, [&](swarm::v1::LinkFrameEnc &e) {
+    e.type((int32_t)type).src(src);
+    if (dst != kBroadcast)
+      e.dst(dst);
+    e.seq(seq).slot(b.slot > 0 ? (uint32_t)b.slot : 0).payload(b.payload);
+    if (b.report)
+      e.t_round_b(b.t_round_b).t_reply_b(b.t_reply_b);
+    if (b.result)
+      e.range_mm(b.range_mm);
+    e.advert(b.advert).summary(b.summary).ver(kVersion);
+  });
+  return r.ok() ? (int)r.size : 0;
 }
 
 }  // namespace wire
