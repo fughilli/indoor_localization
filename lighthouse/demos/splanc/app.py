@@ -28,6 +28,7 @@ import numpy as np
 import calib
 import frames as fr
 import osc
+import splanc_mcp
 import poses
 import probe
 from ledmap import LedMap
@@ -82,7 +83,7 @@ P4_VIEWER_DEV = "P4 tracker"  # how the P4's tracker shows in the lhd viewer
 class App:
     def __init__(self, ledmap, source, streamer, transport_desc, scale_mode="auto", s_fixed=1.0, device=None,
                  mount_path=None, mount_name="default", fake=None, auto_next=True,
-                 table_clearance=TABLE_CLEARANCE, stylus=None, p4=False):
+                 table_clearance=TABLE_CLEARANCE, stylus=None, p4=False, p4_stations=True):
         self.ledmap, self.source, self.streamer = ledmap, source, streamer
         self.transport_desc = transport_desc
         self.scale_mode, self.s_fixed = scale_mode, s_fixed
@@ -148,6 +149,7 @@ class App:
         # every render frame. lhd's base stations go to the P4 (/lh/station) so both
         # trackers share lhd's world.
         self.p4 = p4
+        self.deployer = None  # splanc_mcp.Deployer, set by main() when there's a fixture (the Deploy button)
         if p4:
             self.device = P4_DEVICE
             self.p4_sent = {"stations": 0, "fixture": 0}
@@ -156,7 +158,8 @@ class App:
             # The P4's tracker into the lhd viewer too (vive_web POST /pose), latest only.
             self.p4_relay = queue.Queue(maxsize=1)
             threading.Thread(target=self._p4_relay, daemon=True, name="p4-relay").start()
-            threading.Thread(target=self._p4_station_sync, daemon=True, name="p4-stations").start()
+            if p4_stations:
+                threading.Thread(target=self._p4_station_sync, daemon=True, name="p4-stations").start()
         if mount_path and not p4:
             self.load_mount(mount_path)
 
@@ -984,6 +987,8 @@ class App:
                 "sphere": {"c_W": self.sphere_W[0].tolist(), "r_W": self.sphere_W[1],
                            "c_F": None if self.sphere_F is None else self.sphere_F[0].tolist(),
                            "r_F": None if self.sphere_F is None else self.sphere_F[1]},
+                "deploy": dict(self.deployer.state() if self.deployer else {"state": "idle", "configured": False},
+                               wanted=splanc_mcp.effect_for(self.p4, self.mode, self.shape)),
                 "osc": {"target": self.transport_desc, "datagrams": self.streamer.sent,
                         "values": {k: list(v) for k, v in self.streamer.values.items()},
                         "recent": getattr(getattr(self, "dry_log", None), "recent", [])[-6:]},
@@ -1133,6 +1138,15 @@ def make_handler(app):
                     app.set_shape(body["shape"])
                 elif p == "/api/params":
                     app.set_params(body.get("width"), body.get("halo"), body.get("glow"))
+                elif p == "/api/deploy":
+                    if app.deployer is None:
+                        raise ValueError("no --fixture: nothing to deploy to")
+                    with app.lock:
+                        effect = body.get("effect") or splanc_mcp.effect_for(app.p4, app.mode, app.shape)
+                    if effect not in splanc_mcp.EFFECTS:
+                        raise ValueError("unknown effect %r" % effect)
+                    app.deployer.start(effect)
+                    out["effect"] = effect
                 elif p == "/api/session":
                     out["path"] = app.save_session()
                 else:
@@ -1183,6 +1197,12 @@ def main():
                     help="the fixture is a Splanc P4 player with its tracker wired in (tracker module): "
                          "lhd's stations go to it, the stylus fit sets its mount, shapes go in the world frame "
                          "(deploy effects/*_pose.glsl)")
+    ap.add_argument("--no-p4-stations", action="store_true",
+                    help="--p4: don't send lhd's stations to the P4, so it calibrates its own (e.g. lhd's "
+                         "calibration is from another room). The P4 adopting them turns its own off until it restarts.")
+    ap.add_argument("--splanc-mcp", default=splanc_mcp.CONFIG,
+                    help="JSON {url, token} for the Splanc MCP server, for the page's Deploy button "
+                         "(or set SPLANC_MCP_URL and SPLANC_MCP_TOKEN)")
     a = ap.parse_args()
 
     fake = None
@@ -1227,8 +1247,11 @@ def main():
 
     app = App(ledmap, source, streamer, transport.describe(), scale_mode=a.scale, s_fixed=a.s, device=a.device,
               mount_path=mount_path, mount_name=a.mount_name, fake=fake, table_clearance=a.table_clearance,
-              stylus=a.stylus, p4=a.p4)
+              stylus=a.stylus, p4=a.p4, p4_stations=not a.no_p4_stations)
     app.dry_log = dry
+    if a.fixture:
+        app.deployer = splanc_mcp.Deployer(parse_target(a.fixture)[0], config=a.splanc_mcp,
+                                           on_deployed=lambda effect: streamer.resend())
     if a.p4 and udp is not None:
         udp.on_receive(app.on_osc_in)
     holder["app"] = app

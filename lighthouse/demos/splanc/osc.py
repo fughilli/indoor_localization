@@ -201,6 +201,12 @@ class OscStreamer:
                 self.dirty.add(addr)
                 self.cond.notify()
 
+    def resend(self):
+        """Send every address again now, e.g. to a freshly deployed effect."""
+        with self.cond:
+            self.dirty.update(self.values)
+            self.cond.notify()
+
     def clear(self, *addrs):
         """Stop sending (and keeping alive) these addresses, e.g. /pick after calibration."""
         with self.cond:

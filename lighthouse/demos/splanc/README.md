@@ -26,6 +26,9 @@ Python 3.11 with numpy and scipy, plus a three.js page (pinned CDN, the same pat
 | `effects/sphere_shell.glsl` | Like `plane_slice`, for a sphere: lights LEDs within `width` of its surface. Streamed as `/sphere ,ffff` (centre xyz, radius; metres, frame F). |
 | `effects/tracker_demo_pose.glsl` | `--p4` only: the whole demo in one effect (LED pick, outline, plane or sphere in the world frame, the pose from the P4's uniform pool). `/pick` says what to show, `/shape` which shape. Deploy it once; the demo never needs another. |
 | `effects/plane_slice_pose.glsl`, `effects/sphere_shell_pose.glsl` | The single-purpose `--p4` versions (world-frame shape, pool `pose`). |
+| `effects/hot_spots_pose.glsl` | A hot-and-cold game: four coloured spots in the world; the fixture glows towards each and blinks inside one. Its spots and colours are plain uniforms (set from the app or `set_uniforms`). |
+| `flashlight.py`, `effects/flashlight_pose.glsl` | The stylus as a flashlight (below). |
+| `splanc_mcp.py` | The page's Deploy button: deploys the effect for the current mode through the Splanc MCP server, by library id once it's in the library. |
 | `tests/` | `test_units.py` (maths, map, hold, OSC, sources), `test_calib_synth.py` (calibration against the hidden truth), `test_app_synthetic.py` (whole app over HTTP). |
 
 The maths (`frames`, `ledmap`, `calib`) has no server or UI code in it.
@@ -193,6 +196,37 @@ The fixture tracks itself (its tracker wired to the P4) and the stylus calibrate
   - `/lh/lead ,f <ms>` predicts further ahead;
   - `/lh/stream ,f 0` (or 1) sends sweeps whole (or streams them).
 
+## Flashlight: the stylus lights the fixtures
+
+`flashlight.py` turns the stylus into a flashlight. A cone of light from its tip, along its
+axis, lights the LEDs of every fixture inside it, on `effects/flashlight_pose.glsl`.
+
+```sh
+/usr/bin/python3 flashlight.py --stylus LHR-10F97524 --fixture <lamp IP> [--fixture <another> ...]
+```
+
+- **Tip and axis**: from the stylus pivot calibration the main demo saves
+  (`mounts/stylus-<serial>.json`). Run the demo's Pivot step once per stylus.
+- **The stylus button** cycles five modes:
+  - **colour**: rolling the stylus about its own axis turns the hue, one turn round the
+    wheel;
+  - **saturation**: rolling goes from white (0) to full colour (1, the default), one
+    turn for the whole range;
+  - **width**: rolling widens or narrows the beam, ×3 per turn, 2° to 60° half-angle;
+  - **persistence**: rolling sets how long the beam's trail lasts. Each LED keeps the
+    brighter of the beam and its own fading glow (time constant ×3 per turn, up to
+    20 s). At the short end (0.05 s) the trail is off, the default;
+  - **fixed**: rolling does nothing.
+
+  Only the roll counts. Pointing the stylus around changes nothing but where the beam
+  goes.
+- **Fixtures in one world**: the beam is in lhd's world. A P4 player tracks itself, so it
+  must have adopted lhd's stations (run the demo without `--no-p4-stations`). Any other
+  fixture needs its room pose set in lhd's world (`set_fixture_pose`); the effect lights
+  it by `led.room`.
+- **OSC**: `/origin`, `/dir` (world, metres), `/width` (the half-angle, rad), `/color`,
+  `/decay` (the trail's time constant, s; 0 = none).
+
 ## What the user (or a Splanc-connected agent) has to do
 
 This session had no Splanc MCP tools, so none of these have been run.
@@ -240,6 +274,8 @@ python3 tests/test_units.py          # ~1 s: frames/plane maths, map surface, ho
 python3 tests/test_calib_synth.py -v # ~45 s: calibration vs hidden truth (T_WF, c, o, s), 3 seeds, lift-offs, a wrong touch
 python3 tests/test_app_synthetic.py  # ~45 s: the whole app over HTTP in --synthetic mode, through mount and live
 python3 tests/test_buttons.py        # ~10 s: the tracker-button wizard on simulated time, rub through mount
+python3 tests/test_flashlight.py     # <1 s: the beam follows the tip, button modes, roll-only adjustment
+python3 tests/test_deploy.py         # ~2 s: the Deploy button against a fake Splanc MCP server
 ```
 
 The synthetic fixture is a 300-LED helix on a 0.12 m × Ø0.08 m cylinder. The map has
