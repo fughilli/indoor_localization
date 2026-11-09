@@ -9,8 +9,10 @@ from splanc's `oss/pbview`; MIT OR Apache-2.0): zero-copy views over the receive
 view is a (pointer, length) pair; nothing is decoded into a struct, copied or allocated, so
 a handler costs two words of stack whatever the schema. `Parse` validates once (framing,
 wire types, UTF-8, nesting depth), so accessors never skip anything silently. **Writing**
-uses `pbv::Writer`, which encodes into the frame buffer in place. Rust (the swarm core)
-keeps using micropb from `@firmware//proto`; both generate from the same `.proto`.
+uses `pbv::Writer`, which encodes into the frame buffer in place. Rust: `swarm_net` decodes with pbview views and
+encodes with pbview's generated typed encoders (`FooEnc`; guardrails and compile-time size bounds from
+a sidecar bounds file, see the pbview README); widget.v1 and the pose advert keep micropb from
+`@firmware//proto`. All generate from the same `.proto`.
 
 ## Adding a message
 
@@ -42,11 +44,10 @@ nested `Foo.Bar` is `Foo_BarView`; a oneof `kind` has `kind_case()`. Field acces
 
 - `widget.v1` (`swarm/proto/widget_config.proto`) is protobuf and now has C++ views.
   `PoseAdvertisement` is the over-the-air advert; the radio carries it as opaque bytes today.
-- **Not yet migrated**, in the order I would do them: the `apps/common/protocol.h` link frames
-  (`Header`, `Report`, `Result`; fixed-size packed structs, parsed with `memcpy`), the swarm_net
-  mesh/firmware frames, and the serial records of the sync-log / CIR experiment (JSON today).
-  Protobuf varints make frame lengths data-dependent, and the DS-TWR frames are on a tight
-  timing budget (`kReplyTimeoutUs`, a 125-byte frame limit); measure before moving them.
+- Migrated (docs/swarm-wire.md): the UWB link frames, the swarm_net mesh, settings and firmware
+  formats, the manifest and the staging sector.
+- **Not migrated:** the serial records between a node and its host (JSON; the sync-log and CIR
+  experiment records among them). DS-TWR timing with the new frames is unmeasured on hardware.
 - The C++ output has only been compiled on the host (this repo's `cc_test`), not under the
   xtensa toolchain.
 - pbview is a `git_override` in `MODULE.bazel`, pinned by commit; for co-development use

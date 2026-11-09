@@ -38,8 +38,8 @@ The DW3000 standard PHR allows 127 bytes, 2 of them FCS: a frame is at most **12
 | REPORT | 15 | two fixed32: 10 | 25 |
 | RESULT | 15 | sint32: 4 | 19 |
 | MESH (broadcast) | 2 + 2 + 4 + payload tag/len 2 = 10 | MeshPacket <= 115 (header <= 24, payload <= **88**) | <= 125 |
-| FW_DATA (broadcast) | 10 | FwData: 6 + 3 + 2 + (2 + 96) = 109 | 119 |
-| FW_REQUEST (unicast) | 14 | FwRequest <= 18 | 32 |
+| FW_DATA (broadcast) | 10 | FwData: 110 (pages are 16-bit) | 120 |
+| FW_REQUEST (unicast) | 14 | FwRequest <= 19 | 33 |
 | FW_MANIFEST (broadcast) | 10 | Manifest <= 114 | 124 |
 
 ## Constants derived from the budgets
@@ -54,8 +54,17 @@ The DW3000 standard PHR allows 127 bytes, 2 of them FCS: a frame is at most **12
 | `MAX_KEYS` | 96 | unchanged | |
 | bundle read buffer (`kMaxBlob`) / `TAG_MSG_MAX` | 1024 / 640 | 1024 / 1024 | a full bundle is ~975 bytes |
 
-Rust asserts these at compile time against the encoded worst case (`swarm/net`), C++ in
-`apps/common/link_test.cc`.
+These are enforced mechanically. `swarm/proto/swarm_wire_bounds.txt` declares the limits the
+schema cannot say (`max_len`, `max_count`, and `max_value` for ids, keys and pages); pbview's
+typed encoders enforce them and compute each message's exact worst case, `FooEnc::MAX_ENCODED_LEN`,
+which `swarm/net/src/budget.rs` asserts at compile time against the frame budgets above. Changing
+the schema or the bounds so that a message no longer fits breaks the build. C++ checks the link
+layer in `apps/common/link_test.cc`.
+
+Corrections found while building this (the table above has them): a manifest with a nonzero
+`flags` would be 116 bytes and its frame 126, so `ManifestBody.flags` is bounded to 0; FwData
+is 110 (16-bit pages), FwRequest 19; the override and report budgets assume registry keys fit
+14 bits.
 
 ## Staging partition
 

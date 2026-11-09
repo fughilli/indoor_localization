@@ -10,7 +10,7 @@ swarm.v1.LinkFrame.summary max_len 26
 
 # Firmware distribution
 swarm.v1.ManifestBody.sha256 max_len 32
-swarm.v1.Manifest.body max_len 48
+swarm.v1.Manifest.body max_len 46
 swarm.v1.Manifest.signature max_len 64
 swarm.v1.FwData.data max_len 96
 
@@ -26,3 +26,32 @@ swarm.v1.OverrideBody.settings max_count 7
 swarm.v1.Override.body max_len 78
 swarm.v1.Override.tag max_len 4
 swarm.v1.SettingsReport.settings max_count 6
+
+# Integer ranges (max_value): ids are 16 bits, registry keys 14 bits, pages 16 bits. These make
+# FooEnc::MAX_ENCODED_LEN exact and the setters reject larger values.
+swarm.v1.LinkFrame.src max_value 65534
+swarm.v1.LinkFrame.dst max_value 65535
+swarm.v1.LinkFrame.seq max_value 255
+swarm.v1.LinkFrame.slot max_value 127
+swarm.v1.Summary.pages max_value 65535
+swarm.v1.Summary.total max_value 65535
+swarm.v1.ManifestBody.flags max_value 0   # reserved; a nonzero flag could push the manifest over a frame
+swarm.v1.FwRequest.page max_value 65535
+swarm.v1.FwData.page max_value 65535
+swarm.v1.FwData.chunk max_value 42
+swarm.v1.MeshPacket.origin max_value 65535
+swarm.v1.MeshPacket.id max_value 65535
+swarm.v1.MeshPacket.dest max_value 65535
+swarm.v1.MeshPacket.hop_limit max_value 15
+swarm.v1.MeshPacket.hop_start max_value 15
+swarm.v1.MeshPacket.port max_value 127
+swarm.v1.MeshPacket.flags max_value 3
+swarm.v1.MeshPacket.attempt max_value 15
+swarm.v1.Ack.id max_value 65535
+swarm.v1.Setting.key max_value 16383
+swarm.v1.Setting.source max_value 2
+swarm.v1.BundleFragment.total_len max_value 1024
+swarm.v1.BundleFragment.offset max_value 1024
+swarm.v1.OverrideBody.kind max_value 2
+swarm.v1.SettingsReport.part max_value 127
+swarm.v1.SettingsReport.parts max_value 127

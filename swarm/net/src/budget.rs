@@ -57,15 +57,10 @@ fn manifest_frame() {
     assert_eq!(10 + n, 124);
     assert!(10 + n <= FRAME);
 
-    // With the reserved `flags` set on top, the envelope is 116 and the frame 126: over
-    // budget, so such a manifest is refused (flags stays 0 until the budget is revisited).
-    let bn = wire::manifest_body(u32::MAX, u32::MAX, &sha, 1, &mut body).unwrap();
-    assert_eq!(bn, 48);
-    let mut big = [0u8; 128];
-    let n = wire::manifest(&body[..bn], &[0xEE; 64], &mut big).unwrap();
-    assert_eq!(n, 116);
-    assert!(Manifest::decode(&big[..n]).is_none());
-    assert_eq!(pb::ManifestEnc::MAX_ENCODED_LEN, 116);
+    // The reserved `flags` would push the envelope to 116 and the frame to 126, so the bounds
+    // file caps it at 0 and the encoder refuses it; MAX_ENCODED_LEN is the exact worst case.
+    assert!(wire::manifest_body(u32::MAX, u32::MAX, &sha, 1, &mut body).is_none());
+    assert_eq!(pb::ManifestEnc::MAX_ENCODED_LEN, 114);
 }
 
 #[test]
@@ -75,9 +70,8 @@ fn firmware_request_and_data_frames() {
     assert_eq!(n, 19);
     assert!(n <= REQUEST_MAX);
     assert!(14 + n <= FRAME, "unicast link header 14");
-    // A u32 page would make it 21 (what the schema allows); pages are u16 here.
-    let n = wire::fw_request(u32::MAX, u32::MAX, u64::MAX, &mut b).unwrap();
-    assert_eq!(n, 21);
+    // A u32 page would make it 21 (what the schema alone allows); the bounds cap pages at u16.
+    assert!(wire::fw_request(u32::MAX, u32::MAX, u64::MAX, &mut b).is_none());
 
     let data = [0x5Au8; CHUNK];
     let mut b = [0u8; 128];
@@ -162,3 +156,16 @@ fn ack_and_tag_messages() {
     let _ = crypto::TAG_LEN;
     let _ = Settings::new(1, None);
 }
+
+// ---- compile-time budgets: the bounds file (swarm/proto/swarm_wire_bounds.txt) makes every
+// message's MAX_ENCODED_LEN an exact worst case, so a schema or bounds change that breaks a
+// frame budget fails the build, not a test.
+const _: () = assert!(pb::MeshPacketEnc::MAX_ENCODED_LEN <= 115, "MeshPacket in a mesh link frame (10 + 115)");
+const _: () = assert!(pb::ManifestEnc::MAX_ENCODED_LEN <= 115, "Manifest in its link frame (10 + 115)");
+const _: () = assert!(pb::SummaryEnc::MAX_ENCODED_LEN <= 26, "Summary in a POLL");
+const _: () = assert!(pb::FwDataEnc::MAX_ENCODED_LEN <= 115, "FwData in a broadcast link frame");
+const _: () = assert!(pb::FwRequestEnc::MAX_ENCODED_LEN <= 111, "FwRequest in a unicast link frame");
+const _: () = assert!(pb::SettingsReportEnc::MAX_ENCODED_LEN <= 88, "SettingsReport in a mesh payload");
+const _: () = assert!(pb::BundleFragmentEnc::MAX_ENCODED_LEN <= 88, "BundleFragment in a mesh payload");
+const _: () = assert!(pb::OverrideEnc::MAX_ENCODED_LEN <= 88, "Override in a mesh payload");
+const _: () = assert!(pb::AckEnc::MAX_ENCODED_LEN <= 88);
