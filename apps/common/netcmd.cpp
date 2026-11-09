@@ -258,7 +258,7 @@ bool Handle(const char *line)
     // packet the host built (tagged override, settings GET, ...).
     long dest, port;
     call.kind = NetCall::kSend;
-    int n = Hex(line, "hex", call.data, 112);
+    int n = Hex(line, "hex", call.data, sizeof(call.data));
     if (!Int(line, "dest", &dest) || !Int(line, "port", &port) || n < 0)
     {
       Ack("send", false);
@@ -278,7 +278,9 @@ bool Handle(const char *line)
     call.kind = NetCall::kHostManifest;
     int n = Hex(line, "hex", call.data, sizeof(call.data));
     call.len = n > 0 ? n : 0;
-    Ack("fw_manifest", n == SWARM_NET_MANIFEST_LEN && radio::Call(call) == 1);
+    // A serialized swarm.v1.Manifest (variable length, up to SWARM_NET_MAX_FRAME); swarm_net checks
+    // the signature.
+    Ack("fw_manifest", n > 0 && radio::Call(call) == 1);
   }
   else if (IsCmd(line, "fw_page"))
   {

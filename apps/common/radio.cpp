@@ -5,6 +5,7 @@
 #include <freertos/semphr.h>
 #include <freertos/task.h>
 
+#include "apps/common/link.h"
 #include "apps/common/pins.h"
 #include "libs/dw3000/dw3000.h"
 
@@ -12,6 +13,12 @@ namespace radio {
 namespace {
 
 using namespace proto;
+using FrameType = wire::FrameType;
+
+static_assert(proto::kMaxFrame == wire::kMaxFrame && proto::kMaxAdvert == wire::kMaxAdvert, "link.h and protocol.h agree");
+static_assert((int)FrameType::kPoll == proto::kPoll && (int)FrameType::kFwManifest == proto::kFwManifest &&
+                  (int)FrameType::kResult == proto::kResult && (int)FrameType::kFwData == proto::kFwData,
+              "frame type numbers");
 
 // After bring-up the SPI clock goes up from the Arduino default (~1 MHz):
 // frames carry ~70-byte payloads and every exchange step reads/writes them.
@@ -134,31 +141,29 @@ uint16_t NextPeer()
   return g_rr_last;
 }
 
-int Build(uint8_t *buf, Type type, uint16_t dst, uint8_t seq, const void *payload, int len)
+// A frame from this node (swarm.v1.LinkFrame, apps/common/link.h): its length.
+int Build(uint8_t *buf, FrameType type, uint16_t dst, uint8_t seq, const wire::Body &body = wire::Body())
 {
-  Header h = {kMagic, type, g_id, dst, seq, (uint8_t)MySlot()};
-  memcpy(buf, &h, sizeof(h));
-  if (len)
-    memcpy(buf + sizeof(h), payload, len);
-  return sizeof(h) + len;
+  return wire::Build(buf, type, g_id, dst, seq, body);
 }
 
-// Header + [advert length][advert]: POLL and RESPONSE.
-int BuildWithAdvert(uint8_t *buf, Type type, uint16_t dst, uint8_t seq)
+// POLL (also carrying our slot and the network summary) and RESPONSE: our advert rides along.
+int BuildWithAdvert(uint8_t *buf, FrameType type, uint16_t dst, uint8_t seq)
 {
-  uint8_t payload[1 + kMaxAdvert + kSummaryLen];
+  uint8_t advert[kMaxAdvert], summary[SWARM_NET_SUMMARY_MAX];
+  int advert_len;
   portENTER_CRITICAL(&g_mux);
-  payload[0] = g_advert_len;
-  memcpy(payload + 1, g_advert, g_advert_len);
+  advert_len = g_advert_len;
+  memcpy(advert, g_advert, advert_len);
   portEXIT_CRITICAL(&g_mux);
-  int n = 1 + payload[0];
-  if (type == kPoll)
+  wire::Body body;
+  body.advert = pbv::Bytes(advert, advert_len);
+  if (type == FrameType::kPoll)
   {
-    // [advert len][advert][network summary]
-    swarm_net_summary(payload + n);
-    n += kSummaryLen;
+    body.slot = MySlot();
+    body.summary = pbv::Bytes(summary, swarm_net_summary(summary, sizeof(summary)));
   }
-  return Build(buf, type, dst, seq, payload, n);
+  return Build(buf, type, dst, seq, body);
 }
 
 void Tx(const uint8_t *buf, int len, bool then_rx)
@@ -191,9 +196,10 @@ void ArmRx()
   g_rx_armed = true;
 }
 
-// One received frame into buf (without FCS): its length, or 0 at the
-// deadline. Bad frames are counted and the receiver re-armed.
-int Rx(uint8_t *buf, int64_t deadline)
+// One received frame into buf (without FCS), parsed into `f` (which borrows buf): its
+// length, or 0 at the deadline. Frames that are not valid swarm frames are counted and the
+// receiver re-armed.
+int Rx(uint8_t *buf, wire::Frame *f, int64_t deadline)
 {
   while (Now() < deadline)
   {
@@ -201,10 +207,10 @@ int Rx(uint8_t *buf, int64_t deadline)
     if (s == 1)
     {
       int len = DWM3000.rxFrameLength() - 2;
-      if (len >= (int)sizeof(Header) && len <= kMaxFrame)
+      if (len > 0 && len <= kMaxFrame)
       {
         DWM3000.readBytes(0x12, 0, buf, len);
-        if (buf[0] == kMagic)
+        if (wire::Parse(buf, len, f))
         {
           g_rx_armed = false;  // the receiver stops after a good frame
           return len;
@@ -224,50 +230,48 @@ int Rx(uint8_t *buf, int64_t deadline)
 
 // Wait for `type` from `peer` in exchange `seq`; other frames are skipped
 // (counted as foreign) and the receiver re-armed.
-int Expect(uint8_t *buf, Type type, uint16_t peer, uint8_t seq)
+int Expect(uint8_t *buf, wire::Frame *f, FrameType type, uint16_t peer, uint8_t seq)
 {
   int64_t deadline = Now() + kReplyTimeoutUs;
   while (true)
   {
-    int len = Rx(buf, deadline);
+    int len = Rx(buf, f, deadline);
     if (len == 0)
     {
       g_stats.timeouts++;
       return 0;
     }
-    const Header *h = (const Header *)buf;
-    if (h->type == type && h->src == peer && h->dst == g_id && h->seq == seq)
+    if (f->type == type && f->src == peer && f->dst == g_id && f->seq == seq)
       return len;
     g_stats.foreign++;
     ArmRx();
   }
 }
 
-void EmitAdvert(uint16_t from, int64_t t, const uint8_t *frame, int len)
+void EmitAdvert(uint16_t from, int64_t t, const uint8_t *advert, int len)
 {
-  int at = sizeof(Header);
-  if (len < at + 1 || frame[at] > kMaxAdvert || len < at + 1 + frame[at])
+  if (len <= 0 || len > kMaxAdvert)
     return;
   RadioEvent ev = {};
   ev.kind = RadioEvent::kAdvert;
   ev.peer = from;
   ev.t_us = t;
-  ev.len = frame[at];
-  memcpy(ev.data, frame + at + 1, ev.len);
+  ev.len = len;
+  memcpy(ev.data, advert, ev.len);
   xQueueSend(g_events, &ev, 0);
 }
 
 // The frame just received, stamped `ts`. Call before anything else uses the receiver:
 // the clock-offset and power registers describe the *last* frame.
-void LogHeard(const Header *h, uint64_t ts)
+void LogHeard(const wire::Frame *h, uint64_t ts)
 {
-  if (!g_sync_log || !(g_sync_mask & (1u << h->type)) || (g_sync_count++ % g_sync_every))
+  if (!g_sync_log || !(g_sync_mask & (1u << (int)h->type)) || (g_sync_count++ % g_sync_every))
     return;
   RadioEvent ev = {};
   ev.kind = RadioEvent::kHeard;
   ev.peer = h->src;
   ev.dst = h->dst;
-  ev.ftype = h->type;
+  ev.ftype = (uint8_t)h->type;
   ev.seq = h->seq;
   ev.t_us = Now();
   ev.ts = ts;
@@ -281,7 +285,7 @@ void LogHeard(const Header *h, uint64_t ts)
     ce.t_us = ev.t_us;
     ce.peer = h->src;
     ce.dst = h->dst;
-    ce.ftype = h->type;
+    ce.ftype = (uint8_t)h->type;
     ce.seq = h->seq;
     ce.ts = ts;
     ce.fp_idx = DWM3000.readFirstPathIndex();
@@ -332,86 +336,88 @@ void EmitRange(uint16_t peer, bool initiator, float range_m, float rssi, float f
 void Initiate(uint16_t peer)
 {
   uint8_t tx[kMaxFrame], rx[kMaxFrame];
+  wire::Frame f;
   uint8_t seq = ++g_seq;
-  Tx(tx, BuildWithAdvert(tx, kPoll, peer, seq), true);
+  Tx(tx, BuildWithAdvert(tx, FrameType::kPoll, peer, seq), true);
   if (!WaitTxDone())
     return;
   uint64_t t1 = DWM3000.readTXTimestamp();
   LogSent(kPoll, peer, seq, t1);
   g_stats.polls_tx++;
 
-  int resp_len = Expect(rx, kResponse, peer, seq);
-  if (!resp_len)
+  if (!Expect(rx, &f, FrameType::kResponse, peer, seq))
     return;
   uint64_t t4 = DWM3000.readRXTimestamp();
-  LogHeard((const Header *)rx, t4);
+  LogHeard(&f, t4);
   int clock_offset = DWM3000.getRawClockOffset();
   float rssi = DWM3000.getSignalStrength();
   float fp = DWM3000.getFirstPathSignalStrength();
-  uint8_t resp[kMaxFrame];
-  memcpy(resp, rx, resp_len);
+  uint8_t advert[kMaxAdvert];
+  int advert_len = f.advert.size <= (size_t)kMaxAdvert ? (int)f.advert.size : 0;
+  memcpy(advert, f.advert.data, advert_len);
 
-  Tx(tx, Build(tx, kFinal, peer, seq, nullptr, 0), true);
+  Tx(tx, Build(tx, FrameType::kFinal, peer, seq), true);
   if (!WaitTxDone())
     return;
   uint64_t t5 = DWM3000.readTXTimestamp();
   LogSent(kFinal, peer, seq, t5);
 
-  if (!Expect(rx, kReport, peer, seq))
+  if (!Expect(rx, &f, FrameType::kReport, peer, seq))
     return;
-  Report rep;
-  memcpy(&rep, rx + sizeof(Header), sizeof(rep));
-  int tof = DWM3000.ds_processRTInfo(TsDiff(t4, t1), TsDiff(t5, t4), rep.t_round_b,
-                                     rep.t_reply_b, clock_offset);
+  int tof = DWM3000.ds_processRTInfo(TsDiff(t4, t1), TsDiff(t5, t4), f.t_round_b, f.t_reply_b, clock_offset);
   float range_m = DWM3000.convertToCM(tof) / 100.0f;
 
-  Result res = {(int32_t)lroundf(range_m * 1000.0f)};
-  Tx(tx, Build(tx, kResult, peer, seq, &res, sizeof(res)), false);
+  wire::Body res;
+  res.result = true;
+  res.range_mm = (int32_t)lroundf(range_m * 1000.0f);
+  Tx(tx, Build(tx, FrameType::kResult, peer, seq, res), false);
   WaitTxDone();
   ArmRx();
 
   int64_t now = Now();
   Heard(peer, now);
-  EmitAdvert(peer, now, resp, resp_len);
+  EmitAdvert(peer, now, advert, advert_len);
   EmitRange(peer, true, range_m, rssi, fp);
   g_stats.ranges_init++;
 }
 
 // A POLL addressed to us arrived at radio time t2.
-void Respond(const Header *poll, uint64_t t2)
+void Respond(const wire::Frame *poll, uint64_t t2)
 {
   uint8_t tx[kMaxFrame], rx[kMaxFrame];
+  wire::Frame f;
   uint16_t peer = poll->src;
   uint8_t seq = poll->seq;
-  Tx(tx, BuildWithAdvert(tx, kResponse, peer, seq), true);
+  Tx(tx, BuildWithAdvert(tx, FrameType::kResponse, peer, seq), true);
   if (!WaitTxDone())
     return;
   uint64_t t3 = DWM3000.readTXTimestamp();
   LogSent(kResponse, peer, seq, t3);
 
-  if (!Expect(rx, kFinal, peer, seq))
+  if (!Expect(rx, &f, FrameType::kFinal, peer, seq))
     return;
   uint64_t t6 = DWM3000.readRXTimestamp();
-  LogHeard((const Header *)rx, t6);
+  LogHeard(&f, t6);
   float rssi = DWM3000.getSignalStrength();
   float fp = DWM3000.getFirstPathSignalStrength();
 
-  Report rep = {TsDiff(t6, t3), TsDiff(t3, t2)};
-  Tx(tx, Build(tx, kReport, peer, seq, &rep, sizeof(rep)), true);
+  wire::Body rep;
+  rep.report = true;
+  rep.t_round_b = TsDiff(t6, t3);
+  rep.t_reply_b = TsDiff(t3, t2);
+  Tx(tx, Build(tx, FrameType::kReport, peer, seq, rep), true);
   if (!WaitTxDone())
     return;
 
-  if (!Expect(rx, kResult, peer, seq))
+  if (!Expect(rx, &f, FrameType::kResult, peer, seq))
     return;
-  Result res;
-  memcpy(&res, rx + sizeof(Header), sizeof(res));
-  EmitRange(peer, false, res.range_mm / 1000.0f, rssi, fp);
+  EmitRange(peer, false, f.range_mm / 1000.0f, rssi, fp);
   g_stats.ranges_resp++;
 }
 
 // Align our superframe to the sync master's POLL (sent kPollOffsetUs into
 // its slot `h->slot`), seen at local time t.
-void Sync(const Header *h, int64_t t)
+void Sync(const wire::Frame *h, int64_t t)
 {
   uint16_t master = Master();
   g_stats.sync_master = master;
@@ -429,22 +435,27 @@ void Sync(const Header *h, int64_t t)
 
 // Receive and serve until `until`: answer POLLs addressed to us, record
 // every overheard advertisement, follow the sync master.
-void HandleNetFrame(const Header *h, const uint8_t *rx, int len, int64_t t)
+void HandleNetFrame(const wire::Frame *h, int64_t t)
 {
-  const uint8_t *p = rx + sizeof(Header);
-  int n = len - (int)sizeof(Header);
+  const uint8_t *p = h->payload.data;
+  int n = (int)h->payload.size;
   g_stats.net_rx++;
   switch (h->type)
   {
-    case kMesh:
+    case FrameType::kMesh:
       swarm_net_on_mesh(t, p, n, DWM3000.getSignalStrength());
       break;
-    case kFwData:
+    case FrameType::kFwData:
       swarm_net_on_fw_data(t, p, n);
       break;
-    case kFwRequest:
+    case FrameType::kFwManifest:
+      swarm_net_on_fw_manifest(t, p, n);
+      break;
+    case FrameType::kFwRequest:
       if (h->dst == g_id)
         swarm_net_on_fw_request(t, p, n);
+      break;
+    default:
       break;
   }
 }
@@ -473,10 +484,9 @@ void UpdateServers(int64_t now)
   int n = (int)swarm_net_neighbours(now, kPeerTimeoutUs, nb, kMaxKnown);
   for (int i = 0; i < n; i++)
     nodes[i] = {nb[i].id, nb[i].fw_running, nb[i].fw_staged, nb[i].fw_pages};
-  uint8_t sum[kSummaryLen];
-  swarm_net_summary(sum);
-  auto u32 = [&](int at) { return (uint32_t)sum[at] | sum[at + 1] << 8 | sum[at + 2] << 16 | (uint32_t)sum[at + 3] << 24; };
-  nodes[n++] = {g_id, u32(0), u32(4), (uint16_t)(sum[8] | sum[9] << 8)};
+  SwarmNetStatus st;
+  swarm_net_status(&st);
+  nodes[n++] = {g_id, st.fw_running, st.fw_staged, st.fw_pages};
   g_server_n = 0;
   for (int i = 0; i < n; i++)
   {
@@ -518,8 +528,13 @@ void NetTx(int64_t deadline)
     size_t n = swarm_net_next_tx(Now(), payload, sizeof(payload), &kind, &dest);
     if (!n)
       break;
-    Type type = kind == SWARM_NET_KIND_MESH ? kMesh : kind == SWARM_NET_KIND_FW_REQUEST ? kFwRequest : kFwData;
-    Tx(tx, Build(tx, type, dest, 0, payload, (int)n), false);
+    FrameType type = kind == SWARM_NET_KIND_MESH           ? FrameType::kMesh
+                     : kind == SWARM_NET_KIND_FW_REQUEST   ? FrameType::kFwRequest
+                     : kind == SWARM_NET_KIND_FW_MANIFEST  ? FrameType::kFwManifest
+                                                           : FrameType::kFwData;
+    wire::Body body;
+    body.payload = pbv::Bytes(payload, n);
+    Tx(tx, Build(tx, type, dest, 0, body), false);
     WaitTxDone();
     g_stats.net_tx++;
   }
@@ -605,31 +620,31 @@ void Service()
 void Listen(int64_t until)
 {
   uint8_t rx[kMaxFrame];
+  wire::Frame f;
   if (!g_rx_armed)
     ArmRx();
   while (Now() < until)
   {
-    int len = Rx(rx, until);
+    int len = Rx(rx, &f, until);
     if (len == 0)
       return;
     int64_t t = Now();
     uint64_t ts = DWM3000.readRXTimestamp();
-    const Header *h = (const Header *)rx;
+    const wire::Frame *h = &f;
     LogHeard(h, ts);
     Heard(h->src, t);
-    if (h->type == kPoll)
+    if (h->type == FrameType::kPoll)
     {
       Sync(h, t);
       if (h->dst == g_id)
         Respond(h, ts);
-      EmitAdvert(h->src, t, rx, len);
-      int at = sizeof(Header) + 1 + rx[sizeof(Header)];
-      if (len >= at + kSummaryLen)
-        swarm_net_on_summary(t, h->src, rx + at, kSummaryLen);
+      EmitAdvert(h->src, t, h->advert.data, (int)h->advert.size);
+      if (h->summary.size)
+        swarm_net_on_summary(t, h->src, h->summary.data, h->summary.size);
     }
-    else if (h->type >= kMesh && h->type <= kFwData)
+    else if (h->type >= FrameType::kMesh && h->type <= FrameType::kFwManifest)
     {
-      HandleNetFrame(h, rx, len, t);
+      HandleNetFrame(h, t);
     }
     else if (h->dst != g_id)
     {
@@ -643,7 +658,7 @@ void Listen(int64_t until)
 void Beacon()
 {
   uint8_t tx[kMaxFrame];
-  Tx(tx, BuildWithAdvert(tx, kPoll, kBroadcast, ++g_seq), false);
+  Tx(tx, BuildWithAdvert(tx, FrameType::kPoll, kBroadcast, ++g_seq), false);
   WaitTxDone();
   if (g_sync_log)
     LogSent(kPoll, kBroadcast, g_seq, DWM3000.readTXTimestamp());

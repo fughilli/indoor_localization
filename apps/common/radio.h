@@ -92,7 +92,7 @@ struct NetCall
   bool flag = false;
   uint16_t len = 0;
   const uint8_t *ptr = nullptr;  // kHostPage
-  uint8_t data[640];
+  uint8_t data[1024];  // a tagged settings bundle is up to ~975 bytes (docs/swarm-wire.md)
   SwarmNetStatus status;  // kStatus
   SwarmNetNeighbour neighbours[16];  // kStatus
   uint8_t neighbour_count = 0;
