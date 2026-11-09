@@ -62,20 +62,21 @@ def hmac_tag(domain, *parts):
 
 def main():
     out = {}
+    # LinkFrame fields are written in field-number order (ver = 15 last), as every encoder does.
     # LinkFrame: POLL from node 3, slot 2, seq 9, advert b"\x01\x02\x03", summary below.
     summary = uint(1, 7) + uint(2, 8) + uint(3, 5) + uint(4, 12) + uint(5, 300)
     out["summary"] = summary                           # running 7, staged 8, pages 5, total 12, generation 300
-    out["link_poll"] = (uint(15, 1) + uint(1, 1) + uint(2, 3) + uint(4, 9) + uint(5, 2)
-                        + blob(11, b"\x01\x02\x03") + blob(12, summary))
+    out["link_poll"] = (uint(1, 1) + uint(2, 3) + uint(4, 9) + uint(5, 2)
+                        + blob(11, b"\x01\x02\x03") + blob(12, summary) + uint(15, 1))
     # RESPONSE 3 <- 20000 (a wide id), seq 9, advert empty.
-    out["link_response"] = uint(15, 1) + uint(1, 2) + uint(2, 20000) + uint(3, 3) + uint(4, 9)
+    out["link_response"] = uint(1, 2) + uint(2, 20000) + uint(3, 3) + uint(4, 9) + uint(15, 1)
     # REPORT 3 <- 20000: t_round_b 0x00123456, t_reply_b 0x00654321.
-    out["link_report"] = (uint(15, 1) + uint(1, 4) + uint(2, 20000) + uint(3, 3) + uint(4, 9)
-                          + fixed32(8, 0x00123456) + fixed32(9, 0x00654321))
+    out["link_report"] = (uint(1, 4) + uint(2, 20000) + uint(3, 3) + uint(4, 9)
+                          + fixed32(8, 0x00123456) + fixed32(9, 0x00654321) + uint(15, 1))
     # RESULT: range_mm -1234.
-    out["link_result"] = uint(15, 1) + uint(1, 5) + uint(2, 3) + uint(3, 20000) + uint(4, 9) + sint(10, -1234)
+    out["link_result"] = uint(1, 5) + uint(2, 3) + uint(3, 20000) + uint(4, 9) + sint(10, -1234) + uint(15, 1)
     # MESH broadcast from 3 carrying payload b"\xaa\xbb".
-    out["link_mesh"] = uint(15, 1) + uint(1, 6) + uint(2, 3) + blob(6, b"\xaa\xbb")
+    out["link_mesh"] = uint(1, 6) + uint(2, 3) + blob(6, b"\xaa\xbb") + uint(15, 1)
 
     # MeshPacket: origin 3, id 7, dest 2, hop_limit 2, hop_start 3, port 4, flags 1 (want ack), attempt 2.
     out["mesh_packet"] = (uint(1, 3) + uint(2, 7) + uint(3, 2) + uint(4, 2) + uint(5, 3) + uint(6, 4)

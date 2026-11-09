@@ -51,7 +51,7 @@ message LinkFrame {
   uint32 ver = 15;         // protocol version, 1. A frame with any other value is dropped.
   FrameType type = 1;
   uint32 src = 2;          // node id
-  uint32 dst = 3;          // absent: broadcast. 0xFFFF is never a node id.
+  optional uint32 dst = 3; // absent: broadcast (node ids come from MACs; any u16 but 0xFFFF)
   uint32 seq = 4;          // exchange sequence (the ranging exchange a frame belongs to)
   uint32 slot = 5;         // POLL only: the sender's TDMA slot, for superframe sync
   bytes payload = 6;       // MESH / FW_*: the layer above, opaque to the radio
@@ -122,7 +122,7 @@ message FwData {
 message MeshPacket {
   uint32 origin = 1;
   uint32 id = 2;
-  uint32 dest = 3;         // absent: broadcast
+  optional uint32 dest = 3;// absent: broadcast
   uint32 hop_limit = 4;
   uint32 hop_start = 5;
   uint32 port = 6;         // see Port
