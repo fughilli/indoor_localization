@@ -67,6 +67,7 @@ class SseSource(PoseSource):
         self.count = 0
         self.error = None
         self.presses = {}           # dev -> last running press count seen
+        self.devices = {}           # dev -> the viewer's per-device health (state, reason, pose_age), if it sends one
 
     def _convert(self, p, q):
         p, q = np.asarray(p, float), np.asarray(q, float)
@@ -106,6 +107,7 @@ class SseSource(PoseSource):
                             continue
                         if msg.get("type") != "batch":
                             continue
+                        self.devices = (msg.get("health") or {}).get("devices") or {}
                         for ps in msg.get("poses", []):
                             p, q = self._convert(ps["p"], ps["q"])
                             self.count += 1
@@ -131,7 +133,8 @@ class SseSource(PoseSource):
         self.running = False
 
     def status(self):
-        return {"source": self.name, "state": self.state, "samples": self.count, "error": self.error}
+        return {"source": self.name, "state": self.state, "samples": self.count, "error": self.error,
+                "devices": self.devices}
 
 
 def read_pose_lines(path):

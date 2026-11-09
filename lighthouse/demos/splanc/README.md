@@ -225,7 +225,31 @@ axis, lights the LEDs of every fixture inside it, on `effects/flashlight_pose.gl
   fixture needs its room pose set in lhd's world (`set_fixture_pose`); the effect lights
   it by `led.room`.
 - **OSC**: `/origin`, `/dir` (world, metres), `/width` (the half-angle, rad), `/color`,
-  `/decay` (the trail's time constant, s; 0 = none).
+  `/decay` (the trail's time constant, s; 0 = none), and the stylus gate below:
+  `/stylus_ok`, `/stylus_seq`, `/stale_after`.
+- **No live stylus, no beam.** The stylus's validity is its own signal, separate from a
+  fixture's `tracker_ok` (that one only says the *fixture* knows where it is).
+  `/stylus_ok` is 1 while the newest stylus pose is younger than `--stale` (default
+  **0.5 s**) and 0 otherwise. `/stylus_seq` is a heartbeat that changes with every
+  pose; the effect drops the beam by itself when it hasn't changed for `/stale_after`
+  (sent as the same `--stale`), so a dead driver, network or viewer drops it too.
+  - Without a live stylus (at startup before the first pose, or after the stale
+    threshold) the fixtures show the **inactive state**: no beam, a dim, slow blue
+    breathing on every LED (`idle_color`, `idle_level`; `idle_level` 0 makes it dark).
+    It never shows the effect's default downward beam.
+  - The console says what's wrong and what to check: `NO STYLUS` (no pose yet) or
+    `STYLUS LOST` (last pose N s ago), with the reason it can see: the vive_web
+    source down, the viewer reporting the stylus's tracking lost, poses arriving only
+    from other trackers (a wrong `--stylus`?), or no poses at all. State changes get
+    their own line; `LIVE ...` is the healthy status.
+  - When poses resume the beam comes back by itself; nothing needs redeploying. The
+    roll baseline restarts, so a gap never counts as a roll.
+  - There is no stationary-beam mode: a beam on the fixtures always means fresh
+    stylus poses.
+  - Tests: `tests/test_flashlight.py` (the driver: startup, loss, recovery, other
+    trackers only) and `tests/flashlight_effect_check.mjs` (the effect on Splanc's own
+    VM; give it the `@splanc/agent` package directory, which carries the compiler and
+    the simulator, or it prints SKIP).
 
 ## What the user (or a Splanc-connected agent) has to do
 

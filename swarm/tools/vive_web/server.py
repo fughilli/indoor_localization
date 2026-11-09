@@ -24,6 +24,16 @@ of libsurvive's config.json (the base-station calibration playback needs) and
 a .json with the notes and timing. Replay with
   survive-cli --playback X.rec.gz --configfile X.config.json --playback-factor 0
 
+Telemetry capabilities: each batch carries `capabilities` (what the source can
+measure) and `health`. A field the source can't measure is null, never a zero:
+with --source lhd there's no per-sensor light or sweep-angle stream, so `lit` and
+`rates.angle` / `rates.hid` are null and `health.optical` is "unavailable" (lhd's
+poses carry the number of light hits each solve used, published as
+`rates.hits_used` when present). `health.devices[dev].state` keeps three
+conditions apart: "tracking" (fresh poses), "no_pose_output" (no pose for
+POSE_STALE_S, with no loss reported) and "lost_tracking" (the source said so: lhd's
+tracking/lost, or the device went away); `health.summary` is the worst of them.
+
 Also survive-cli doesn't recover when the tracker resets as it's switched
 into light mode (macOS), so it's restarted after --restart-after seconds
 without a single HID report (the device is gone, not merely untracked), or
@@ -60,6 +70,22 @@ BUTTON_NAMES = {0: "trigger", 1: "trackpad", 2: "thumbstick", 3: "system", 4: "A
 HIDFEAT_KEEP = 20000
 BATCH_S = 1 / 60.0
 LIT_WINDOW_S = 0.25
+POSE_STALE_S = 0.5  # s without a pose from a device before it counts as "no pose output"
+# What each source can measure. Whatever a source can't is published as null
+# ("unavailable"), never as a measured zero or an empty set of lit sensors.
+#   optical:         per-sensor hits (`lit`) and the sweep-angle rate (`rates.angle`)
+#   hid:             the raw HID report rate (`rates.hid`)
+#   tracking_events: explicit tracking started/lost events (else health is from pose age)
+#   pose_hits:       light hits used per solve (`rates.hits_used`); lhd turns it on when
+#                    its poses carry `used`
+CAPABILITIES = {
+    "libsurvive": {"optical": True, "hid": True, "pose": True, "imu": True, "tracking_events": False,
+                   "pose_hits": False},
+    "lhd": {"optical": False, "hid": False, "pose": True, "imu": True, "tracking_events": True,
+            "pose_hits": False},
+}
+# Rates that need a capability; null when the source lacks it.
+RATE_NEEDS = {"angle": "optical", "hid": "hid", "hits_used": "pose_hits"}
 
 
 def frame_from_config(entry):
@@ -107,19 +133,24 @@ def head_frames(cfg):
 class Hub:
     """Shared state plus a queue per connected page."""
 
-    def __init__(self):
+    def __init__(self, source="libsurvive"):
         self.lock = threading.Lock()
+        self.source = source
+        self.capabilities = dict(CAPABILITIES[source])
         self.clients = []
         self.lighthouses = {}  # id -> {"id", "mode", "p", "q", "t"}
         self.configs = {}  # dev -> {"points", "normals"} in the head frame
         self.imu_to_head = {}  # dev -> function rotating IMU-frame vectors into the head frame
         self.log = []  # recent log lines
-        self.status = {"survive": "starting", "restarts": 0}
+        self.status = {"survive": "starting", "restarts": 0, "source": source}
         self.pending = {"poses": [], "imu": [], "vel": {}, "log": []}
         self.lit = {}  # (dev, lh, axis, sensor) -> host time last hit
-        self.counts = {"pose": 0, "imu": 0, "angle": 0, "hid": 0}
-        self.rates = {"pose": 0.0, "imu": 0.0, "angle": 0.0, "hid": 0.0}
+        self.counts = {"pose": 0, "imu": 0, "angle": 0, "hid": 0, "hits_used": 0}
+        self.rates = {"pose": 0.0, "imu": 0.0, "angle": 0.0, "hid": 0.0, "hits_used": 0.0}
         self.last_pose = 0.0
+        self.pose_seen = {}  # dev -> host time of its newest pose
+        self.tracking = {}  # dev -> {"state": "started"|"lost"|"disconnected", "reason", "t"} (lhd)
+        self.hits = {}  # dev -> light hits the newest pose's solve used (lhd, when it says)
         self.last_hid = 0.0
         self.buttons = {}  # dev -> {"held": set of ids, "presses": n}
 
@@ -128,7 +159,8 @@ class Hub:
         with self.lock:
             self.clients.append(q)
             snap = {"type": "snapshot", "lighthouses": list(self.lighthouses.values()),
-                    "configs": self.configs, "log": self.log[-50:], "status": self.status}
+                    "configs": self.configs, "log": self.log[-50:], "status": self.status,
+                    "capabilities": dict(self.capabilities)}
         q.put(snap)
         return q
 
@@ -165,6 +197,7 @@ class Hub:
                     self.pending["poses"].append({"dev": parts[1], "t": float(parts[0]), "ht": now,
                                                   "p": v[0:3], "q": v[3:7]})
                     self.counts["pose"] += 1
+                    self.pose_seen[parts[1]] = now
                 self.last_pose = now
             elif kind == "I" and len(parts) >= 14:
                 v = [float(x) for x in parts[5:14]]
@@ -224,10 +257,22 @@ class Hub:
         now = time.time()
         kind = e.get("type")
         if kind == "pose":
+            dev = e["serial"]
             with self.lock:
-                self.pending["poses"].append({"dev": e["serial"], "t": e["t"], "ht": now, "p": e["p"], "q": e["q"]})
+                self.pending["poses"].append({"dev": dev, "t": e["t"], "ht": now, "p": e["p"], "q": e["q"]})
                 self.counts["pose"] += 1
+                self.pose_seen[dev] = now
+                if "used" in e:
+                    # The solve's light hits: real optical evidence, even without `lit`.
+                    self.capabilities["pose_hits"] = True
+                    self.hits[dev] = int(e["used"])
+                    self.counts["hits_used"] += int(e["used"])
             self.last_pose = now
+        elif kind == "tracking" and e.get("serial"):
+            with self.lock:
+                self.tracking[e["serial"]] = {"state": e.get("state"), "reason": e.get("reason"), "t": now}
+            self.add_log("%s tracking %s%s" % (e["serial"], e.get("state"),
+                                               " (%s)" % e["reason"] if e.get("reason") else ""))
         elif kind == "imu":
             with self.lock:
                 self.pending["imu"].append({"dev": e["serial"], "t": now, "acc": e["acc"], "gyro": e["gyro"],
@@ -244,6 +289,10 @@ class Hub:
         elif kind == "buttons":
             mask = int(e.get("buttons", 0))
             self.set_buttons(e["serial"], {i for i in range(32) if mask >> i & 1})
+        elif kind == "device" and e.get("state") in ("removed", "disconnected") and e.get("serial"):
+            with self.lock:
+                self.tracking[e["serial"]] = {"state": "disconnected", "reason": e.get("state"), "t": now}
+            self.add_log("%s %s %s" % (e.get("name", "device"), e["serial"], e.get("state")))
         elif kind == "device" and e.get("sensors_head"):
             rec = {"points": e["sensors_head"], "normals": e.get("normals_head", []), "serial": e["serial"],
                    "imu_position": [0, 0, 0]}
@@ -271,7 +320,38 @@ class Hub:
     def flush(self):
         """One batch to every page: new poses and IMU samples, latest velocity,
         which sensors each base station lit recently, and rates."""
-        now = time.time()
+        self.broadcast(self.batch(time.time()))
+
+    def health(self, now):
+        """Source-specific health, keeping "no optical telemetry", "no pose output" and
+        "lost tracking" apart. Call with the lock held."""
+        caps = self.capabilities
+        if not caps["optical"]:
+            optical = "unavailable"
+        else:
+            optical = "lit" if any(t >= now - LIT_WINDOW_S for t in self.lit.values()) else "dark"
+        devices = {}
+        for dev in set(self.pose_seen) | set(self.tracking):
+            seen = self.pose_seen.get(dev)
+            age = None if seen is None else now - seen
+            tr = self.tracking.get(dev)
+            if tr and tr["state"] in ("lost", "disconnected"):
+                state = "lost_tracking"
+            elif age is not None and age <= POSE_STALE_S:
+                state = "tracking"
+            else:
+                state = "no_pose_output"
+            d = {"state": state, "pose_age": age,
+                 "tracking": tr["state"] if tr else None, "reason": tr["reason"] if tr else None}
+            if caps["pose_hits"]:
+                d["hits_used"] = self.hits.get(dev)
+            devices[dev] = d
+        states = {d["state"] for d in devices.values()}
+        summary = next((s for s in ("lost_tracking", "no_pose_output", "tracking") if s in states), "no_devices")
+        return {"optical": optical, "summary": summary, "devices": devices}
+
+    def batch(self, now):
+        """The batch message (and drains what's pending): see flush."""
         with self.lock:
             batch, self.pending = self.pending, {"poses": [], "imu": [], "vel": {}, "log": []}
             cut = now - LIT_WINDOW_S
@@ -284,12 +364,16 @@ class Hub:
             status = dict(self.status)
             buttons = {d: {"held": sorted(b["held"]), "names": [BUTTON_NAMES.get(i, "bit %d" % i) for i in sorted(b["held"])],
                            "presses": b["presses"]} for d, b in self.buttons.items()}
+            caps = dict(self.capabilities)
+            health = self.health(now)
+            rates = {k: (v if caps[RATE_NEEDS[k]] else None) if k in RATE_NEEDS else v for k, v in self.rates.items()}
         if batch["imu"]:
             # The page only draws the newest accel; keep a few for smoothing.
             batch["imu"] = batch["imu"][-4:]
-        msg = {"type": "batch", "now": now, "lit": lit, "rates": self.rates, "status": status, "buttons": buttons,
-               "last_pose_age": now - self.last_pose if self.last_pose else None, **batch}
-        self.broadcast(msg)
+        # Unsupported optical telemetry is null, not an empty (= measured dark) set.
+        return {"type": "batch", "now": now, "lit": lit if caps["optical"] else None, "rates": rates,
+                "status": status, "buttons": buttons, "capabilities": caps, "health": health,
+                "last_pose_age": now - self.last_pose if self.last_pose else None, **batch}
 
     def tick_rates(self, dt):
         with self.lock:
@@ -438,7 +522,6 @@ class Lhd:
                                          start_new_session=True)
             self.started = time.time()
             self.hub.status["survive"] = "running"
-            self.hub.status["source"] = "lhd"
             self.hub.add_log("--- started lhd %s" % " ".join(self.args))
             threading.Thread(target=self.read, args=(self.proc,), daemon=True).start()
 
@@ -619,7 +702,7 @@ def main():
                     help="after --: passed to survive-cli")
     a = ap.parse_args()
 
-    hub = Hub()
+    hub = Hub(source=a.source)
     if a.source == "lhd":
         os.makedirs(os.path.dirname(a.calibration), exist_ok=True)
         args = ["--calibration", a.calibration] + (["--replay", a.replay] if a.replay else [])
