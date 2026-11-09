@@ -95,7 +95,7 @@
     <button id="rec-btn" class="primary">Start recording</button>
     <div class="kv" id="k-rec"></div>
   </div>
-  <h2>libsurvive</h2>
+  <h2 id="h-source">libsurvive</h2>
   <div class="kv" id="k-status"></div>
   <h2>Trackers</h2>
   <div id="k-trackers"></div>
@@ -349,6 +349,12 @@ recBtn.onclick = async () => {
 // ---------- data ----------
 const logEl = $("log");
 let status = {}, rates = {}, lastPoseAge = null, lastMsg = 0;
+// What the source can measure (server.py CAPABILITIES) and its health. A field the
+// source can't measure arrives as null: show it as unavailable, never as a zero.
+let caps = {}, health = {};
+const NA = '<span style="color:var(--muted)" title="this source has no such telemetry; not a measured zero">n/a</span>';
+const STATE_LABEL = { tracking: ["tracking", "var(--good)"], no_pose_output: ["no pose output", "var(--warn)"],
+  lost_tracking: ["lost tracking", "var(--bad)"], no_devices: ["no devices", "var(--muted)"] };
 
 function addLog(lines) {
   if (!lines || !lines.length) return;
@@ -373,6 +379,7 @@ function onConfig(dev, cfg) {
 
 function onBatch(m) {
   status = m.status; rates = m.rates; lastPoseAge = m.last_pose_age;
+  caps = m.capabilities || {}; health = m.health || {};
   for (const p of m.poses) {
     const t = trackers.get(p.dev) || makeTracker(p.dev);
     t.pose = p; t.poses++;
@@ -388,7 +395,7 @@ function onBatch(m) {
     t.root.quaternion.set(t.pose.q[1], t.pose.q[2], t.pose.q[3], t.pose.q[0]);
     t.trail.geometry.setDrawRange(0, t.trailN);
     t.trail.geometry.attributes.position.needsUpdate = true;
-    t.lit = (m.lit && m.lit[t.dev]) || {};
+    t.lit = m.lit == null ? null : m.lit[t.dev] || {};  // null: the source has no optical telemetry
   }
   for (const s of m.imu) {
     const t = trackers.get(s.dev);
@@ -410,7 +417,7 @@ function connect() {
     else if (m.type === "snapshot") {
       for (const l of m.lighthouses) onLighthouse(l);
       for (const [dev, c] of Object.entries(m.configs)) onConfig(dev, c);
-      logEl.textContent = ""; addLog(m.log); status = m.status;
+      logEl.textContent = ""; addLog(m.log); status = m.status; caps = m.capabilities || caps;
     }
   };
   es.onerror = () => { status = { survive: "viewer server unreachable" }; };
@@ -439,7 +446,7 @@ function updateScene() {
     if (t.sensors) {
       t.sensors.visible = showSensors;
       const hits = new Map(); // sensor -> axes seen
-      for (const [, axes] of Object.entries(t.lit)) {
+      for (const [, axes] of Object.entries(t.lit || {})) {
         axes[0].forEach(s => hits.set(s, (hits.get(s) || 0) | 1));
         axes[1].forEach(s => hits.set(s, (hits.get(s) || 0) | 2));
       }
@@ -474,14 +481,15 @@ function updateScene() {
     let len = 1.5;
     if (firstTracker && firstTracker.pose) len = Math.max(0.5, l.root.position.distanceTo(firstTracker.root.position) * 1.1);
     setFrustum(l, len);
+    const unknown = !!firstTracker && firstTracker.lit == null;  // no optical telemetry: neither seen nor unseen
     const seen = firstTracker && firstTracker.lit && Object.keys(firstTracker.lit).length > 0 &&
       Object.prototype.hasOwnProperty.call(firstTracker.lit, lhIndex(l));
     l.ray.visible = $("t-rays").checked && !!(firstTracker && firstTracker.pose);
     if (l.ray.visible) {
       l.ray.geometry.setFromPoints([l.root.position, firstTracker.root.position]);
       l.ray.computeLineDistances();
-      l.ray.material.color.setHex(seen ? 0x3ccf8e : 0x8a96a3);
-      l.ray.material.dashSize = seen ? 1e3 : 0.04;
+      l.ray.material.color.setHex(unknown ? 0x4aa3ff : seen ? 0x3ccf8e : 0x8a96a3);
+      l.ray.material.dashSize = seen ? 1e3 : unknown ? 0.01 : 0.04;
     }
   }
   const b = workspaceBox();
@@ -497,15 +505,25 @@ function lhIndex(l) { return String([...lighthouses.keys()].indexOf(l.id)); }
 
 function updateHud() {
   const st = $("k-status");
+  $("h-source").textContent = status.source || "libsurvive";
   const age = lastPoseAge == null ? "–" : lastPoseAge.toFixed(1) + " s";
   const sColor = status.survive === "running" ? "var(--good)" : "var(--warn)";
+  const [hLabel, hColor] = STATE_LABEL[health.summary] || ["–", "var(--muted)"];
+  const optical = health.optical === "unavailable"
+    ? `<span style="color:var(--muted)" title="${status.source || "this source"} reports no per-sensor light or sweep angles: unknown, not dark">unavailable</span>`
+    : health.optical || "–";
+  const perSec = (v, cap) => (caps[cap] === false || v == null ? NA : `${fmt(v, 0)} /s`);
   st.innerHTML = `<span>state</span><span><span class="dot" style="background:${sColor}"></span>${status.survive || "–"}</span>
+    <span>source</span><span>${status.source || "–"}</span>
     <span>restarts</span><span>${status.restarts ?? "–"}</span>
+    <span>tracking</span><span><span class="dot" style="background:${hColor}"></span>${hLabel}</span>
     <span>last pose</span><span>${age}</span>
     <span>pose rate</span><span>${fmt(rates.pose, 0)} Hz</span>
     <span>IMU rate</span><span>${fmt(rates.imu, 0)} Hz</span>
-    <span>sweep hits</span><span>${fmt(rates.angle, 0)} /s</span>
-    <span>HID reports</span><span>${fmt(rates.hid, 0)} /s</span>`;
+    <span>optical</span><span>${optical}</span>
+    <span>sweep hits</span><span>${perSec(rates.angle, "optical")}</span>
+    ${caps.pose_hits ? `<span title="light hits the pose solver used">solver light hits</span><span>${fmt(rates.hits_used, 0)} /s</span>` : ""}
+    <span>HID reports</span><span>${perSec(rates.hid, "hid")}</span>`;
   const r = status.recording;
   recBtn.classList.toggle("recording", !!r);
   recBtn.textContent = r ? `Stop recording (${r.seconds.toFixed(0)} s)` : "Start recording";
@@ -513,7 +531,7 @@ function updateHud() {
     <span>lines</span><span>${r.lines}</span>` : "";
   $("waiting").style.display = trackers.size || lighthouses.size ? "none" : "block";
   $("waiting").textContent = performance.now() - lastMsg > 3000 ? "Waiting for the viewer server…"
-    : "Waiting for libsurvive — keep the tracker still and in view (first fix ~15 s)";
+    : `Waiting for ${status.source || "libsurvive"} — keep the tracker still and in view (first fix ~15 s)`;
 
   let html = "";
   for (const t of trackers.values()) {
@@ -522,7 +540,10 @@ function updateHud() {
     const a = t.acc || [NaN, NaN, NaN];
     const an = Math.hypot(...a);
     const sp = t.vel ? Math.hypot(...t.vel.v) : NaN;
-    const litCount = Object.values(t.lit).map(ax => new Set([...ax[0], ...ax[1]]).size);
+    const litCount = t.lit == null ? null : Object.values(t.lit).map(ax => new Set([...ax[0], ...ax[1]]).size);
+    const dh = (health.devices || {})[t.dev];
+    const [dLabel, dColor] = STATE_LABEL[dh && dh.state] || ["–", "var(--muted)"];
+    const dWhy = dh && dh.state === "lost_tracking" && dh.reason ? ` (${dh.reason})` : "";
     html += `<div class="kv" style="margin-bottom:8px">
       <span><span class="dot" style="background:#${t.color.toString(16).padStart(6, "0")}"></span>${t.dev}</span><span>${t.poses} poses</span>
       <span>x y z cm</span><span>${fmt(p[0] * 100)}${fmt(p[1] * 100)}${fmt(p[2] * 100)}</span>
@@ -531,7 +552,9 @@ function updateHud() {
       <span>accel g (${t.accFrame || "–"})</span><span>${fmt(a[0], 3)}${fmt(a[1], 3)}${fmt(a[2], 3)}</span>
       <span>|accel|</span><span>${fmt(an, 3)} g</span>
       <span title="Angle between the accel rotated into the world by the optical pose and world +z. ~0 when still if the world frame really is level.">accel vs world up</span><span>${fmt(t.upErr, 1)}°</span>
-      <span>sensors lit</span><span>${litCount.length ? litCount.join(" / ") : "none"}</span>
+      <span>tracking</span><span><span class="dot" style="background:${dColor}"></span>${dLabel}${dWhy}</span>
+      <span>sensors lit</span><span>${litCount == null ? NA : litCount.length ? litCount.join(" / ") : "none"}</span>
+      ${dh && dh.hits_used != null ? `<span>solver light hits</span><span>${dh.hits_used} in the last pose</span>` : ""}
       <span>buttons</span><span>${t.buttons && t.buttons.names.length
         ? t.buttons.names.map(n => `<span class="chip">${n}</span>`).join("")
         : '<span class="chip off">none held</span>'} <span style="color:var(--muted)">${t.buttons ? t.buttons.presses + " presses" : ""}</span></span>
