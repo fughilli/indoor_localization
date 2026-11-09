@@ -58,6 +58,7 @@ class PoseSource:
 
 class SseSource(PoseSource):
     def __init__(self, url="http://127.0.0.1:8765", world_up="z"):
+        self.lighthouses = {}  # station id (str) -> (p, q), world <- station
         self.url = url.rstrip("/") + "/events"
         self.name = "sse " + self.url
         self.world_up = world_up   # "z" (libsurvive) or "y" (SteamVR-style, converted)
@@ -92,6 +93,16 @@ class SseSource(PoseSource):
                         try:
                             msg = json.loads(line[5:])
                         except ValueError:
+                            continue
+                        if msg.get("type") in ("snapshot", "lighthouse"):
+                            # lhd's base stations (world <- station), for --p4: the P4
+                            # adopts them so its world is this one. A snapshot is the whole
+                            # set: stations from before (an older calibration) go.
+                            if msg["type"] == "snapshot":
+                                self.lighthouses = {}
+                            for lh in msg.get("lighthouses", []) if msg["type"] == "snapshot" else [msg]:
+                                p, q = self._convert(lh["p"], lh["q"])
+                                self.lighthouses[str(lh["id"])] = (p, q)
                             continue
                         if msg.get("type") != "batch":
                             continue

@@ -19,6 +19,7 @@ import os
 import queue
 import threading
 import time
+import urllib.request
 from collections import deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -72,10 +73,16 @@ def to_json(obj, **kw):
     return json.dumps(_finite(obj), allow_nan=False, **kw)
 
 
+P4_DEVICE = "p4"  # the P4's tracker, the fixture tracker in --p4 mode
+P4_LOOK_SHAPE, P4_LOOK_DIM = -1.0, -2.0  # /pick values for tracker_demo_pose.glsl (p4_look)
+P4_POSE_MAX_AGE = 1.0  # s: older P4 poses aren't drawn
+P4_VIEWER_DEV = "P4 tracker"  # how the P4's tracker shows in the lhd viewer
+
+
 class App:
     def __init__(self, ledmap, source, streamer, transport_desc, scale_mode="auto", s_fixed=1.0, device=None,
                  mount_path=None, mount_name="default", fake=None, auto_next=True,
-                 table_clearance=TABLE_CLEARANCE, stylus=None):
+                 table_clearance=TABLE_CLEARANCE, stylus=None, p4=False):
         self.ledmap, self.source, self.streamer = ledmap, source, streamer
         self.transport_desc = transport_desc
         self.scale_mode, self.s_fixed = scale_mode, s_fixed
@@ -121,15 +128,111 @@ class App:
         self.stylus = stylus
         self.press_dev = None
         self.recent_rel = deque()    # (host time, M) of the stylus in T, last 2 s
-        self.piv = []                # samples of the pivot in progress
-        self.piv_row = None          # the LED it pivots on
-        self.pivots = []             # [(row, [M...])]
-        self.c_tip = None            # stylus tip in its frame, from the pivot (then the fit)
+        self.piv = []                # world poses T_WS of the pivot in progress
+        self.piv_row = None          # unused: the pivot is on its own fixture, not an LED
+        self.pivots = []             # [(row, [M...])] pivots on LEDs (none from the pivot step)
+        # Stylus tip in its frame, from the pivot on the pivot fixture: a property of the
+        # stylus (saved per stylus, loaded here), held fixed by the LED fit.
+        self.c_tip = self.pivot_info = None
+        self.piv_live = None         # (n samples, time, state for the page) of the pivot in progress
+        self.load_stylus_tip()
         self.ptouches = []           # [(row, M)]
         self.pfit = self.pprev = None
         self.pconv, self.pconverged = {"why": "no fit yet"}, False
-        if mount_path:
+        # --p4: the fixture is a Splanc P4 player with its tracker wired in (the tracker
+        # module). Its tracker's poses come back over OSC (/lh/pose) and stand in as the
+        # fixture tracker: the stylus fit is then the mount itself (T_TF, in the P4
+        # tracker's frame), which goes to the P4 as /lh/mount. The fixture may move
+        # between touches, and nothing depends on the P4's pose when the mount lands. Shapes
+        # are streamed in the world frame; the P4 moves them into the fixture's own frame
+        # every render frame. lhd's base stations go to the P4 (/lh/station) so both
+        # trackers share lhd's world.
+        self.p4 = p4
+        if p4:
+            self.device = P4_DEVICE
+            self.p4_sent = {"stations": 0, "fixture": 0}
+            self.p4_pose = None      # (tracking, world <- P4 tracker, host time), from /lh/pose
+            self.p4_fixture = None   # (world <- fixture map, host time), from /lh/fixture_pose
+            # The P4's tracker into the lhd viewer too (vive_web POST /pose), latest only.
+            self.p4_relay = queue.Queue(maxsize=1)
+            threading.Thread(target=self._p4_relay, daemon=True, name="p4-relay").start()
+            threading.Thread(target=self._p4_station_sync, daemon=True, name="p4-stations").start()
+        if mount_path and not p4:
             self.load_mount(mount_path)
+
+    # ---------------------------------------------------------------- P4 player (--p4)
+    def p4_send(self, addr, *args):
+        """A standalone /lh/* datagram (the P4 tracker module only claims single messages,
+        never bundles: the streamer may bundle)."""
+        self.streamer.transport.send(osc.message_typed(addr, *args))
+
+    def _p4_station_sync(self):
+        while True:
+            for sid, (p, q) in list(getattr(self.source, "lighthouses", {}).items()):
+                try:
+                    self.p4_send("/lh/station", int(sid), *[float(x) for x in p], *[float(x) for x in q])
+                    self.p4_sent["stations"] += 1
+                except (ValueError, OSError):
+                    pass
+            time.sleep(1.0)
+
+    def on_osc_in(self, data):
+        """What the P4 sends back: its tracker's pose and, once mounted, the fixture's."""
+        for addr, args in osc.decode(data):
+            with self.lock:
+                if addr == "/lh/pose" and len(args) == 8:
+                    q, p = np.array(args[4:8], float), np.array(args[1:4], float)
+                    M = np.eye(4)
+                    M[:3, :3] = fr.quat_to_mat(q)
+                    M[:3, 3] = p
+                    self.p4_pose = (bool(args[0]), M, time.time())
+                    if args[0]:
+                        self.latest[P4_DEVICE] = (time.time(), M, time.time())
+                        try:  # latest only: never block the receiver
+                            self.p4_relay.get_nowait()
+                        except queue.Empty:
+                            pass
+                        self.p4_relay.put_nowait((p.tolist(), q.tolist()))
+                elif addr == "/lh/fixture_pose" and len(args) == 16:
+                    self.p4_fixture = (np.array(args, float).reshape(4, 4).T, time.time())
+
+    def _p4_relay(self):
+        url = getattr(self.source, "url", None)
+        if not url:
+            return
+        url = url.rsplit("/events", 1)[0] + "/pose"
+        while True:
+            p, q = self.p4_relay.get()
+            try:
+                req = urllib.request.Request(url, data=json.dumps({"dev": P4_VIEWER_DEV, "p": p, "q": q}).encode(),
+                                             headers={"Content-Type": "application/json"}, method="POST")
+                urllib.request.urlopen(req, timeout=1).close()
+            except Exception:  # noqa: BLE001 - the viewer may be an older one, or down
+                time.sleep(1.0)
+
+    def p4_look(self):
+        """--p4: the fixture runs one effect throughout (tracker_demo_pose.glsl), told what
+        to show by /pick: an LED index blinks that LED, P4_LOOK_SHAPE shows the live shape,
+        P4_LOOK_DIM a faint outline. Re-sent once a second: the effect keeps whatever it got
+        last (lock held)."""
+        if not self.p4:
+            return
+        if self.mode == "live":
+            look = P4_LOOK_SHAPE
+        elif self.pick_row is not None:
+            look = float(self.ledmap.index[self.pick_row])
+        else:
+            look = P4_LOOK_DIM
+        self.streamer.set("/pick", look, keepalive=PARAM_KEEPALIVE)
+
+    def p4_send_mount(self, T_TF):
+        """The stylus fit, P4 tracker <- fixture map, as the P4's mount: column-major,
+        three times (UDP; the P4 saves it)."""
+        cols = [float(x) for x in np.asarray(T_TF, float).T.reshape(-1)]
+        for _ in range(3):
+            self.p4_send("/lh/mount", *cols)
+            time.sleep(0.05)
+        self.p4_sent["fixture"] += 1
 
     # ---------------------------------------------------------------- helpers
     def event(self, kind, **kw):
@@ -192,8 +295,9 @@ class App:
         with self.lock:
             if mode not in ("idle", "rub", "touch", "mount", "live", "pivot", "probe"):
                 raise ValueError(mode)
-            if mode in ("pivot", "probe") and (self.stylus is None or self.device is None or
-                                               self.stylus == self.device):
+            if mode == "pivot" and self.stylus is None:
+                raise ValueError("no stylus (--stylus)")
+            if mode == "probe" and (self.stylus is None or self.device is None or self.stylus == self.device):
                 raise ValueError("stylus calibration needs two trackers: --device (on the fixture) and --stylus")
             if mode == "probe" and self.c_tip is None:
                 raise ValueError("pivot first")
@@ -201,7 +305,7 @@ class App:
                 raise ValueError("record rubs and fit first")
             if mode == "mount" and self.fit is None:
                 raise ValueError("calibrate first")
-            if mode == "live" and self.T_TF is None and self.fit is None:
+            if mode == "live" and self.T_TF is None and self.fit is None and not self.p4:
                 raise ValueError("no mount record and no fit: nothing places the fixture")
             prev, self.mode = self.mode, mode
             self.hold.reset()
@@ -212,9 +316,10 @@ class App:
                 if mode == "touch" and self.pick_row is None:
                     self.next_pick()
                 elif mode == "pivot":
-                    self.piv = []
-                    self.piv_row = self.probe_next_row()
-                    self.set_pick(self.piv_row)
+                    # On the pivot fixture, in the world: no LED involved.
+                    self.piv, self.piv_row, self.piv_live = [], None, None
+                    self.streamer.clear("/pick")
+                    self.pick_row = None
                 elif mode == "probe":
                     if self.pick_row is None and not self.pconverged:
                         self.probe_next()
@@ -230,6 +335,7 @@ class App:
                 self.streamer.clear("/pick", "/plane", "/sphere", "/width", "/halo", "/glow")
             if prev == "rub" and mode != "rub" and self.rubs:
                 self.request_fit()
+            self.p4_look()
             self.event("mode", mode=mode)
 
     # ---------------------------------------------------------------- calibration
@@ -305,6 +411,7 @@ class App:
             self.hold.reset(keep_arm=True)
             if row is not None:
                 self.streamer.set("/pick", float(self.ledmap.index[row]))
+            self.p4_look()
             self.event("pick", row=row, led=None if row is None else int(self.ledmap.index[row]))
 
     def distance_to_pick(self, T_WT):
@@ -365,7 +472,10 @@ class App:
 
     # ---------------------------------------------------------------- stylus calibration
     def on_stylus(self, M_WS):
-        """A stylus pose: relative to the fixture tracker's latest (lock held)."""
+        """A stylus pose: in the world for the pivot, relative to the fixture tracker's
+        latest for probing (lock held)."""
+        if self.mode == "pivot" and len(self.piv) < 5000:
+            self.piv.append(M_WS)
         fx = self.latest.get(self.device)
         if fx is None or time.time() - fx[2] > FIXTURE_POSE_MAX_AGE:
             return
@@ -374,8 +484,6 @@ class App:
         self.recent_rel.append((now, M))
         while self.recent_rel[0][0] < now - BTN_LOOKBACK[0] - 0.5:
             self.recent_rel.popleft()
-        if self.mode == "pivot" and len(self.piv) < 5000:
-            self.piv.append(M)
 
     def probe_rows(self):
         return [r for r, _ in self.ptouches] + [r for r, _ in self.pivots if r is not None]
@@ -391,17 +499,41 @@ class App:
         with self.lock:
             if len(self.piv) < 3:
                 raise ValueError("no stylus poses yet (are both trackers tracking?)")
-            c, q, rms, spread = probe.pivot(self.piv)
-            why = probe.pivot_ok(len(self.piv), rms, spread)
+            c, q, rms, spread, inl, _ = probe.pivot_robust(self.piv)
+            k = int(inl.sum())
+            why = probe.pivot_ok(k, rms, spread, inliers=(k, len(self.piv)))
             if why:
-                self.event("reject", why="pivot: " + why)
-                self.piv = []
+                self.event("reject", why="pivot: %s (RMS %.1f mm of %d/%d kept, ±%.0f°)" % (
+                    why, rms * 1e3, k, len(self.piv), spread))
+                self.piv, self.piv_live = [], None
                 return
-            self.pivots.append((self.piv_row, list(self.piv)))
             self.c_tip = c
+            self.pivot_info = {"rms_mm": rms * 1e3, "spread_deg": spread, "n": len(self.piv), "kept": k,
+                               "q_W": q.tolist()}
+            self.save_stylus_tip()
             self.event("pivot", rms_mm=rms * 1e3, spread_deg=spread, tip_mm=(c * 1e3).round(1).tolist())
-            self.piv, self.pick_row = [], None
-            self.set_mode("probe")
+            self.piv, self.pick_row, self.piv_live = [], None, None
+            # A new tip invalidates touches held with the old one.
+            self.ptouches, self.pfit, self.pprev = [], None, None
+            self.pconv, self.pconverged = {"why": "no fit yet"}, False
+            self.set_mode("idle")
+
+    def stylus_tip_path(self):
+        return os.path.join(MOUNTS, "stylus-%s.json" % "".join(ch for ch in self.stylus if ch.isalnum() or ch in "-_"))
+
+    def load_stylus_tip(self):
+        if self.stylus is None or not os.path.exists(self.stylus_tip_path()):
+            return
+        with open(self.stylus_tip_path()) as f:
+            doc = json.load(f)
+        self.c_tip = np.array(doc["c_S"], float)
+        self.pivot_info = doc.get("pivot")
+
+    def save_stylus_tip(self):
+        os.makedirs(MOUNTS, exist_ok=True)
+        with open(self.stylus_tip_path(), "w") as f:
+            json.dump({"stylus": self.stylus, "c_S": self.c_tip.tolist(), "pivot": self.pivot_info,
+                       "saved": time.strftime("%Y-%m-%dT%H:%M:%S")}, f, indent=1)
 
     def confirm_probe(self, t0):
         """Accept the picked LED from the stylus poses before t0: the latest BTN_HOLD window
@@ -440,7 +572,8 @@ class App:
             est = calib.should_estimate_scale(self.ledmap, [calib.Touch(r, None, 0) for r in rows], self.scale_mode)
             prev = self.pfit if self.pfit is not None and self.pfit.scale_estimated == est else None
             try:
-                cur = probe.fit(self.ledmap, self.ptouches, self.pivots, self.c_tip, est, self.s_fixed, prev=prev)
+                cur = probe.fit(self.ledmap, self.ptouches, self.pivots, self.c_tip, est, self.s_fixed, prev=prev,
+                                fix_c=True)
             except Exception as e:  # noqa: BLE001
                 self.event("fit_error", error=str(e))
                 return
@@ -474,31 +607,63 @@ class App:
             self.T_TF, self.mount_doc, self.mount_path = T_TF, doc, path
             self.pick_row = None
             self.event("mount", path=os.path.relpath(path, HERE))
+            if self.p4:
+                self.p4_send_mount(T_TF)
+                if self.p4_pose is not None:
+                    self.T_WF_live, self.T_WF_source = self.p4_pose[1] @ T_TF, "stylus fit (mount sent to the P4)"
+                self.event("p4_fixture", text="mount sent to the P4 (/lh/mount)")
             self.set_mode("live")
 
     def reset_probe(self):
         with self.lock:
+            # The stylus tip stays: it belongs to the stylus (Pivot redoes it).
             self.piv, self.pivots, self.ptouches = [], [], []
-            self.c_tip = self.pfit = self.pprev = None
+            self.pfit = self.pprev = None
             self.pconv, self.pconverged = {"why": "no fit yet"}, False
             self.skip_rows, self.pick_row = set(), None
             self.streamer.clear("/pick")
+            self.p4_look()
             if self.mode in ("pivot", "probe"):
                 self.set_mode("idle")
             self.event("reset")
+
+    def pivot_live(self):
+        """The pivot in progress, solved robustly as it grows (at most 4 Hz): the track of
+        the stylus tracker (decimated; which samples the solve keeps), the pivot point and
+        the tip, for the page."""
+        n = len(self.piv)
+        if self.mode != "pivot" or n < 20:
+            return None
+        if self.piv_live is not None and (self.piv_live[0] == n or time.time() - self.piv_live[1] < 0.25):
+            return self.piv_live[2]
+        P = np.array(self.piv[-3000:])
+        c, q, rms, spread, inl, sig = probe.pivot_robust(P)
+        step = max(1, len(P) // 600)
+        k = int(inl.sum())
+        out = {"track": P[::step, :3, 3].round(5).tolist(), "kept": inl[::step].astype(int).tolist(),
+               "q_W": q.tolist(), "c_mm": (c * 1e3).round(2).tolist(), "rms_mm": rms * 1e3, "sigma_mm": sig * 1e3,
+               "spread_deg": spread, "n": len(P), "n_kept": k,
+               "ok": probe.pivot_ok(k, rms, spread, inliers=(k, len(P)))}
+        self.piv_live = (n, time.time(), out)
+        return out
 
     def probe_state(self):
         fx = self.latest.get(self.device)
         st = self.latest.get(self.stylus) if self.stylus else None
         tip_W = None
-        if st is not None and self.c_tip is not None:
-            tip_W = fr.apply(st[1], self.c_tip).tolist()
+        live = self.pivot_live()
+        c_now = np.array(live["c_mm"]) / 1e3 if live is not None else self.c_tip
+        if st is not None and c_now is not None:
+            tip_W = fr.apply(st[1], c_now).tolist()
         return {
             "stylus": self.stylus, "fixture_tracker": self.device,
             "pivot_samples": len(self.piv), "pivot_row": self.piv_row,
             "pivots": [{"row": r, "n": len(P)} for r, P in self.pivots],
             "c_tip_mm": None if self.c_tip is None else (self.c_tip * 1e3).round(2).tolist(),
+            "pivot": self.pivot_info,
+            "pivot_live": live,
             "tip_W": tip_W,
+            "stylus_M": None if st is None or time.time() - st[2] > 1.0 else _f(st[1]),
             "touches": [{"i": i, "row": int(r), "led": int(self.ledmap.index[r]),
                          "res_mm": None if self.pfit is None or i >= len(self.pfit.residuals)
                          else float(np.linalg.norm(self.pfit.residuals[i]) * 1e3)}
@@ -621,8 +786,7 @@ class App:
         """What the next press does, for the page."""
         mode = self.mode
         if mode == "pivot":
-            return "stylus: rest the tip on LED %s and rock it round (±20° or more), press: done · double: restart" % (
-                "?" if self.piv_row is None else int(self.ledmap.index[self.piv_row]))
+            return "stylus: tip in the pivot fixture, rock it round (±20° or more), press: done · double: restart"
         if mode == "probe":
             if self.pick_row is not None:
                 return "stylus: tip on LED %d, hold still, press: confirm · double: skip" % int(
@@ -725,6 +889,19 @@ class App:
 
     def send_plane(self):
         """Streams the live shape (plane or sphere) in F; the fixture runs the matching effect."""
+        if self.p4:
+            # The P4 has its own pose: send the shape in the world frame (the *_pose effects).
+            if self.mode == "live":
+                n_W, d_W = self.plane_W
+                c_W, r_W = self.sphere_W
+                if self.shape == "sphere":
+                    self.streamer.clear("/plane")
+                    self.streamer.set("/sphere", c_W[0], c_W[1], c_W[2], r_W)
+                else:
+                    self.streamer.clear("/sphere")
+                    self.streamer.set("/plane", n_W[0], n_W[1], n_W[2], d_W)
+                self.streamer.set("/shape", 1.0 if self.shape == "sphere" else 0.0, keepalive=PARAM_KEEPALIVE)
+            return
         T_WF = self.T_WF_live
         if T_WF is None:
             self.plane_F = self.sphere_F = None
@@ -747,7 +924,11 @@ class App:
             now = time.time()
             dev = self.latest.get(self.device)
             pst = self.probe_state()
-            if self.mode == "live":
+            p4_fx = self.p4_fixture if self.p4 and self.p4_fixture and now - self.p4_fixture[1] < P4_POSE_MAX_AGE else None
+            p4_pose = self.p4_pose if self.p4 and self.p4_pose and now - self.p4_pose[2] < P4_POSE_MAX_AGE else None
+            if p4_fx is not None and self.mode in ("live", "idle"):
+                T_WF, T_WF_src = p4_fx[0], "P4 (its tracker x mount)"
+            elif self.mode == "live":
                 T_WF, T_WF_src = self.T_WF_live, self.T_WF_source
             elif self.mode in ("pivot", "probe") and pst["T_WF"] is not None:
                 T_WF, T_WF_src = np.array(pst["T_WF"]), "stylus fit"
@@ -769,7 +950,9 @@ class App:
                 "type": "state", "now": now, "mode": self.mode, "device": self.device,
                 "devices": {d: round(now - v[2], 2) for d, v in self.latest.items()},
                 "source": self.source.status(),
-                "pose": None if dev is None else {"M": dev[1].tolist(), "age": now - dev[2], "contact": contact},
+                "pose": ({"M": p4_pose[1].tolist(), "age": now - p4_pose[2], "contact": p4_pose[1][:3, 3].tolist()}
+                         if p4_pose is not None else
+                         None if dev is None or self.p4 else {"M": dev[1].tolist(), "age": now - dev[2], "contact": contact}),
                 "T_WF": _f(T_WF),
                 "T_WF_source": T_WF_src,
                 "rubs": len(self.rubs), "rub_version": self.rub_version,
@@ -793,6 +976,11 @@ class App:
                           "width": self.width, "halo": self.halo, "glow": list(self.glow)},
                 "shape": self.shape,
                 "probe": pst,
+                "p4": None if not self.p4 else {
+                    "stations": sorted(getattr(self.source, "lighthouses", {}).keys()), **self.p4_sent,
+                    "tracking": None if self.p4_pose is None else self.p4_pose[0],
+                    "pose_age": None if self.p4_pose is None else now - self.p4_pose[2],
+                    "fixture_age": None if self.p4_fixture is None else now - self.p4_fixture[1]},
                 "sphere": {"c_W": self.sphere_W[0].tolist(), "r_W": self.sphere_W[1],
                            "c_F": None if self.sphere_F is None else self.sphere_F[0].tolist(),
                            "r_F": None if self.sphere_F is None else self.sphere_F[1]},
@@ -937,6 +1125,8 @@ def make_handler(app):
                 elif p == "/api/stylus":
                     with app.lock:
                         app.stylus = body["dev"] or None
+                        app.c_tip = app.pivot_info = None
+                        app.load_stylus_tip()
                 elif p == "/api/sphere":
                     app.set_sphere(body["c"], body["r"])
                 elif p == "/api/shape":
@@ -989,6 +1179,10 @@ def main():
                     help="estimate the map scale s: auto (once touches span the fixture), on, off (use --s)")
     ap.add_argument("--s", type=float, default=1.0, help="map scale when not estimated (e.g. from a ruler)")
     ap.add_argument("--port", type=int, default=8770)
+    ap.add_argument("--p4", action="store_true",
+                    help="the fixture is a Splanc P4 player with its tracker wired in (tracker module): "
+                         "lhd's stations go to it, the stylus fit sets its mount, shapes go in the world frame "
+                         "(deploy effects/*_pose.glsl)")
     a = ap.parse_args()
 
     fake = None
@@ -1033,8 +1227,10 @@ def main():
 
     app = App(ledmap, source, streamer, transport.describe(), scale_mode=a.scale, s_fixed=a.s, device=a.device,
               mount_path=mount_path, mount_name=a.mount_name, fake=fake, table_clearance=a.table_clearance,
-              stylus=a.stylus)
+              stylus=a.stylus, p4=a.p4)
     app.dry_log = dry
+    if a.p4 and udp is not None:
+        udp.on_receive(app.on_osc_in)
     holder["app"] = app
     source.start(app.on_pose, app.on_button)
 

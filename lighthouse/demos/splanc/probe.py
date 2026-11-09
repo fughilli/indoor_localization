@@ -29,7 +29,9 @@ ROBUST = 0.005            # m: residuals are quadratic up to about this, robust 
 PRIOR_H = 0.03            # m, h around 0 (weak)
 PIVOT_MIN_SAMPLES = 60
 PIVOT_MIN_SPREAD = 15.0   # deg: the stylus must rock at least this much round the tip
-PIVOT_MAX_RMS = 0.002     # m
+PIVOT_MAX_RMS = 0.008     # m (of the inliers, for a robust pivot); lhd's station disagreement alone gives ~5 mm
+PIVOT_INLIER_FLOOR = 0.003   # m: a robust pivot keeps every sample this close, however tight the rest
+PIVOT_MIN_INLIER_FRAC = 0.5
 MIN_TOUCHES = 3           # for a fit (a similarity needs three points)
 CONV_MIN_TOUCHES = 6
 CONV_POS = 0.0005         # m, max LED displacement between successive fits
@@ -63,8 +65,53 @@ def pivot(Ms):
     return c, q, rms, spread
 
 
-def pivot_ok(n, rms, spread):
-    """None if the pivot is usable, else why not."""
+def pivot_robust(Ms, iters=12):
+    """pivot() that shrugs off jiggle: the approach and lift-off, the tip slipping, pose
+    jumps. Huber-reweighted least squares, then only the samples within 3 robust sigmas
+    (at least PIVOT_INLIER_FLOOR) of the pivot, refitted until the set settles. Returns
+    (c, q, inlier rms m, inlier spread deg, inlier mask, robust sigma m)."""
+    Ms = np.asarray(Ms, float)
+    n = len(Ms)
+    A = np.zeros((n, 3, 6))
+    A[:, :, :3] = Ms[:, :3, :3]
+    A[:, :, 3:] = -np.eye(3)
+    b = -Ms[:, :3, 3]
+    w = np.ones(n)
+    inl = np.ones(n, bool)
+    sig = PIVOT_INLIER_FLOOR
+    for it in range(iters):
+        sw = np.sqrt(w)[:, None, None]
+        x, *_ = np.linalg.lstsq((A * sw).reshape(-1, 6), (b * sw[:, :, 0]).ravel(), rcond=None)
+        r = np.linalg.norm(np.einsum("nij,j->ni", A, x) - b, axis=1)
+        sig = max(1.4826 * float(np.median(r[inl] if it >= 3 else r)), PIVOT_INLIER_FLOOR / 3)
+        if it < 3:
+            w = np.minimum(1.0, 1.5 * sig / np.maximum(r, 1e-12))      # Huber
+            continue
+        new = r < max(3 * sig, PIVOT_INLIER_FLOOR)
+        if new.sum() < 6:
+            break
+        if np.array_equal(new, inl) and it > 3:
+            break
+        inl, w = new, new.astype(float)
+    c, q = x[:3], x[3:]
+    ri = r[inl]
+    rms = float(np.sqrt(np.mean(ri * ri))) if inl.any() else float("inf")
+    axes = Ms[inl, :3, :3] @ (c / max(np.linalg.norm(c), 1e-9))
+    if len(axes):
+        mean = axes.mean(0)
+        mean /= np.linalg.norm(mean)
+        spread = float(np.degrees(np.arccos(np.clip(axes @ mean, -1, 1))).max())
+    else:
+        spread = 0.0
+    return c, q, rms, spread, inl, sig
+
+
+def pivot_ok(n, rms, spread, inliers=None):
+    """None if the pivot is usable, else why not (n, rms, spread: of the inliers, out of
+    `inliers` = (kept, total) for a robust pivot)."""
+    if inliers is not None and inliers[0] < PIVOT_MIN_INLIER_FRAC * inliers[1]:
+        return "only %d of %d samples on one point (need %.0f%%): hold the tip in the fixture" % (
+            inliers[0], inliers[1], PIVOT_MIN_INLIER_FRAC * 100)
     if n < PIVOT_MIN_SAMPLES:
         return "only %d samples (need %d)" % (n, PIVOT_MIN_SAMPLES)
     if spread < PIVOT_MIN_SPREAD:
@@ -94,9 +141,11 @@ class ProbeFit:
                 "pivot_rms_mm": [r * 1e3 for r in self.pivot_rms]}
 
 
-def fit(ledmap, touches, pivots, c0, est_scale, s_fixed=1.0, prev=None):
+def fit(ledmap, touches, pivots, c0, est_scale, s_fixed=1.0, prev=None, fix_c=False):
     """touches: [(row, M)], pivots: [(row or None, [M, ...]), ...] (each set round one
-    point: that LED, or an unknown one), c0: the tip from the pivot. Returns ProbeFit."""
+    point: that LED, or an unknown one), c0: the tip from the pivot. fix_c: hold the tip at
+    c0 (it came from a pivot on its own fixture; touches with an unknown h can trade the
+    tip's length against h). Returns ProbeFit."""
     rows = np.array([r for r, _ in touches], int)
     Mt = np.array([M for _, M in touches]).reshape(-1, 4, 4)
     if len(rows) + sum(r is not None for r, _ in pivots) < MIN_TOUCHES:
@@ -119,6 +168,8 @@ def fit(ledmap, touches, pivots, c0, est_scale, s_fixed=1.0, prev=None):
     q0 = [fr.apply_each(P, c0).mean(0) for r, P in pv if r is None]
 
     def unpack(x):
+        if fix_c:
+            x = np.concatenate([c0, x])
         c, rv, t, h = x[:3], x[3:6], x[6:9], x[9]
         s = float(np.exp(x[10])) if est_scale else s_fixed
         k = 11 if est_scale else 10
@@ -142,7 +193,7 @@ def fit(ledmap, touches, pivots, c0, est_scale, s_fixed=1.0, prev=None):
             out.append((fr.apply_each(P, c) - target) / SIGMA / np.sqrt(max(len(P) / 30, 1)))
         return out
 
-    parts = [c0, np.zeros(3), t0, [h0]]
+    parts = ([] if fix_c else [c0]) + [np.zeros(3), t0, [h0]]
     if est_scale:
         parts.append([np.log(s0)])
     parts += [np.ravel(q) for q in q0]
