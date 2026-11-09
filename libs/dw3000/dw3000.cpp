@@ -1454,6 +1454,33 @@ void DWM3000Class::readBytes(int base, int sub, uint8_t *out, int len)
   spiEnd(pins.cs);
 }
 
+bool DWM3000Class::readCir(int first, int n, uint8_t *out)
+{
+  if (first < 0 || n <= 0 || first + n > kCirTaps)
+    return false;
+  // Accumulator memory needs its clocks forced on (CLK_CTRL bits 15 and 6).
+  uint32_t clk = read(PMSC_REG, 0x04);
+  write(PMSC_REG, 0x04, clk | 0x8040, 4);
+  // Beyond the 7-bit sub-address, reach ACC_MEM through indirect pointer A.
+  static uint8_t buf[1 + 6 * 16];   // one leading byte is always unused
+  for (int done = 0; done < n;)
+  {
+    int chunk = min(16, n - done);
+    write(0x1F, 0x04, ACC_MEM_REG, 4);            // INDIRECT_ADDR_A: file 0x15
+    write(0x1F, 0x08, first + done, 4);           // ADDR_OFFSET_A: tap index
+    readBytes(INDIRECT_PTR_A_REG, 0, buf, 1 + 6 * chunk);
+    memcpy(out + 6 * done, buf + 1, 6 * chunk);
+    done += chunk;
+  }
+  write(PMSC_REG, 0x04, clk, 4);
+  return true;
+}
+
+uint16_t DWM3000Class::readFirstPathIndex()
+{
+  return read(0x0C, 0x48) & 0xFFFF;
+}
+
 int DWM3000Class::rxFrameLength()
 {
   // RX_FINFO (GEN_CFG 0x4C): RXFLEN in bits 0..9.

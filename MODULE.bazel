@@ -18,6 +18,15 @@ local_path_override(
     path = "third_party/embedded",
 )
 
+# Zero-copy protobuf views (C++ header-only runtime + generator) for the embedded
+# transport structures. For co-development: bazel --override_module=pbview=/path
+bazel_dep(name = "pbview", version = "0.1.0")
+git_override(
+    module_name = "pbview",
+    commit = "11a07b7b567a98ac3f460188864fc190179fdead",
+    remote = "https://github.com/fughilli/pbview.git",
+)
+
 # Hermetic Python for //host (solver/server/simulator). Deps flow from
 # requirements.in via the rules_uv regen target (bazel run
 # //:generate_requirements_lock) into requirements.lock, consumed by pip.parse.

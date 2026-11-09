@@ -15,17 +15,17 @@
 // firmware data as broadcasts, a firmware request to the neighbour serving
 // it. Every POLL carries the sender's network summary after its advert.
 //
-// All multi-byte fields little-endian. Frames stay under 127 bytes (DW3000
-// standard PHR); the 2-byte FCS is appended by the radio.
+// Every frame is a swarm.v1.LinkFrame protobuf message (swarm/proto/swarm_wire.proto,
+// docs/swarm-wire.md), encoded and parsed by apps/common/link.h; this header keeps the
+// protocol's timing and the numeric frame types the sync log reports. Frames stay under 125
+// bytes (DW3000 standard PHR); the 2-byte FCS is appended by the radio. The summary and the
+// manifest travel in the POLL and in a frame of their own (kFwManifest).
 #ifndef APPS_COMMON_PROTOCOL_H
 #define APPS_COMMON_PROTOCOL_H
 
 #include <stdint.h>
-#include <string.h>
 
 namespace proto {
-
-constexpr uint8_t kMagic = 0xA7;  // protocol v1
 
 enum Type : uint8_t
 {
@@ -37,6 +37,7 @@ enum Type : uint8_t
   kMesh = 6,       // swarm_net mesh packet (link broadcast)
   kFwRequest = 7,  // swarm_net firmware page request (to the server)
   kFwData = 8,     // swarm_net firmware chunk (link broadcast)
+  kFwManifest = 9, // swarm_net signed firmware manifest (link broadcast)
 };
 
 constexpr uint16_t kBroadcast = 0xFFFF;
@@ -45,7 +46,13 @@ constexpr uint16_t kBroadcast = 0xFFFF;
 // rank among the ids it hears (incl. itself), and timing follows the
 // lowest-id node in range. 6 slots x 5 ms = 30 ms: each node initiates ~33
 // times a second; with 4 nodes every pair ranges ~22 times a second.
-constexpr int kSlots = 6;
+// SWARM_SLOTS must be at least the number of nodes: a node owns slot (rank % kSlots),
+// so more nodes than slots share a slot and collide. The default 6 keeps 4-node
+// meshes ranging at full rate; a 10-node fleet builds with --copt=-DSWARM_SLOTS=12.
+#ifndef SWARM_SLOTS
+#define SWARM_SLOTS 6
+#endif
+constexpr int kSlots = SWARM_SLOTS;
 constexpr int64_t kSlotUs = 5000;
 constexpr int64_t kSuperframeUs = kSlots * kSlotUs;
 // POLL goes out this long after the slot starts (guard for sync error).
@@ -55,35 +62,11 @@ constexpr int64_t kReplyTimeoutUs = 3000;
 // Ids not heard for this long leave the schedule.
 constexpr int64_t kPeerTimeoutUs = 2000000;
 
-// Header: magic, type, src, dst, exchange seq, sender's slot index.
-struct __attribute__((packed)) Header
-{
-  uint8_t magic;
-  uint8_t type;
-  uint16_t src;
-  uint16_t dst;
-  uint8_t seq;
-  uint8_t slot;
-};
-static_assert(sizeof(Header) == 8, "header layout");
-
 constexpr int kMaxAdvert = 64;  // SWARM_NODE_ADVERT_MAX
-constexpr int kSummaryLen = 16;  // SWARM_NET_SUMMARY_LEN
 // Network frames stop this long before the slot ends: a full frame takes
 // ~450 us (SPI write + air), and the next slot's POLL is 400 us in.
 constexpr int64_t kNetGuardUs = 500;
 constexpr int kMaxFrame = 125;  // + 2 FCS = 127
-
-struct __attribute__((packed)) Report
-{
-  uint32_t t_round_b;
-  uint32_t t_reply_b;
-};
-
-struct __attribute__((packed)) Result
-{
-  int32_t range_mm;
-};
 
 // DW3000 timestamps are 40-bit; differences of an exchange fit 32 bits.
 inline uint32_t TsDiff(uint64_t later, uint64_t earlier)

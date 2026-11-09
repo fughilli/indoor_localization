@@ -1,6 +1,8 @@
 # Swarm network (Rust, no_std): mesh packets with managed flooding,
 # authenticated live settings, signed firmware manifests and firmware page
-# distribution; see docs/swarm-network.md.
+# distribution; see docs/swarm-network.md. Every format is a swarm.v1 protobuf
+# message (swarm/proto/swarm_wire.proto, docs/swarm-wire.md), read with pbview views and
+# encoded into fixed-capacity buffers: no allocation.
 #
 # Two builds of the same sources, differing only in the crypto backend
 # (src/crypto.rs): :swarm_net uses RustCrypto (host tests and tools);
@@ -10,11 +12,18 @@ load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
 package(default_visibility = ["//visibility:public"])
 
+# Zero-copy views of the swarm.v1 messages (pbview, generated from swarm_wire.proto) and the
+# pbview runtime (views and the encoder).
+PB_DEPS = [
+    "//swarm/proto:swarm_wire_rs",
+    "@pbview//:pbview",
+]
+
 rust_library(
     name = "swarm_net",
     srcs = glob(["src/**/*.rs"]),
     crate_root = "src/lib.rs",
-    deps = [
+    deps = PB_DEPS + [
         "@swarm_crates//:hmac",
         "@swarm_crates//:p256",
         "@swarm_crates//:sha2",
@@ -24,6 +33,8 @@ rust_library(
 rust_test(
     name = "swarm_net_test",
     crate = ":swarm_net",
+    data = ["//swarm/proto:swarm_wire_golden_rs"],
+    env = {"SWARM_WIRE_GOLDEN": "$(rootpath //swarm/proto:swarm_wire_golden_rs)"},
 )
 
 rust_library(
@@ -32,6 +43,7 @@ rust_library(
     crate_features = ["mbedtls"],
     crate_name = "swarm_net",
     crate_root = "src/lib.rs",
+    deps = PB_DEPS,
 )
 
 # What firmware links (through swarm_node's or the loader's staticlib):
@@ -45,6 +57,7 @@ rust_library(
     ],
     crate_name = "swarm_net",
     crate_root = "src/lib.rs",
+    deps = PB_DEPS,
 )
 
 rust_cbindgen(

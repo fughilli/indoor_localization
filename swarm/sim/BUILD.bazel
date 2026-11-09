@@ -80,3 +80,52 @@ py_binary(
     srcs = ["trace_room.py"],
     deps = [":run_sim_lib"],
 )
+
+# Reflector / fader estimation against the UWB mesh: the multipath channel +
+# PDoA array model, the P1 (map) and P2 (locate the mesh) solvers, and the tier
+# comparison (docs/uwb-landmarks.md). Pure numpy/scipy; world_lib only for the
+# closed-form widget trajectories.
+py_library(
+    name = "multipath_lib",
+    srcs = ["multipath.py"],
+    deps = [
+        ":world_lib",
+        "@pypi//numpy",
+    ],
+)
+
+py_library(
+    name = "landmarks_lib",
+    srcs = ["landmarks.py"],
+    deps = [
+        ":multipath_lib",
+        "@pypi//numpy",
+        "@pypi//scipy",
+    ],
+)
+
+py_binary(
+    name = "landmarks_run",
+    srcs = ["landmarks_run.py"],
+    main = "landmarks_run.py",
+    deps = [
+        ":landmarks_lib",
+        ":multipath_lib",
+        ":world_lib",
+    ],
+)
+
+py_test(
+    name = "landmarks_test",
+    size = "medium",
+    srcs = [
+        "landmarks_run.py",
+        "landmarks_test.py",
+    ],
+    main = "landmarks_test.py",
+    deps = [
+        ":landmarks_lib",
+        ":multipath_lib",
+        ":world_lib",
+    ],
+)

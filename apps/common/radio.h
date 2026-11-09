@@ -20,6 +20,8 @@ struct RadioEvent
   {
     kAdvert,  // a peer's advertisement (data/len) heard at t_us
     kRange,   // a completed exchange with `peer`
+    kHeard,   // sync log: a frame heard (peer = sender; dst, ftype, seq, ts, clk, rssi)
+    kSent,    // sync log: a frame this node sent (peer = destination; ftype, seq, ts)
   } kind;
   int8_t initiator;  // kRange: 1 if this node initiated
   uint16_t peer;
@@ -29,6 +31,12 @@ struct RadioEvent
   float fp_rssi;
   uint8_t len;
   uint8_t data[proto::kMaxAdvert];
+  // kHeard / kSent
+  uint16_t dst;
+  uint8_t ftype;   // proto::Type
+  uint8_t seq;
+  uint64_t ts;     // DW3000 device time of the RX/TX timestamp (40 bits, 15.65 ps units)
+  int32_t clk;     // kHeard: raw carrier-integrator clock offset of that frame
 };
 
 // A mesh packet for the app (ports >= 16, settings reports).
@@ -84,7 +92,7 @@ struct NetCall
   bool flag = false;
   uint16_t len = 0;
   const uint8_t *ptr = nullptr;  // kHostPage
-  uint8_t data[640];
+  uint8_t data[1024];  // a tagged settings bundle is up to ~975 bytes (docs/swarm-wire.md)
   SwarmNetStatus status;  // kStatus
   SwarmNetNeighbour neighbours[16];  // kStatus
   uint8_t neighbour_count = 0;
@@ -110,6 +118,32 @@ void Start(uint16_t id, QueueHandle_t events, const NetHooks &hooks);
 // Latest encoded advertisement to carry in POLL / RESPONSE frames (len 0:
 // none, e.g. the loader).
 void SetAdvert(const uint8_t *data, int len);
+// Sync log (an experiment): emit a kSent event for every frame this node sends and a
+// kHeard event for every frame it receives whose type is in `mask` (bit n = proto::Type
+// n), every `every`th of them. The host joins them across nodes to see how well the
+// nodes' clocks agree. Costs a few SPI reads per logged frame.
+void SetSyncLog(bool on, uint16_t mask, uint8_t every);
+// CIR capture (an experiment, on top of the sync log's frame selection): for every
+// `every`th frame heard whose type is in the sync-log mask, read `n` (<= kCirWindow)
+// taps of the Ipatov channel impulse response starting `pre` taps before the first path.
+// Read right after the frame, before the node replies: costs ~0.5 ms of SPI per capture,
+// which the reply timeout (kReplyTimeoutUs) absorbs. Needs SetSyncLog(true, ...) too.
+constexpr int kCirWindow = 48;
+struct CirEvent
+{
+  int64_t t_us;    // radio clock when logged, as RadioEvent::t_us
+  uint16_t peer;   // sender
+  uint16_t dst;
+  uint8_t ftype;
+  uint8_t seq;
+  uint64_t ts;     // RX timestamp, as in the sync log
+  uint16_t fp_idx; // raw first-path index (tap = fp_idx >> 6)
+  uint16_t first;  // tap number of data[0..5]
+  uint8_t n;       // taps in data
+  uint8_t data[6 * kCirWindow];   // per tap: 24-bit LE signed I, 24-bit LE signed Q
+};
+void SetCirCapture(bool on, uint8_t pre, uint8_t n, uint8_t every);
+bool PollCir(CirEvent *out);
 // Antenna delay change (settings), applied by the radio task.
 void SetAntennaDelay(int delay);
 // Run `call` on the radio task; returns its result (bool as 0/1, or a

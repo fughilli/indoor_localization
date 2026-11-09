@@ -178,12 +178,21 @@ py_library(
     name = "swarm_wire_lib",
     srcs = ["swarm_wire.py"],
     imports = ["."],
+    deps = [
+        "//swarm/proto:swarm_wire_py_proto",
+        "@pypi//cryptography",
+        "@pypi//protobuf",
+    ],
 )
 
 py_test(
     name = "swarm_wire_test",
     srcs = ["swarm_wire_test.py"],
-    deps = [":swarm_wire_lib"],
+    data = ["//swarm/proto:testdata/swarm_wire_golden.txt"],
+    deps = [
+        ":swarm_wire_lib",
+        "@pypi//cryptography",
+    ],
 )
 
 # Vive Tracker ground truth (host-run: `python3 swarm/tools/vive_truth.py`,
@@ -214,4 +223,44 @@ py_test(
         ":vive_truth_lib",
         "@pypi//numpy",
     ],
+)
+
+# Clock agreement between nodes from the firmware's sync log (docs/uwb-sync-experiment.md).
+py_library(
+    name = "sync_residual_lib",
+    srcs = ["sync_residual.py"],
+    deps = ["@pypi//numpy"],
+)
+
+py_binary(
+    name = "sync_residual",
+    srcs = ["sync_residual.py"],
+    main = "sync_residual.py",
+    deps = [":sync_residual_lib"],
+)
+
+py_test(
+    name = "sync_residual_test",
+    srcs = ["sync_residual_test.py"],
+    deps = [":sync_residual_lib"],
+)
+
+# Look at the CIR windows a node logs (docs/uwb-sync-experiment.md).
+py_library(
+    name = "cir_peaks_lib",
+    srcs = ["cir_peaks.py"],
+    deps = ["@pypi//numpy"],
+)
+
+py_binary(
+    name = "cir_peaks",
+    srcs = ["cir_peaks.py"],
+    main = "cir_peaks.py",
+    deps = [":cir_peaks_lib"],
+)
+
+py_test(
+    name = "cir_peaks_test",
+    srcs = ["cir_peaks_test.py"],
+    deps = [":cir_peaks_lib"],
 )

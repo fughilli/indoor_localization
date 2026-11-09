@@ -58,16 +58,16 @@ void InstallIfPending()
   if (!store::Exists(store::kInstall))
     return;
   store::Remove(store::kInstall);  // one attempt per request
-  uint8_t m[SWARM_NET_MANIFEST_LEN];
-  if (!swarm_net_staged_manifest(m) || !swarm_net_verify_staged())
+  // swarm_net owns the manifest format (swarm.v1.Manifest, staged as a length-delimited message).
+  uint32_t version = 0, size = 0;
+  uint8_t sha256[32];
+  if (!swarm_net_staged_manifest_info(&version, &size, sha256) || !swarm_net_verify_staged())
     return Log("install_failed", ",\"stage\":\"verify_staged\"");
-  uint32_t version = m[0] | m[1] << 8 | m[2] << 16 | (uint32_t)m[3] << 24;
-  uint32_t size = m[4] | m[5] << 8 | m[6] << 16 | (uint32_t)m[7] << 24;
   char detail[64];
   snprintf(detail, sizeof(detail), ",\"version\":%lu,\"size\":%lu", (unsigned long)version,
            (unsigned long)size);
   Log("installing", detail);
-  if (!boot::InstallStaged(size, m + 8))
+  if (!boot::InstallStaged(size, sha256))
     return Log("install_failed", ",\"stage\":\"copy\"");
   store::WriteU32(store::kInstalled, version);
   store::Remove(store::kStayInLoader);

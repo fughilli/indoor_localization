@@ -10,6 +10,23 @@ ESP32_ONLY = select({
     "//conditions:default": ["@platforms//:incompatible"],
 })
 
+# The link-layer codec (swarm.v1.LinkFrame via pbview); header-only, so it also builds on the
+# host for link_test.
+cc_library(
+    name = "link",
+    hdrs = ["link.h"],
+    deps = ["//swarm/proto:swarm_wire_views"],
+)
+
+cc_test(
+    name = "link_test",
+    srcs = ["link_test.cc"],
+    copts = ["-std=c++17", "-Wall", "-Wextra", "-Werror", "-fno-exceptions", "-fno-rtti"],
+    data = ["//swarm/proto:testdata/swarm_wire_golden.txt"],
+    env = {"GOLDEN": "$(rootpath //swarm/proto:testdata/swarm_wire_golden.txt)"},
+    deps = [":link"],
+)
+
 cc_library(
     name = "pins",
     hdrs = ["pins.h"],
