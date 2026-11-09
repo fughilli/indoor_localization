@@ -1,0 +1,75 @@
+{
+  "units": "m",
+  "frame": "plate: x from the ESP32 board's front edge (the antenna points past it, x < 0) towards the back, y from its left edge (DC jack side, facing the antenna), z up; z = 0 on the plate top, the board's bottom copper at z = standoff_h",
+  "ball_d": 0.0127,
+  "seats": {
+    "1": [
+      0.02,
+      -0.02,
+      0.01638
+    ],
+    "2": [
+      0.094,
+      0.006,
+      0.01638
+    ],
+    "3": [
+      0.082,
+      0.07,
+      0.01638
+    ]
+  },
+  "sides": {
+    "12": 0.078435,
+    "23": 0.065115,
+    "31": 0.109289
+  },
+  "antenna": [
+    -0.00589,
+    0.02665,
+    0.021716
+  ],
+  "antenna_note": "nominal: ant_inset behind the tab tip; the phase centre is estimated from data",
+  "imu": {
+    "p": [
+      0.03683,
+      0.019304,
+      0.037718
+    ],
+    "yaw_deg": 0.0
+  },
+  "mag": {
+    "p": [
+      0.052324,
+      0.021082,
+      0.037718
+    ]
+  },
+  "mobile_mount": {
+    "p": [
+      0.146,
+      0.02665,
+      0.090718
+    ],
+    "note": "datum A at the screw axis, pin along -y (head turned 180 deg), tracker above; nominal: the survey measures plate -> tracker"
+  },
+  "stylus": {
+    "tip_len": 0.13,
+    "tip_off": 0.022,
+    "note": "ball centre tip_len below datum A, tip_off along +x from the screw axis; nominal"
+  },
+  "cut_list_mm": {
+    "stylus_tube": 120.0,
+    "mast_tube": 92.1
+  },
+  "checks": {
+    "keepout_ok_mm": 4.890000000000001,
+    "tip_ok_mm": 4.826,
+    "ins_clear_mm": 2.4437499999999996,
+    "cbore_room_mm": 3.41,
+    "socket_roof_mm": 2.0,
+    "tube_wall_mm": 11.1015,
+    "taper_ok_mm": 4.018000000000004,
+    "core_ok_mm": 3.4419999999999984
+  }
+}

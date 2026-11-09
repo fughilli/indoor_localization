@@ -98,6 +98,17 @@ swarm_crate.from_specs(
 )
 use_repo(swarm_crate, "swarm_crates")
 
+# Lighthouse (Vive Tracker) tracking: kernel, protocol, device (no_std), lhd and
+# the tools, from fughilli/lighthouse (moved out of this repo so Splanc's ESP32-P4
+# player can pin it too). lhd: bazel build -c opt @lighthouse//daemon:lhd
+bazel_dep(name = "lighthouse", version = "0.0.0")
+archive_override(
+    module_name = "lighthouse",
+    integrity = "sha256-8KeGlT7pzwdNLef7lhSrY6z3Dh94V+n5u6gwwPRVEKw=",
+    strip_prefix = "lighthouse-4919232c4e350efcfe4dd6e49a83929cdf046c4f",
+    urls = ["https://github.com/fughilli/lighthouse/archive/4919232c4e350efcfe4dd6e49a83929cdf046c4f.tar.gz"],
+)
+
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(
     hub_name = "pypi",

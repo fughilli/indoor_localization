@@ -1,0 +1,663 @@
+diff --git a/src/disambiguator_statebased.c b/src/disambiguator_statebased.c
+index d23d174..fa68e14 100644
+--- a/src/disambiguator_statebased.c
++++ b/src/disambiguator_statebased.c
+@@ -1,5 +1,7 @@
+ //
++#include "ootx_decoder.h"
+ #include "survive_internal.h"
++#include "survive_reproject.h"
+ #include <assert.h>
+ #include <math.h> /* for sqrt */
+ #include <stdint.h>
+@@ -39,12 +41,38 @@
+  *
+  * The main advantage to this scheme is that its reasonably fast and is able to deal with being
+  * close enough to the lighthouse that the lengths are in a valid sync pulse range.
++ *
++ * Robustness against stray light (reflections, other IR sources, long sweep hits close to a
++ * lighthouse) comes from three checks on top of the timing model:
++ *
++ *  - Coincidence: a sync flash lights every sensor that can see the lighthouse at once, so a
++ *    sync is only accepted when at least `disambiguator-min-sync-sensors` distinct sensors start
++ *    a pulse within SYNC_COINCIDENCE ticks of each other. Its start and length are the medians
++ *    over those sensors. A lone pulse of sync-like length is never taken for a sync, neither
++ *    while searching for the state nor while locked, and doesn't cost confidence.
++ *  - Placement: once locked, a coincident sync-like flash inside a sweep window means the lock
++ *    is wrong and costs confidence; single long pulses there are just sweep hits (close to a
++ *    lighthouse they get long), so they aren't penalized.
++ *  - Sweep hit selection: a sensor can see more than one pulse in a sweep (a reflection of the
++ *    beam off a nearby surface, typically longer than the direct hit). Every pulse is kept, and
++ *    once the object has a pose the one whose angle best matches the angle predicted from that
++ *    pose is used; none within `disambiguator-sweep-gate` drops the sensor for that sweep. Before
++ *    there is a pose (or when most sensors disagree with it) the longest pulse wins, as upstream.
++ *  - OOTX framing: each lighthouse's data bits are run through an OOTX decoder. A wrong lock
++ *    produces bad sync bits and bad CRCs; `disambiguator-ootx-max-errors` of them without a
++ *    good packet in between drops the lock.
+  */
+ 
+ // Every pulse_window seems roughly 20k ticks long. That leaves ~360 to the capture window
+ #define PULSE_WINDOW 20000
+ #define CAPTURE_WINDOW 360000
+ 
++// Sync pulses on different sensors start within a few us of each other (detection delay varies
++// with intensity); 1000 ticks is ~21us at 48MHz.
++#define SYNC_COINCIDENCE 1000
++#define MAX_PULSE_ELEMENTS 64
++#define MAX_SWEEP_CANDIDATES 4
++
+ enum LighthouseState {
+ 	LS_UNKNOWN = 0,
+ 
+@@ -165,13 +193,42 @@ typedef struct {
+ 	bool single_60hz_mode;
+ 	int light_min_length;
+ 	int verbosity;
++	int min_sync_sensors;
++	int sweep_max_length;
++	int ootx_max_errors;
++	FLT sweep_gate;
+ } Global_Disambiguator_data_t;
+ 
+ STRUCT_CONFIG_SECTION(Global_Disambiguator_data_t)
+ STRUCT_CONFIG_ITEM("light-min-length", "Minimum length of V1 light to accept.", 100, t->light_min_length);
+ STRUCT_CONFIG_ITEM("disambiguator-verbosity", "Verbosity of disambiguator", 1000, t->verbosity);
++STRUCT_CONFIG_ITEM("disambiguator-min-sync-sensors",
++				   "Distinct sensors that must see a sync flash at once for it to count as a sync; 0 = auto (3 "
++				   "wired, 1 wireless, whose radio link reports a sync on about one sensor)",
++				   0, t->min_sync_sensors);
++STRUCT_CONFIG_ITEM("disambiguator-sweep-max-length",
++				   "Longest V1 sweep hit to accept, ticks (hits get long close to a lighthouse)", 48000,
++				   t->sweep_max_length);
++STRUCT_CONFIG_ITEM("disambiguator-ootx-max-errors",
++				   "OOTX framing errors without a good packet before the lock is dropped (0 = off)", 4,
++				   t->ootx_max_errors);
++STRUCT_CONFIG_ITEM("disambiguator-sweep-gate",
++				   "Max difference (rad) between a sweep hit and the angle predicted from the current pose; "
++				   "<= 0 keeps upstream's longest-pulse choice",
++				   0.05, t->sweep_gate);
+ END_STRUCT_CONFIG_SECTION(Global_Disambiguator_data_t)
+ 
++typedef struct {
++	LightcapElement e[MAX_PULSE_ELEMENTS];
++	int count;
++} PulseSet;
++
++/** Every pulse one sensor saw in the current sweep window (the longest MAX_SWEEP_CANDIDATES). */
++typedef struct {
++	LightcapElement e[MAX_SWEEP_CANDIDATES];
++	int count;
++} SweepCandidates;
++
+ typedef struct {
+ 	SurviveObject *so;
+ 	/* Keep running average of sync signals as they come in */
+@@ -183,6 +240,16 @@ typedef struct {
+ 	uint32_t first_sync_timestamp;
+ 	uint32_t longest_sync_length;
+ 
++	// Every pulse of the sync being collected, and sync-like pulses seen in the current sweep
++	// window; both are judged for coincidence when the window or sync ends.
++	PulseSet sync_pulses;
++	PulseSet sweep_sync_like;
++
++	// Per-lighthouse OOTX decoders, only used to check the framing of the lock.
++	ootx_decoder_context ootx[NUM_GEN1_LIGHTHOUSES];
++	int ootx_errors[NUM_GEN1_LIGHTHOUSES];
++	bool lock_lost;
++
+ 	struct {
+ 		uint32_t sync_count[2];
+ 		uint32_t drop_syncs[2];
+@@ -192,6 +259,15 @@ typedef struct {
+ 
+ 		uint32_t confidence_resets;
+ 		uint32_t sync_time_error;
++
++		uint32_t lone_syncs_rejected;
++		uint32_t misplaced_syncs;
++		uint32_t ootx_good;
++		uint32_t ootx_errors;
++		uint32_t ootx_relocks;
++		uint32_t sweep_multi;
++		uint32_t sweep_switched;
++		uint32_t sweep_gated;
+ 	} stats;
+ 
+ 	/**  This part of the structure is general use when we know our state */
+@@ -206,11 +282,15 @@ typedef struct {
+ 	int failures;
+ 	bool lastWasSync;
+ 
+-#define SYNC_HISTORY_LEN 12
++// Lock needs SYNC_LOCK_INLIERS of the last SYNC_HISTORY_LEN sync candidates to fit one phase of the
++// timing model; the rest may be stray pulses (reflections, close-range sweep hits, single-sensor
++// flashes on wireless links) without blocking the lock.
++#define SYNC_HISTORY_LEN 48
++#define SYNC_LOCK_INLIERS 24
+ 	LightcapElement sync_history[SYNC_HISTORY_LEN];
+ 	int sync_offset;
+ 
+-	LightcapElement sweep_data[];
++	SweepCandidates sweep_data[];
+ } Disambiguator_data_t;
+ 
+ static int find_acode(uint32_t pulseLen) {
+@@ -262,6 +342,92 @@ static bool overlaps(const LightcapElement *a, const LightcapElement *b) {
+ 	return overlap > a->length / 2;
+ }
+ 
++static void PulseSet_add(PulseSet *set, const LightcapElement *le) {
++	if (set->count < MAX_PULSE_ELEMENTS)
++		set->e[set->count++] = *le;
++}
++
++static uint32_t median_u32(uint32_t *v, int n) {
++	for (int i = 1; i < n; i++) {
++		uint32_t x = v[i];
++		int j = i - 1;
++		for (; j >= 0 && v[j] > x; j--)
++			v[j + 1] = v[j];
++		v[j + 1] = x;
++	}
++	return n ? v[n / 2] : 0;
++}
++
++/**
++ * Finds the largest set of pulses that start within SYNC_COINCIDENCE of one another, counting each
++ * sensor once. Returns the number of distinct sensors in it and, through `out`, a synthetic element
++ * with the median start and median length of that set (sensor_id = 0xff). Starts are compared
++ * relative to the first pulse so 32-bit timecode rollover doesn't matter.
++ */
++static uint32_t calculate_error(int target_acode, const LightcapElement *le);
++static void group_at(const PulseSet *set, int anchor, LightcapElement *out);
++
++static int coincident_group_for(const PulseSet *set, int target_acode, LightcapElement *out) {
++	int best_count = 0, best_anchor = -1;
++	uint32_t best_error = UINT32_MAX;
++	for (int i = 0; i < set->count; i++) {
++		uint64_t seen = 0;
++		int count = 0;
++		for (int j = 0; j < set->count; j++) {
++			int32_t dt = (int32_t)(set->e[j].timestamp - set->e[i].timestamp);
++			if (dt < 0 || dt > SYNC_COINCIDENCE)
++				continue;
++			uint64_t bit = 1ull << (set->e[j].sensor_id & 63);
++			if (!(seen & bit)) {
++				seen |= bit;
++				count++;
++			}
++		}
++		// Most sensors wins; on a tie (single-sensor syncs on wireless links, a stray pulse in the
++		// window) the one whose length best matches the code expected here.
++		uint32_t error = 0;
++		if (target_acode >= 0 && count == best_count) {
++			LightcapElement g;
++			group_at(set, i, &g);
++			error = calculate_error(target_acode, &g);
++		}
++		if (count > best_count || (count == best_count && target_acode >= 0 && error < best_error)) {
++			best_count = count;
++			best_anchor = i;
++			if (target_acode >= 0) {
++				LightcapElement g;
++				group_at(set, i, &g);
++				best_error = calculate_error(target_acode, &g);
++			}
++		}
++	}
++	if (best_anchor < 0)
++		return 0;
++	if (out)
++		group_at(set, best_anchor, out);
++	return best_count;
++}
++
++static int coincident_group(const PulseSet *set, LightcapElement *out) { return coincident_group_for(set, -1, out); }
++
++/** Median start and length of the pulses starting within SYNC_COINCIDENCE after pulse `anchor`. */
++static void group_at(const PulseSet *set, int anchor, LightcapElement *out) {
++	uint32_t starts[MAX_PULSE_ELEMENTS], lengths[MAX_PULSE_ELEMENTS];
++	int n = 0;
++	uint32_t base = set->e[anchor].timestamp;
++	for (int j = 0; j < set->count; j++) {
++		int32_t dt = (int32_t)(set->e[j].timestamp - base);
++		if (dt < 0 || dt > SYNC_COINCIDENCE)
++			continue;
++		starts[n] = (uint32_t)dt;
++		lengths[n] = set->e[j].length;
++		n++;
++	}
++	out->timestamp = base + median_u32(starts, n);
++	out->length = (uint16_t)median_u32(lengths, n);
++	out->sensor_id = 0xff;
++}
++
+ const int SKIP_BIT = 4;
+ const int DATA_BIT = 2;
+ const int AXIS_BIT = 1;
+@@ -271,15 +437,35 @@ const int AXIS_BIT = 1;
+ 
+ #define DIV_ROUND_CLOSEST(n, d) ((((n) < 0) ^ ((d) < 0)) ? (((n) - (d) / 2) / (d)) : (((n) + (d) / 2) / (d)))
+ 
+-LightcapElement get_last_sync(Disambiguator_data_t *d) {
++static int min_sync_sensors(Disambiguator_data_t *d) {
++	Global_Disambiguator_data_t *g = d->so->ctx->disambiguator_data;
++	int n = g->min_sync_sensors;
++	if (n <= 0) {
++		// Wireless watchmen (WM0, WM1, ...) thin out their light data on the radio link; a sync flash
++		// arrives on ~1 sensor, so coincidence can't be required there and timing does the work.
++		n = strncmp(d->so->codename, "WM", 2) == 0 ? 1 : 3;
++	}
++	if (n > d->so->sensor_ct)
++		n = d->so->sensor_ct;
++	return n < 1 ? 1 : n;
++}
++
++/** The sync collected so far, if enough sensors saw it at once; a zero-length element otherwise.
++ * `target_acode` (or -1) breaks ties between equally large groups. */
++static LightcapElement get_sync_for(Disambiguator_data_t *d, int target_acode) {
+ 	if (d->last_sync_count == 0) {
+ 		return (LightcapElement){0};
+ 	}
+-	LightcapElement lastSync = {
+-		.timestamp = d->first_sync_timestamp, .length = d->longest_sync_length, .sensor_id = -d->last_sync_count};
++	LightcapElement lastSync = {0};
++	if (coincident_group_for(&d->sync_pulses, target_acode, &lastSync) < min_sync_sensors(d)) {
++		d->stats.lone_syncs_rejected++;
++		return (LightcapElement){0};
++	}
+ 	return lastSync;
+ }
+ 
++LightcapElement get_last_sync(Disambiguator_data_t *d) { return get_sync_for(d, -1); }
++
+ enum LightcapClassification { LCC_SWEEP, LCC_SYNC };
+ static enum LightcapClassification naive_classify(Disambiguator_data_t *d, const LightcapElement *le) {
+ 	bool clearlyNotSync = le->length < LOWER_SYNC_TIME || le->length > UPPER_SYNC_TIME;
+@@ -417,7 +603,7 @@ static enum LighthouseState find_relative_offset(Disambiguator_data_t *d, uint32
+ 
+ 				int inliers = find_inliers(d, guess_mod, test60hz);
+ 				DEBUG_LOCK("With 60hz -- %d %d", test60hz, inliers);
+-				if (inliers > SYNC_HISTORY_LEN - 1) {
++				if (inliers >= SYNC_LOCK_INLIERS) {
+ 					*mod = guess_mod;
+ 					*single_60hz = test60hz == 1;
+ 					return guess;
+@@ -452,6 +638,7 @@ static enum LighthouseState EndSync(Disambiguator_data_t *d, const LightcapEleme
+ }
+ 
+ static void RegisterSync(Disambiguator_data_t *d, const LightcapElement *le) {
++	PulseSet_add(&d->sync_pulses, le);
+ 	if (le->timestamp < d->first_sync_timestamp || d->longest_sync_length == 0)
+ 		d->first_sync_timestamp = le->timestamp;
+ 
+@@ -467,6 +654,7 @@ static void RegisterSync(Disambiguator_data_t *d, const LightcapElement *le) {
+ static void ResetSync(Disambiguator_data_t *d) {
+ 	d->first_sync_timestamp = d->longest_sync_length = 0;
+ 	d->last_sync_timestamp = d->last_sync_length = d->last_sync_count = 0;
++	d->sync_pulses.count = 0;
+ }
+ 
+ static enum LighthouseState AttemptFindState(Disambiguator_data_t *d, const LightcapElement *le) {
+@@ -483,10 +671,14 @@ static enum LighthouseState AttemptFindState(Disambiguator_data_t *d, const Ligh
+ 	enum LightcapClassification classification = naive_classify(d, le);
+ 
+ 	if (classification == LCC_SYNC) {
+-		LightcapElement lastSync = get_last_sync(d);
++		// Is this pulse part of the flash being collected? (Starts within the coincidence window
++		// of its first pulse.)
++		bool same_flash = d->last_sync_count > 0 &&
++						  (int32_t)(le->timestamp - d->first_sync_timestamp) <= SYNC_COINCIDENCE &&
++						  (int32_t)(d->first_sync_timestamp - le->timestamp) <= SYNC_COINCIDENCE;
+ 
+ 		// Handle the case that this is a new SYNC coming in
+-		if (d->lastWasSync == false || overlaps(&lastSync, le) == false) {
++		if (d->lastWasSync == false || same_flash == false) {
+ 			// Now that the previous two states are in, check to see if they tell us where we are
+ 			enum LighthouseState new_state = d->lastWasSync ? EndSync(d, le) : EndSweep(d, le);
+ 			if (new_state != LS_UNKNOWN)
+@@ -532,9 +724,14 @@ static enum LighthouseState SetState(Disambiguator_data_t *d, const LightcapElem
+ 			   LighthouseStateName(d->state), d->state, LighthouseStateName(new_state), new_state);
+ 
+ 	d->state = new_state;
++	d->sweep_sync_like.count = 0;
+ 	if (new_state == LS_UNKNOWN) {
+ 		memset(d->sync_history, 0, sizeof(LightcapElement) * SYNC_HISTORY_LEN);
+ 		d->sync_offset = 0;
++		for (int i = 0; i < NUM_GEN1_LIGHTHOUSES; i++) {
++			ootx_init_decoder_context(&d->ootx[i], 0);
++			d->ootx_errors[i] = 0;
++		}
+ 	}
+ 	if (new_state == LS_UNKNOWN && get_best_latest_state(g) == 0) {
+ 		if (g->single_60hz_mode) {
+@@ -545,16 +742,30 @@ static enum LighthouseState SetState(Disambiguator_data_t *d, const LightcapElem
+ 
+ 	ResetSync(d);
+ 
+-	memset(d->sweep_data, 0, sizeof(LightcapElement) * d->so->sensor_ct);
++	memset(d->sweep_data, 0, sizeof(SweepCandidates) * d->so->sensor_ct);
+ 
+ 	return new_state;
+ }
+ 
+ static void PropagateState(Disambiguator_data_t *d, const LightcapElement *le);
++
++/** While locked, every pulse in a sync window is collected; the window is judged as a whole when it
++ * ends (JudgeSync), so stray single-sensor pulses neither count as the sync nor cost confidence. */
+ static void RunACodeCapture(int target_acode, Disambiguator_data_t *d, const LightcapElement *le) {
+ 	// Just ignore small signals; this has a measurable impact on signal quality
+ 	if (le->length < 400)
+ 		return;
++	RegisterSync(d, le);
++}
++
++/** Judges the sync collected in the window just left. Returns false when there is no usable sync:
++ * too few sensors saw a flash (occluded or stray light; no penalty), or its length doesn't match
++ * the code expected here (penalized; enough of these drop the lock). */
++static bool JudgeSync(int target_acode, Disambiguator_data_t *d, LightcapElement *sync) {
++	*sync = get_sync_for(d, target_acode);
++	if (sync->length == 0)
++		return false;
++	const LightcapElement *le = sync;
+ 
+ 	// We know what state we are in, so we verify that state as opposed to
+ 	// trying to suss out the acode.
+@@ -583,7 +794,7 @@ static void RunACodeCapture(int target_acode, Disambiguator_data_t *d, const Lig
+ 		d->stats.sync_time_error++;
+ 		DEBUG_TB("Disambiguator missed %s; %d expected %d but got %d(%d) - %u %d", survive_colorize(d->so->codename),
+ 				 error, target_acode, le->length, d->confidence, d->mod_offset[0], le->timestamp);
+-		return;
++		return false;
+ 	}
+ 
+ 	if (d->confidence < 50) {
+@@ -594,9 +805,118 @@ static void RunACodeCapture(int target_acode, Disambiguator_data_t *d, const Lig
+ 	if (d->confidence < 100) {
+ 		d->confidence++;
+ 	}
+-	// If its a real timestep, integrate it here and we can take the average later
++	return true;
++}
+ 
+-	RegisterSync(d, le);
++static void ootx_check_error(ootx_decoder_context *octx, const char *msg) {
++	if (strstr(msg, "Bad sync bit") == 0)
++		return; // "Preamble found" and friends
++	Disambiguator_data_t *d = octx->user;
++	d->ootx_errors[octx->user1]++;
++	d->stats.ootx_errors++;
++}
++
++static void ootx_check_bad_crc(ootx_decoder_context *octx, ootx_packet *packet, uint32_t crc) {
++	Disambiguator_data_t *d = octx->user;
++	d->ootx_errors[octx->user1]++;
++	d->stats.ootx_errors++;
++}
++
++static void ootx_check_packet(ootx_decoder_context *octx, ootx_packet *packet) {
++	Disambiguator_data_t *d = octx->user;
++	d->ootx_errors[octx->user1] = 0;
++	d->stats.ootx_good++;
++}
++
++/** Feeds one lighthouse's data bit to its framing check; flags the lock as lost when the framing
++ * keeps breaking. */
++static void CheckOOTXBit(Disambiguator_data_t *d, int lh, bool bit) {
++	Global_Disambiguator_data_t *g = d->so->ctx->disambiguator_data;
++	ootx_decoder_context *octx = &d->ootx[lh];
++	if (octx->payload_size == 0) {
++		ootx_init_decoder_context(octx, 0);
++	}
++	octx->user = d;
++	octx->user1 = lh;
++	octx->ootx_error_clbk = ootx_check_error;
++	octx->ootx_bad_crc_clbk = ootx_check_bad_crc;
++	octx->ootx_packet_clbk = ootx_check_packet;
++	ootx_pump_bit(octx, bit);
++	if (g->ootx_max_errors > 0 && d->ootx_errors[lh] >= g->ootx_max_errors) {
++		d->lock_lost = true;
++	}
++}
++
++static int32_t sweep_offset_from(Disambiguator_data_t *d, const LightcapElement *le, int lh, int end_of_mod) {
++	int le_offset = apply_mod_offset(le->timestamp + le->length / 2, d->mod_offset[lh], end_of_mod);
++	return le_offset - LSParam_offset_for_state(d->state - 1 - lh);
++}
++
++/**
++ * Picks each sensor's hit for the sweep just ended into `chosen` (length 0 = none). With a pose and
++ * a positioned lighthouse, the pulse closest to the predicted angle within the gate; otherwise, or
++ * if most multi-candidate sensors disagree with the prediction (the pose is probably stale or
++ * wrong), the longest pulse.
++ */
++static void SelectSweepHits(Disambiguator_data_t *d, int lh, int axis, int end_of_mod, LightcapElement *chosen) {
++	SurviveObject *so = d->so;
++	SurviveContext *ctx = so->ctx;
++	Global_Disambiguator_data_t *g = ctx->disambiguator_data;
++
++	bool predict = g->sweep_gate > 0 && ctx->bsd[lh].PositionSet && so->sensor_locations &&
++				   quatmagnitude(so->OutPoseIMU.Rot) > 0.5;
++	SurvivePose world2lh = {0};
++	if (predict)
++		world2lh = InvertPoseRtn(survive_get_lighthouse_position(ctx, lh));
++
++	int judged = 0, disagree = 0;
++	for (int i = 0; i < so->sensor_ct; i++) {
++		SweepCandidates *c = &d->sweep_data[i];
++		int longest = -1;
++		for (int k = 0; k < c->count; k++)
++			if (longest < 0 || c->e[k].length > c->e[longest].length)
++				longest = k;
++		chosen[i] = longest >= 0 ? c->e[longest] : (LightcapElement){0};
++		if (!predict || c->count == 0)
++			continue;
++
++		SurviveAngleReading pred;
++		survive_reproject_full(ctx->bsd[lh].fcal, &world2lh, &so->OutPoseIMU, so->sensor_locations + 3 * i, pred);
++		int best = -1;
++		FLT best_err = 0;
++		for (int k = 0; k < c->count; k++) {
++			FLT angle = sweep_offset_from(d, &c->e[k], lh, end_of_mod) * (LINMATHPI / 400000.) - LINMATHPI_2;
++			FLT err = fabs(angle - pred[axis]);
++			if (best < 0 || err < best_err) {
++				best = k;
++				best_err = err;
++			}
++		}
++		if (c->count > 1)
++			d->stats.sweep_multi++;
++		judged++;
++		if (best_err > g->sweep_gate) {
++			disagree++;
++			chosen[i] = (LightcapElement){0};
++		} else {
++			if (best != longest)
++				d->stats.sweep_switched++;
++			chosen[i] = c->e[best];
++		}
++	}
++	if (predict && judged >= 4 && disagree * 2 > judged) {
++		// The prediction is off for most sensors: don't trust it for this sweep.
++		for (int i = 0; i < so->sensor_ct; i++) {
++			SweepCandidates *c = &d->sweep_data[i];
++			int longest = -1;
++			for (int k = 0; k < c->count; k++)
++				if (longest < 0 || c->e[k].length > c->e[longest].length)
++					longest = k;
++			chosen[i] = longest >= 0 ? c->e[longest] : (LightcapElement){0};
++		}
++	} else {
++		d->stats.sweep_gated += disagree;
++	}
+ }
+ 
+ static void ProcessStateChange(Disambiguator_data_t *d, const LightcapElement *le, enum LighthouseState new_state) {
+@@ -605,12 +925,9 @@ static void ProcessStateChange(Disambiguator_data_t *d, const LightcapElement *l
+ 	int end_of_mod = g->single_60hz_mode ? LS_WaitLHB_ACode0 : LS_END;
+ 
+ 	// Leaving a sync ...
++	LightcapElement lastSync;
+ 	if (LS_Params[d->state].is_sweep == 0) {
+-		if (d->last_sync_count > 0) {
+-			LightcapElement lastSync = {.timestamp = d->first_sync_timestamp,
+-										.length = d->longest_sync_length,
+-										.sensor_id = -d->last_sync_count};
+-
++		if (d->last_sync_count > 0 && JudgeSync(LSParam_acode(d->state), d, &lastSync)) {
+ 			AddSyncHistory(d, lastSync);
+ 			// Use the average of the captured pulse to adjust where we are modulo against.
+ 			// This lets us handle drift in any of the timing chararacteristics
+@@ -629,6 +946,7 @@ static void ProcessStateChange(Disambiguator_data_t *d, const LightcapElement *l
+ 			if (hasData) {
+ 				acode |= DATA_BIT;
+ 			}
++			CheckOOTXBit(d, LS_Params[d->state].lh, hasData);
+ 
+ 			int next_state = d->state + 1;
+ 
+@@ -647,14 +965,29 @@ static void ProcessStateChange(Disambiguator_data_t *d, const LightcapElement *l
+ 		}
+ 	} else {
+ 		// Leaving a sweep ...
++		if (coincident_group(&d->sweep_sync_like, 0) >= min_sync_sensors(d) && min_sync_sensors(d) > 1) {
++			// Mild, since a sweep can light several sensors in its plane at once at close range;
++			// syncs in the right place earn +2 per cycle, so this only drains a lock that's wrong.
++			const int penalty = 1;
++			d->stats.misplaced_syncs++;
++			DEBUG_TB("Sync-like flash in a sweep window for %s (%d)", survive_colorize(d->so->codename),
++					 d->confidence);
++			if (d->confidence < penalty) {
++				d->lock_lost = true;
++			}
++			d->confidence -= penalty;
++		}
+ 		size_t avg_length = 0;
+ 
+ 		int lh = LS_Params[d->state].lh;
+ 		survive_timecode best_timecode = LSParam_offset_for_state(d->state) + CAPTURE_WINDOW + d->mod_offset[lh];
+ 		size_t cnt = 0;
+ 
++		LightcapElement *chosen = alloca(sizeof(LightcapElement) * d->so->sensor_ct);
++		SelectSweepHits(d, lh, LSParam_acode(d->state) & 1, end_of_mod, chosen);
++
+ 		for (int i = 0; i < d->so->sensor_ct; i++) {
+-			LightcapElement le = d->sweep_data[i];
++			LightcapElement le = chosen[i];
+ 			if (le.length > g->light_min_length) {
+ 				avg_length += le.length;
+ 				cnt++;
+@@ -674,7 +1007,7 @@ static void ProcessStateChange(Disambiguator_data_t *d, const LightcapElement *l
+ 
+ 			int acode = LSParam_acode(d->state);
+ 			for (int i = 0; i < d->so->sensor_ct; i++) {
+-				const LightcapElement *le = &d->sweep_data[i];
++				const LightcapElement *le = &chosen[i];
+ 				// Only care if we actually have data AND we have a time of last sync. We won't have the latter
+ 				// if we synced with the LH at certain times.
+ 				if (le->length > 0 && le->length >= minl && le->length <= maxl) {
+@@ -744,16 +1077,28 @@ static void PropagateState(Disambiguator_data_t *d, const LightcapElement *le) {
+ 	const LighthouseStateParameters *param = &LS_Params[d->state];
+ 	if (param->is_sweep == 0) {
+ 		RunACodeCapture(LSParam_acode(d->state), d, le);
+-	} else if (le->length > d->sweep_data[le->sensor_id].length &&
+-			   le->length < 10000 /*anything above 10k seems to be bullshit?*/) {
+-		// Note we only select the highest length one per sweep. Also, we bundle everything up and send it later all at
+-		// once.
+-		// so that we can do this filtering. Might not be necessary?
+-		if (le->length > 3000) {
+-			d->confidence--;
++	} else {
++		// A flash of sync length here is only suspicious if several sensors see it at once (judged
++		// when the sweep ends); on one sensor it's a sweep hit, which is long close to a lighthouse.
++		if (le->length >= LOWER_SYNC_TIME && le->length <= UPPER_SYNC_TIME) {
++			PulseSet_add(&d->sweep_sync_like, le);
++		}
++		// Every pulse is kept (the longest few); which one is the sensor's hit is decided when the
++		// sweep ends (SelectSweepHits).
++		if (le->length < g->sweep_max_length) {
++			assert(le->sensor_id < d->so->sensor_ct);
++			SweepCandidates *c = &d->sweep_data[le->sensor_id];
++			if (c->count < MAX_SWEEP_CANDIDATES) {
++				c->e[c->count++] = *le;
++			} else {
++				int shortest = 0;
++				for (int k = 1; k < c->count; k++)
++					if (c->e[k].length < c->e[shortest].length)
++						shortest = k;
++				if (le->length > c->e[shortest].length)
++					c->e[shortest] = *le;
++			}
+ 		}
+-		assert(le->sensor_id < d->so->sensor_ct);
+-		d->sweep_data[le->sensor_id] = *le;
+ 	}
+ }
+ 
+@@ -769,6 +1114,12 @@ void DisambiguatorStateBased(SurviveObject *so, const LightcapElement *le) {
+ 			SV_VERBOSE(5, "\tconfidence_resets       %u", d->stats.confidence_resets);
+ 			SV_VERBOSE(5, "\tdrop_sweeps             %u", d->stats.drop_sweeps);
+ 			SV_VERBOSE(5, "\tsweep_hit_count         %u", d->stats.sweep_hit_count);
++			SV_VERBOSE(5, "\tlone_syncs_rejected     %u", d->stats.lone_syncs_rejected);
++			SV_VERBOSE(5, "\tmisplaced_syncs         %u", d->stats.misplaced_syncs);
++			SV_VERBOSE(5, "\tootx_good / errors      %u / %u", d->stats.ootx_good, d->stats.ootx_errors);
++			SV_VERBOSE(5, "\tootx_relocks            %u", d->stats.ootx_relocks);
++			SV_VERBOSE(5, "\tsweep multi/switched/gated %u / %u / %u", d->stats.sweep_multi, d->stats.sweep_switched,
++					   d->stats.sweep_gated);
+ 			for (int i = 0; i < 2; i++) {
+ 				SV_VERBOSE(5, "\tsync_count[%d]           %u", i, d->stats.sync_count[i]);
+ 				SV_VERBOSE(5, "\tdrop_syncs[%d]           %u", i, d->stats.drop_syncs[i]);
+@@ -802,7 +1153,7 @@ void DisambiguatorStateBased(SurviveObject *so, const LightcapElement *le) {
+ 	}
+ 
+ 	if (so->disambiguator_data == NULL) {
+-		Disambiguator_data_t *d = SV_CALLOC(sizeof(Disambiguator_data_t) + sizeof(LightcapElement) * so->sensor_ct);
++		Disambiguator_data_t *d = SV_CALLOC(sizeof(Disambiguator_data_t) + sizeof(SweepCandidates) * so->sensor_ct);
+ 		d->so = so;
+ 		so->disambiguator_data = d;
+ 	}
+@@ -850,6 +1201,16 @@ void DisambiguatorStateBased(SurviveObject *so, const LightcapElement *le) {
+ 			d->confidence = d->confidence - penalty;
+ 		}
+ 		PropagateState(d, le);
++		if (d->lock_lost) {
++			d->lock_lost = false;
++			d->stats.ootx_relocks += d->ootx_errors[0] || d->ootx_errors[1];
++			SV_WARN("Disambiguator lock for %s looks wrong (OOTX framing errors %d/%d, confidence %d); refinding state",
++					survive_colorize(d->so->codename), d->ootx_errors[0], d->ootx_errors[1], d->confidence);
++			d->stats.confidence_resets++;
++			SetState(d, le, LS_UNKNOWN);
++			d->last_timestamp = le->timestamp;
++			return;
++		}
+ 	}
+ 
+ 	d->last_timestamp = le->timestamp;
+diff --git a/src/ootx_decoder.h b/src/ootx_decoder.h
+index b168ea6..563bfc9 100644
+--- a/src/ootx_decoder.h
++++ b/src/ootx_decoder.h
+@@ -9,6 +9,8 @@
+ #include <stddef.h>
+ #include <stdint.h>
+ 
++#include "survive_types.h" // SURVIVE_EXPORT
++
+ typedef struct {
+ 	uint16_t length;
+ 	uint8_t* data;
+@@ -99,10 +101,10 @@ void init_lighthouse_info_v15(lighthouse_info_v15 *lhi, uint8_t *data);
+ void init_lighthouse_info_v6(lighthouse_info_v6* lhi, uint8_t* data);
+ void print_lighthouse_info_v6(lighthouse_info_v6* lhi);
+ 
+-void ootx_init_decoder_context(ootx_decoder_context *ctx, float time);
+-void ootx_free_decoder_context(ootx_decoder_context *ctx);
++SURVIVE_EXPORT void ootx_init_decoder_context(ootx_decoder_context *ctx, float time);
++SURVIVE_EXPORT void ootx_free_decoder_context(ootx_decoder_context *ctx);
+ 
+-void ootx_pump_bit(ootx_decoder_context *ctx, int8_t dbit);
++SURVIVE_EXPORT void ootx_pump_bit(ootx_decoder_context *ctx, int8_t dbit);
+ 
+ uint8_t ootx_decode_bit(uint32_t length);
+ 

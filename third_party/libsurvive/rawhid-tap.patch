@@ -1,0 +1,111 @@
+diff --git a/src/driver_playback.c b/src/driver_playback.c
+index 0a17b08..dbf2ecc 100644
+--- a/src/driver_playback.c
++++ b/src/driver_playback.c
+@@ -461,6 +461,9 @@ static int playback_pump_msg(struct SurviveContext *ctx, void *_driver) {
+ 
+ 		survive_get_ctx_lock(ctx);
+ 		switch (op[0]) {
++		case 'H':
++			// HIDIN / HIDFEAT: the raw HID tap (record-rawhid); replay uses the decoded lines.
++			break;
+ 		case 'F':
+ 			if (strcmp(op, "FULL_STATE") == 0 || strcmp(op, "FULL_COVARIANCE") == 0) {
+ 			}
+diff --git a/src/driver_vive.hidapi.h b/src/driver_vive.hidapi.h
+index ebcc491..0c7781f 100644
+--- a/src/driver_vive.hidapi.h
++++ b/src/driver_vive.hidapi.h
+@@ -2,7 +2,57 @@
+ #include <assert.h>
+ #include <errno.h>
+ #include <hidapi.h>
++#include <os_generic.h>
++#include <stdio.h>
+ #include <survive.h>
++
++#include "survive_recording.h"
++
++STATIC_CONFIG_ITEM(RECORD_RAWHID, "record-rawhid", 'b',
++				   "Record every HID report exactly as hidapi delivers it (HIDIN) and every feature report "
++				   "exchanged (HIDFEAT), hex, with the host receive time in us",
++				   0)
++
++/**
++ * Raw HID tap. One line per report, so a recording holds every byte the device sent while it ran:
++ *
++ *   <t> <dev> HIDIN <interface> <host_us> <len> <hex>
++ *   <t> <dev> HIDFEAT <GET|SET> <host_us> <rtn> <hex>
++ *
++ * <interface> is libsurvive's name for it (IMU, Lightcap, Buttons, ...); <host_us> is
++ * OGGetAbsoluteTimeUS() when hidapi returned the report; for HIDFEAT, <rtn> is hidapi's return
++ * (bytes transferred, or -1) and <hex> the buffer after the call (GET) or the one sent (SET).
++ */
++static void hid_tap(SurviveContext *ctx, const char *dev, const char *what, const char *sub, uint64_t host_us,
++					int len, const uint8_t *data, int datalen) {
++	static int enabled = -1;
++	if (!ctx || !ctx->recptr)
++		return;
++	if (enabled == -1)
++		enabled = survive_configi(ctx, "record-rawhid", SC_GET, 0);
++	if (!enabled)
++		return;
++	char hex[2 * 1024 + 1];
++	if (datalen > 1024)
++		datalen = 1024;
++	static const char digits[] = "0123456789abcdef";
++	for (int i = 0; i < datalen; i++) {
++		hex[2 * i] = digits[data[i] >> 4];
++		hex[2 * i + 1] = digits[data[i] & 15];
++	}
++	hex[2 * (datalen > 0 ? datalen : 0)] = 0;
++	// The recording writer prints the time and the body separately; keep the line whole.
++	flockfile(stdout);
++	survive_recording_write_to_output(ctx->recptr, "%s %s %s %llu %d %s\n", dev, what, sub,
++									  (unsigned long long)host_us, len, hex);
++	funlockfile(stdout);
++}
++
++static const char *usb_dev_name(struct SurviveUSBInfo *usbInfo) {
++	if (usbInfo->so && usbInfo->so->codename[0])
++		return usbInfo->so->codename;
++	return usbInfo->device_info && usbInfo->device_info->codename[0] ? usbInfo->device_info->codename : "USB";
++}
+ #define LIBUSB_TRANSFER_COMPLETED 0
+ #define LIBUSB_TRANSFER_STALL -1
+ #define LIBUSB_TRANSFER_TIMED_OUT -2
+@@ -36,10 +86,14 @@ static inline int survive_usb_transfer_submit(survive_usb_transfer_t *tx) {
+ 	switch (tx->type) {
+ 	case survive_usb_transfer_type_read_feature_report: {
+ 		rtn = hid_get_feature_report(tx->dev->handle->interfaces[0], tx->buffer, tx->actual_length);
++		hid_tap(tx->dev->viveData ? tx->dev->viveData->ctx : 0, usb_dev_name(tx->dev), "HIDFEAT", "GET",
++				OGGetAbsoluteTimeUS(), rtn, tx->buffer, rtn > 0 ? rtn : 1);
+ 		break;
+ 	}
+ 	case survive_usb_transfer_type_send_feature_report: {
+ 		rtn = hid_send_feature_report(tx->dev->handle->interfaces[0], tx->buffer, tx->length);
++		hid_tap(tx->dev->viveData ? tx->dev->viveData->ctx : 0, usb_dev_name(tx->dev), "HIDFEAT", "SET",
++				OGGetAbsoluteTimeUS(), rtn, tx->buffer, (int)tx->length);
+ 		break;
+ 	}
+ 	}
+@@ -85,10 +139,16 @@ static void *HAPIReceiver(void *v) {
+ 	SurviveUSBInterface *iface = v;
+ 	USB_INTERFACE_HANDLE *hp = &iface->uh;
+ 
+-	if ((iface->actual_len = hid_read(*hp, iface->buffer, sizeof(iface->swap_buffer[0]) )) > 0) {
+-		// if( iface->actual_len  == 52 ) continue;
++	// Drain everything queued. Reading one report per poll falls behind the IMU and light streams,
++	// and the OS's report queue then drops the overflow before we ever see it.
++	for (int drained = 0; drained < 256; drained++) {
++		if ((iface->actual_len = hid_read(*hp, iface->buffer, sizeof(iface->swap_buffer[0]))) <= 0)
++			break;
+ 		iface->packet_count++;
+-		survive_data_cb(OGGetAbsoluteTimeUS(), iface);
++		uint64_t now = OGGetAbsoluteTimeUS();
++		hid_tap(iface->ctx, iface->assoc_obj ? iface->assoc_obj->codename : usb_dev_name(iface->usbInfo), "HIDIN",
++				iface->hname, now, iface->actual_len, iface->buffer, iface->actual_len);
++		survive_data_cb(now, iface);
+ 	}
+ 	if (iface->actual_len < 0) {
+ 		SurviveContext *ctx = iface->sv->ctx;
