@@ -15,14 +15,21 @@
 
 use crate::crypto::{self, DOMAIN_BUNDLE, DOMAIN_OVERRIDE, HMAC_KEY_LEN, TAG_LEN};
 use crate::mesh::{BROADCAST, MAX_PAYLOAD};
+use crate::wire::{self, pb, MAX_KEY};
 
 pub const MAX_KEYS: usize = 96;
-/// key u16 + value u32.
+/// A `Setting` inside a repeated field, `source` absent: tag + length 2, key (< 2^14) 3,
+/// value 5.
+pub const SETTING_MAX: usize = 10;
+/// Longest BundleBody: generation 6 + 96 settings.
+pub const MAX_BUNDLE_BODY: usize = 6 + MAX_KEYS * SETTING_MAX;
+/// Longest tagged swarm Bundle envelope: body tag + 2-byte length + body, tag field 6.
+pub const MAX_BUNDLE: usize = 3 + MAX_BUNDLE_BODY + 2 + TAG_LEN;
+
+/// Persisted layer (local storage only, not a wire format): key u16 + value u32.
 pub const ENTRY_LEN: usize = 6;
 /// count u16 + entries.
 pub const MAX_LAYER: usize = 2 + MAX_KEYS * ENTRY_LEN;
-/// Tagged swarm bundle: generation u32 + layer + tag.
-pub const MAX_BUNDLE: usize = 4 + MAX_LAYER + TAG_LEN;
 
 /// Mesh ports.
 pub const PORT_BUNDLE_DATA: u8 = 2;
@@ -30,18 +37,28 @@ pub const PORT_BUNDLE_REQUEST: u8 = 3;
 pub const PORT_OVERRIDE: u8 = 4;
 
 pub const CMD_SET: u8 = 1;
+const CMD_SET_I: i32 = CMD_SET as i32;
+const CMD_CLEAR_I: i32 = CMD_CLEAR as i32;
 /// Clear the listed keys; no keys clears every override.
 pub const CMD_CLEAR: u8 = 2;
-const CMD_HEAD: usize = 1 + 4 + 1; // kind, seq, count
-/// Entries per override command: what fits next to the tag.
-pub const CMD_MAX_ENTRIES: usize = (MAX_PAYLOAD - CMD_HEAD - TAG_LEN) / ENTRY_LEN;
+/// Override envelope around the body: body tag + length 2, tag field 2 + TAG_LEN.
+const CMD_ENVELOPE: usize = 2 + 2 + TAG_LEN;
+/// OverrideBody without settings: kind 2 + seq 6.
+const CMD_HEAD: usize = 2 + 6;
+/// Entries per override command: what fits in one mesh payload next to the tag.
+pub const CMD_MAX_ENTRIES: usize = (MAX_PAYLOAD - CMD_ENVELOPE - CMD_HEAD) / SETTING_MAX;
 
-/// Fragment: generation u32 + bundle length u16 + offset u16 + bytes.
-const FRAG_HEAD: usize = 8;
-pub const FRAG_DATA: usize = MAX_PAYLOAD - FRAG_HEAD;
+/// Data bytes per BundleFragment: its overhead is generation 6 + total_len 3 + offset 3 +
+/// data tag and length 2 = 14, so a fragment is at most 86 bytes of the 88.
+pub const FRAG_DATA: usize = 72;
+const _: () = assert!(FRAG_DATA + 14 <= MAX_PAYLOAD);
 // Fragments of a bundle are tracked in a u32 bitmap.
 const _: () = assert!(MAX_BUNDLE.div_ceil(FRAG_DATA) <= 32);
-
+const _: () = assert!(CMD_MAX_ENTRIES == 7);
+// pbview's exact worst cases for the two bounded envelopes (see the bounds file).
+const _: () = assert!(pb::BundleEnc::MAX_ENCODED_LEN == MAX_BUNDLE);
+const _: () = assert!(pb::OverrideEnc::MAX_ENCODED_LEN <= MAX_PAYLOAD);
+const _: () = assert!(1 + 2 + MAX_BUNDLE_BODY <= crypto::TAG_MSG_MAX);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Entry {
@@ -71,8 +88,11 @@ impl Layer {
         &self.entries[..self.len]
     }
 
-    /// False if the layer is full.
+    /// False if the layer is full or `key` exceeds MAX_KEY.
     pub fn set(&mut self, key: u16, value: u32) -> bool {
+        if key > MAX_KEY {
+            return false;
+        }
         match self.slice().binary_search_by_key(&key, |e| e.key) {
             Ok(i) => {
                 self.entries[i].value = value;
@@ -134,35 +154,41 @@ impl Layer {
 }
 
 
-/// Host side (and the USB path): a tagged swarm bundle. Returns the length.
-pub fn make_bundle(layer: &Layer, generation: u32, key: &[u8; HMAC_KEY_LEN], out: &mut [u8; MAX_BUNDLE]) -> usize {
-    out[0..4].copy_from_slice(&generation.to_le_bytes());
-    let n = 4 + layer.encode(&mut out[4..4 + MAX_LAYER]).unwrap();
-    let tag = crypto::tag(key, DOMAIN_BUNDLE, &[&out[..n]]).unwrap();
-    out[n..n + TAG_LEN].copy_from_slice(&tag);
-    n + TAG_LEN
+fn recs(layer: &Layer) -> ([wire::SettingRec; MAX_KEYS], usize) {
+    let mut out = [wire::SettingRec { key: 0, value: 0, source: 0 }; MAX_KEYS];
+    for (i, e) in layer.slice().iter().enumerate() {
+        out[i] = wire::SettingRec { key: e.key, value: e.value, source: 0 };
+    }
+    (out, layer.len)
 }
 
-/// Host side: a tagged override command for `dest`.
+/// Host side (and the USB path): a tagged swarm bundle `{body, tag}`. The tag is the
+/// first 4 bytes of HMAC-SHA256 over 'B' || body, body as serialized here. Returns the
+/// length.
+pub fn make_bundle(layer: &Layer, generation: u32, key: &[u8; HMAC_KEY_LEN], out: &mut [u8; MAX_BUNDLE]) -> usize {
+    let (r, n) = recs(layer);
+    let mut body = [0u8; MAX_BUNDLE_BODY];
+    let n = wire::bundle_body(generation, &r[..n], &mut body).unwrap();
+    let tag = crypto::tag(key, DOMAIN_BUNDLE, &[&body[..n]]).unwrap();
+    wire::bundle(&body[..n], &tag, out).unwrap()
+}
+
+/// Host side: a tagged override command `{body, tag}` for `dest`; the tag is over
+/// 'O' || dest (u16 LE) || body, so a command for one node cannot be replayed at another.
 pub fn make_override(dest: u16, kind: u8, seq: u32, entries: &[Entry], key: &[u8; HMAC_KEY_LEN]) -> Option<([u8; MAX_PAYLOAD], usize)> {
-    if entries.len() > CMD_MAX_ENTRIES {
+    if entries.len() > CMD_MAX_ENTRIES || entries.iter().any(|e| e.key > MAX_KEY) {
         return None;
     }
-    let mut out = [0u8; MAX_PAYLOAD];
-    let n = CMD_HEAD + entries.len() * ENTRY_LEN;
-    out[0] = kind;
-    out[1..5].copy_from_slice(&seq.to_le_bytes());
-    out[5] = entries.len() as u8;
+    let mut r = [wire::SettingRec { key: 0, value: 0, source: 0 }; CMD_MAX_ENTRIES];
     for (i, e) in entries.iter().enumerate() {
-        let at = CMD_HEAD + i * ENTRY_LEN;
-        out[at..at + 2].copy_from_slice(&e.key.to_le_bytes());
-        out[at + 2..at + 6].copy_from_slice(&e.value.to_le_bytes());
+        r[i] = wire::SettingRec { key: e.key, value: e.value, source: 0 };
     }
-    // The tag covers the destination too: a command for one node can't be
-    // replayed at another.
-    let tag = crypto::tag(key, DOMAIN_OVERRIDE, &[&dest.to_le_bytes(), &out[..n]])?;
-    out[n..n + TAG_LEN].copy_from_slice(&tag);
-    Some((out, n + TAG_LEN))
+    let mut body = [0u8; MAX_PAYLOAD];
+    let n = wire::override_body(kind as u32, seq, &r[..entries.len()], &mut body)?;
+    let tag = crypto::tag(key, DOMAIN_OVERRIDE, &[&dest.to_le_bytes(), &body[..n]])?;
+    let mut out = [0u8; MAX_PAYLOAD];
+    let len = wire::override_(&body[..n], &tag, &mut out)?;
+    Some((out, len))
 }
 
 /// What changed after handling a packet; the firmware re-resolves its
@@ -197,9 +223,11 @@ pub struct SettingsStats {
 pub struct Settings {
     pub me: u16,
     key: Option<[u8; HMAC_KEY_LEN]>,
-    /// The tagged swarm bundle as received, and its length (0: none).
+    /// The tagged swarm bundle exactly as received (never re-encoded), its length (0:
+    /// none) and the generation inside it.
     bundle: [u8; MAX_BUNDLE],
     bundle_len: usize,
+    generation: u32,
     pub swarm: Layer,
     pub overrides: Layer,
     /// Highest override command sequence accepted.
@@ -219,6 +247,7 @@ impl Settings {
             key,
             bundle: [0; MAX_BUNDLE],
             bundle_len: 0,
+            generation: 0,
             swarm: Layer::default(),
             overrides: Layer::default(),
             override_seq: 0,
@@ -239,10 +268,7 @@ impl Settings {
 
     /// Swarm-layer generation (0: none), for the summary in POLL frames.
     pub fn generation(&self) -> u32 {
-        if self.bundle_len < 4 {
-            return 0;
-        }
-        u32::from_le_bytes([self.bundle[0], self.bundle[1], self.bundle[2], self.bundle[3]])
+        self.generation
     }
 
     /// Effective raw value: override, else swarm, else None (default).
@@ -334,13 +360,13 @@ impl Settings {
         }
         self.last_request_us = t_us;
         let mut payload = [0u8; MAX_PAYLOAD];
-        payload[..4].copy_from_slice(&generation.to_le_bytes());
-        Some(Outgoing { dest: id, port: PORT_BUNDLE_REQUEST, hop_limit: 0, len: 4, payload })
+        let len = wire::bundle_request(generation, &mut payload)?;
+        Some(Outgoing { dest: id, port: PORT_BUNDLE_REQUEST, hop_limit: 0, len, payload })
     }
 
-    /// Next fragment to send while serving the bundle. Local broadcasts
-    /// (hop limit 0): every neighbour that needs it takes it, and anyone
-    /// further away asks its own neighbours.
+    /// Next fragment to send while serving the bundle: a BundleFragment slicing the stored
+    /// bundle bytes. Local broadcasts (hop limit 0): every neighbour that needs it takes it,
+    /// and anyone further away asks its own neighbours.
     pub fn next_outgoing(&mut self) -> Option<Outgoing> {
         let k = self.serve_next?;
         let len = self.bundle_len;
@@ -351,23 +377,20 @@ impl Settings {
         }
         let n = (len - off).min(FRAG_DATA);
         let mut payload = [0u8; MAX_PAYLOAD];
-        payload[0..4].copy_from_slice(&self.bundle[0..4]);
-        payload[4..6].copy_from_slice(&(len as u16).to_le_bytes());
-        payload[6..8].copy_from_slice(&(off as u16).to_le_bytes());
-        payload[FRAG_HEAD..FRAG_HEAD + n].copy_from_slice(&self.bundle[off..off + n]);
+        let plen = wire::bundle_fragment(self.generation, len as u32, off as u32, &self.bundle[off..off + n], &mut payload)?;
         self.serve_next = if off + n < len { Some(k + 1) } else { None };
-        Some(Outgoing { dest: BROADCAST, port: PORT_BUNDLE_DATA, hop_limit: 0, len: FRAG_HEAD + n, payload })
+        Some(Outgoing { dest: BROADCAST, port: PORT_BUNDLE_DATA, hop_limit: 0, len: plen, payload })
     }
 
     fn fragment(&mut self, p: &[u8]) -> Changes {
-        if p.len() < FRAG_HEAD {
-            return Changes::default();
-        }
-        let generation = u32::from_le_bytes([p[0], p[1], p[2], p[3]]);
-        let len = u16::from_le_bytes([p[4], p[5]]) as usize;
-        let off = u16::from_le_bytes([p[6], p[7]]) as usize;
-        let data = &p[FRAG_HEAD..];
-        if generation <= self.generation() || len > MAX_BUNDLE || off % FRAG_DATA != 0 || off + data.len() > len {
+        let Ok(f) = pb::BundleFragmentView::parse(p) else { return Changes::default() };
+        let (generation, len, off, data) = (f.generation(), f.total_len() as usize, f.offset() as usize, f.data());
+        if generation <= self.generation()
+            || len == 0
+            || len > MAX_BUNDLE
+            || off % FRAG_DATA != 0
+            || off + data.len() > len
+        {
             return Changes::default();
         }
         if !matches!(self.incoming, Some((g, l, _, _)) if g == generation && l == len) {
@@ -387,28 +410,38 @@ impl Settings {
         }
     }
 
-    /// Check and adopt a tagged bundle. `reload`: from our own storage at
+    /// Check and adopt a tagged bundle: the tag is checked over the body bytes as they
+    /// are in `b`, and `b` itself is what is kept. `reload`: from our own storage at
     /// boot (any generation; it's what we had).
     fn accept_bundle(&mut self, b: &[u8], reload: bool) -> bool {
         let Some(key) = self.key else {
             self.stats.no_key += 1;
             return false;
         };
-        if b.len() < 4 + 2 + TAG_LEN || b.len() > MAX_BUNDLE {
+        if b.is_empty() || b.len() > MAX_BUNDLE {
             return false;
         }
-        let (body, tag) = b.split_at(b.len() - TAG_LEN);
-        if !crypto::check_tag(&key, DOMAIN_BUNDLE, &[body], tag) {
+        let Ok(env) = pb::BundleView::parse(b) else { return false };
+        // The tag covers the body bytes exactly as they are in `b`.
+        if !crypto::check_tag(&key, DOMAIN_BUNDLE, &[env.body()], env.tag()) {
             self.stats.rejected_tag += 1;
             return false;
         }
-        let generation = u32::from_le_bytes([b[0], b[1], b[2], b[3]]);
+        let Ok(body) = pb::BundleBodyView::parse(env.body()) else { return false };
+        let generation = body.generation();
         if !reload && generation <= self.generation() {
             return false;
         }
-        let Some(layer) = Layer::decode(&body[4..]) else { return false };
+        let mut layer = Layer::default();
+        for st in body.settings() {
+            let Ok(k) = u16::try_from(st.key()) else { return false };
+            if !layer.set(k, st.value()) {
+                return false;
+            }
+        }
         self.bundle[..b.len()].copy_from_slice(b);
         self.bundle_len = b.len();
+        self.generation = generation;
         self.swarm = layer;
         self.stats.bundles_applied += 1;
         true
@@ -419,43 +452,38 @@ impl Settings {
             self.stats.no_key += 1;
             return Changes::default();
         };
-        if p.len() < CMD_HEAD + TAG_LEN {
-            return Changes::default();
-        }
-        let kind = p[0];
-        let seq = u32::from_le_bytes([p[1], p[2], p[3], p[4]]);
-        let count = p[5] as usize;
-        let n = CMD_HEAD + count * ENTRY_LEN;
-        if count > CMD_MAX_ENTRIES || p.len() < n + TAG_LEN {
-            return Changes::default();
-        }
-        if !crypto::check_tag(&key, DOMAIN_OVERRIDE, &[&self.me.to_le_bytes(), &p[..n]], &p[n..n + TAG_LEN]) {
+        let Ok(env) = pb::OverrideView::parse(p) else { return Changes::default() };
+        if !crypto::check_tag(&key, DOMAIN_OVERRIDE, &[&self.me.to_le_bytes(), env.body()], env.tag()) {
             self.stats.rejected_tag += 1;
             return Changes::default();
         }
-        if seq <= self.override_seq {
+        let Ok(body) = pb::OverrideBodyView::parse(env.body()) else { return Changes::default() };
+        if body.seq() <= self.override_seq {
             self.stats.rejected_replay += 1;
             return Changes::default();
         }
-        self.override_seq = seq;
-        let entry = |i: usize| {
-            let at = CMD_HEAD + i * ENTRY_LEN;
-            Entry {
-                key: u16::from_le_bytes([p[at], p[at + 1]]),
-                value: u32::from_le_bytes([p[at + 2], p[at + 3], p[at + 4], p[at + 5]]),
+        let mut entries = [Entry { key: 0, value: 0 }; CMD_MAX_ENTRIES];
+        let mut count = 0;
+        for st in body.settings() {
+            let Ok(k) = u16::try_from(st.key()) else { return Changes::default() };
+            if count == CMD_MAX_ENTRIES {
+                return Changes::default();
             }
-        };
-        match kind {
-            CMD_SET => {
-                for i in 0..count {
-                    let e = entry(i);
+            entries[count] = Entry { key: k, value: st.value() };
+            count += 1;
+        }
+        self.override_seq = body.seq();
+        let entries = &entries[..count];
+        match body.kind() {
+            CMD_SET_I => {
+                for e in entries {
                     self.overrides.set(e.key, e.value);
                 }
             }
-            CMD_CLEAR if count == 0 => self.overrides = Layer::default(),
-            CMD_CLEAR => {
-                for i in 0..count {
-                    self.overrides.remove(entry(i).key);
+            CMD_CLEAR_I if count == 0 => self.overrides = Layer::default(),
+            CMD_CLEAR_I => {
+                for e in entries {
+                    self.overrides.remove(e.key);
                 }
             }
             _ => return Changes::default(),
@@ -572,25 +600,59 @@ mod tests {
         assert_eq!(m.override_seq, 101);
     }
 
-    /// The same bytes swarm/tools/swarm_wire.py produces (its test pins
-    /// them too): host and node agree on the encoding and the tag.
+    /// The tag covers the body bytes as sent: a bundle whose body is a valid but non-canonical
+    /// encoding (an unknown field, a duplicated setting) is accepted when tagged as such, and
+    /// served on byte for byte.
     #[test]
-    fn matches_host_tool_encoding() {
-        let key = [5u8; HMAC_KEY_LEN];
-        let mut b = [0u8; MAX_BUNDLE];
-        let n = make_bundle(&layer(&[(106, 7.0f32.to_bits()), (300, 0.2f32.to_bits())]), 3, &key, &mut b);
-        assert_eq!(hex(&b[..n]), "0300000002006a000000e0402c01cdcc4c3e6e1e97e2");
-        let (o, len) = make_override(13, CMD_SET, 1, &[Entry { key: 300, value: 0.2f32.to_bits() }], &key).unwrap();
-        assert_eq!(hex(&o[..len]), "0101000000012c01cdcc4c3e402c9832");
-    }
-
-    fn hex(b: &[u8]) -> String {
-        b.iter().map(|x| format!("{:02x}", x)).collect()
+    fn non_canonical_bundle_is_verified_and_stored_as_received() {
+        let mut body = vec![0x08, 0x09]; // generation 9
+        body.extend_from_slice(&[0x12, 0x07, 0x08, 0x01, 0x15, 1, 0, 0, 0]); // key 1 = 1
+        body.extend_from_slice(&[0x12, 0x07, 0x08, 0x01, 0x15, 2, 0, 0, 0]); // key 1 = 2 (last wins)
+        body.extend_from_slice(&[0x50, 0x07]); // unknown field 10
+        let tag = crypto::tag(&KEY, DOMAIN_BUNDLE, &[&body]).unwrap();
+        let mut env = vec![0x0a, body.len() as u8];
+        env.extend_from_slice(&body);
+        env.extend_from_slice(&[0x12, 0x04]);
+        env.extend_from_slice(&tag);
+        let mut a = Settings::new(1, Some(KEY));
+        let mut b = Settings::new(2, Some(KEY));
+        assert!(a.host_bundle(&env).swarm);
+        assert_eq!(a.get(1), Some(2));
+        assert_eq!(a.bundle(), &env[..]);
+        assert!(serve(&mut a, &mut b).swarm);
+        assert_eq!(b.bundle(), &env[..]);
     }
 
     #[test]
     fn capacities() {
-        assert_eq!(CMD_MAX_ENTRIES, 16);
-        assert_eq!(MAX_BUNDLE.div_ceil(FRAG_DATA), 6);
+        assert_eq!(CMD_MAX_ENTRIES, 7);
+        assert_eq!(FRAG_DATA, 72);
+        assert_eq!(MAX_BUNDLE, 975);
+        assert_eq!(MAX_BUNDLE.div_ceil(FRAG_DATA), 14);
+    }
+
+    /// The keys a bundle can carry stop at MAX_KEY (a Setting is 10 bytes at most).
+    #[test]
+    fn keys_above_the_limit_are_refused() {
+        let mut l = Layer::default();
+        assert!(l.set(MAX_KEY, 1));
+        assert!(!l.set(MAX_KEY + 1, 1));
+        assert!(make_override(1, CMD_SET, 1, &[Entry { key: MAX_KEY + 1, value: 0 }], &KEY).is_none());
+        assert!(make_override(1, CMD_SET, 1, &[Entry { key: 1, value: 0 }; CMD_MAX_ENTRIES + 1], &KEY).is_none());
+    }
+
+    /// A full bundle (96 keys) goes through fragments, byte for byte.
+    #[test]
+    fn full_bundle_is_fragmented_and_kept_verbatim() {
+        let mut a = Settings::new(1, Some(KEY));
+        let mut b = Settings::new(2, Some(KEY));
+        let l = layer((0..MAX_KEYS as u16).map(|k| (MAX_KEY - k, 0xFFFF_FFFF - k as u32)).collect::<Vec<_>>().as_slice());
+        let bytes = bundle(&l, u32::MAX, &KEY);
+        assert_eq!(bytes.len(), MAX_BUNDLE);
+        assert!(a.host_bundle(&bytes).swarm);
+        assert!(serve(&mut a, &mut b).swarm);
+        assert_eq!(b.bundle(), &bytes[..]);
+        assert_eq!(b.swarm, l);
+        assert_eq!(b.generation(), u32::MAX);
     }
 }

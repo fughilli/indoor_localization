@@ -1,0 +1,28 @@
+# Limits the schema cannot express, for pbview's typed encoders (pbview_library(bounds = ...)):
+# `<package>.<Message>.<field> max_len N` (bytes / string) and `max_count N` (repeated). The
+# setters enforce them and a fully bounded message gets FooEnc::MAX_ENCODED_LEN. The numbers
+# are the budgets of docs/swarm-wire.md.
+
+# LinkFrame (C++ only)
+swarm.v1.LinkFrame.payload max_len 115
+swarm.v1.LinkFrame.advert max_len 64
+swarm.v1.LinkFrame.summary max_len 26
+
+# Firmware distribution
+swarm.v1.ManifestBody.sha256 max_len 32
+swarm.v1.Manifest.body max_len 48
+swarm.v1.Manifest.signature max_len 64
+swarm.v1.FwData.data max_len 96
+
+# Mesh
+swarm.v1.MeshPacket.payload max_len 88
+
+# Settings
+swarm.v1.BundleBody.settings max_count 96
+swarm.v1.Bundle.body max_len 966
+swarm.v1.Bundle.tag max_len 4
+swarm.v1.BundleFragment.data max_len 72
+swarm.v1.OverrideBody.settings max_count 7
+swarm.v1.Override.body max_len 78
+swarm.v1.Override.tag max_len 4
+swarm.v1.SettingsReport.settings max_count 6

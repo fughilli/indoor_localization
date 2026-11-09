@@ -12,20 +12,28 @@
 //!   relay it first cancels ours.
 //! - Unicast with want-ack: the destination answers with an ack packet; the
 //!   origin retries until it hears it (or gives up).
+//!
+//! A packet on the air is a `MeshPacket` protobuf message (swarm_wire.proto): the origin's
+//! retry number, hop limit and flags are separate fields, and a broadcast has no `dest`.
+
+use crate::wire::{self, pb};
 
 pub const BROADCAST: u16 = 0xFFFF;
-pub const HEADER_LEN: usize = 9;
-/// 127-byte frame - 2 FCS - 8 link header - 9 mesh header: exactly room
-/// for a signed manifest (108 bytes).
-pub const MAX_PAYLOAD: usize = 108;
-pub const MAX_PACKET: usize = HEADER_LEN + MAX_PAYLOAD;
+/// The mesh payload: 125 - 10 link header - 24 MeshPacket header = 91, three bytes of
+/// slack (docs/swarm-wire.md).
+pub const MAX_PAYLOAD: usize = 88;
+/// Longest encoded MeshPacket: header 24 (every id at full width, every small field set,
+/// payload tag and length included) + payload.
+pub const MAX_PACKET: usize = 24 + MAX_PAYLOAD;
 
 pub const FLAG_WANT_ACK: u8 = 1 << 0;
 pub const FLAG_IS_ACK: u8 = 1 << 1;
-/// The high nibble of the flags byte is the attempt number.
-const ATTEMPT_SHIFT: u8 = 4;
+/// Largest hop limit / hop start / attempt and port: one-byte varints (the header budget).
+pub const MAX_SMALL: u8 = 127;
+/// Retry numbers stay below this (the origin sends at most 16 attempts).
+const MAX_ATTEMPT: u8 = 15;
 
-/// Port of ack packets (payload: the acked id, u16 LE).
+/// Port of ack packets (payload: `Ack`, the acked id).
 pub const PORT_ACK: u8 = 0;
 
 const SEEN_LEN: usize = 64;
@@ -97,38 +105,44 @@ impl Packet {
         &self.payload[..self.len as usize]
     }
 
+    /// A MeshPacket. `dest` is absent on the wire for a broadcast; every other small field
+    /// is omitted at 0 (proto3).
     pub fn encode(&self, out: &mut [u8]) -> Option<usize> {
-        let n = HEADER_LEN + self.len as usize;
-        if out.len() < n {
-            return None;
-        }
         let h = &self.header;
-        out[0..2].copy_from_slice(&h.origin.to_le_bytes());
-        out[2..4].copy_from_slice(&h.id.to_le_bytes());
-        out[4..6].copy_from_slice(&h.dest.to_le_bytes());
-        out[6] = (h.hop_limit & 0x0F) | (h.hop_start << 4);
-        out[7] = (h.flags & 0x0F) | (h.attempt << ATTEMPT_SHIFT);
-        out[8] = h.port;
-        out[HEADER_LEN..n].copy_from_slice(self.payload());
-        Some(n)
+        let dest = if h.dest == BROADCAST { None } else { Some(h.dest as u32) };
+        wire::mesh_packet(
+            h.origin as u32,
+            h.id as u32,
+            dest,
+            h.hop_limit as u32,
+            h.hop_start as u32,
+            h.port as u32,
+            h.flags as u32,
+            h.attempt as u32,
+            self.payload(),
+            out,
+        )
     }
 
+    /// None for anything malformed, or with a field outside what this node produces
+    /// (ids above 16 bits, small fields above 127, payload above MAX_PAYLOAD).
     pub fn decode(b: &[u8]) -> Option<Packet> {
-        if b.len() < HEADER_LEN || b.len() > MAX_PACKET {
-            return None;
-        }
-        let u16_at = |i: usize| u16::from_le_bytes([b[i], b[i + 1]]);
+        let m = pb::MeshPacketView::parse(b).ok()?;
+        let small = |v: u32| u8::try_from(v).ok().filter(|&v| v <= MAX_SMALL);
         let header = Header {
-            origin: u16_at(0),
-            id: u16_at(2),
-            dest: u16_at(4),
-            hop_limit: b[6] & 0x0F,
-            hop_start: b[6] >> 4,
-            flags: b[7] & 0x0F,
-            attempt: b[7] >> ATTEMPT_SHIFT,
-            port: b[8],
+            origin: u16::try_from(m.origin()).ok()?,
+            id: u16::try_from(m.id()).ok()?,
+            dest: match m.dest() {
+                Some(d) => u16::try_from(d).ok()?,
+                None => BROADCAST,
+            },
+            hop_limit: small(m.hop_limit())?,
+            hop_start: small(m.hop_start())?,
+            flags: small(m.flags())?,
+            attempt: small(m.attempt())?,
+            port: small(m.port())?,
         };
-        Packet::new(header, &b[HEADER_LEN..])
+        Packet::new(header, m.payload())
     }
 }
 
@@ -224,6 +238,9 @@ impl Mesh {
     /// send() with an explicit hop limit; 0 keeps a packet to direct
     /// neighbours (local serving traffic that every hop redoes anyway).
     pub fn send_with_hops(&mut self, dest: u16, port: u8, payload: &[u8], want_ack: bool, hop_limit: u8) -> Option<u16> {
+        if port > MAX_SMALL || hop_limit > MAX_SMALL {
+            return None;
+        }
         let slot = self.outbox.iter().position(|o| o.is_none())?;
         self.next_id = self.next_id.wrapping_add(1);
         let id = self.next_id;
@@ -272,8 +289,7 @@ impl Mesh {
         let for_me = h.dest == self.me || h.dest == BROADCAST;
         if for_me {
             if h.flags & FLAG_IS_ACK != 0 && h.dest == self.me {
-                if p.len >= 2 {
-                    let acked = u16::from_le_bytes([p.payload[0], p.payload[1]]);
+                if let Some(Ok(acked)) = pb::AckView::parse(p.payload()).ok().map(|a| u16::try_from(a.id())) {
                     self.ack_received(h.origin, acked);
                 }
             } else {
@@ -320,7 +336,7 @@ impl Mesh {
             if o.next_us > t_us {
                 continue;
             }
-            o.packet.header.attempt = o.tries.min(15);
+            o.packet.header.attempt = o.tries.min(MAX_ATTEMPT);
             let h = o.packet.header;
             self.remember(h.origin, h.id, h.attempt);
             let n = o.packet.encode(out);
@@ -385,7 +401,9 @@ impl Mesh {
             attempt: 0,
             port: PORT_ACK,
         };
-        let packet = Packet::new(header, &id.to_le_bytes()).unwrap();
+        let mut body = [0u8; 8];
+        let n = wire::ack(id as u32, &mut body).unwrap();
+        let packet = Packet::new(header, &body[..n]).unwrap();
         self.outbox[slot] = Some(Pending { packet, tries: 0, next_us: i64::MIN });
     }
 

@@ -5,11 +5,18 @@
 //! chunks it's missing in its current page, and that neighbour broadcasts
 //! them, so everyone else on the same page gets them too.
 //!
-//! Staging layout: sector 0 holds the signed manifest; the image starts at
-//! offset PAGE_SIZE. The firmware provides the flash (a raw partition).
+//! Staging layout: sector 0 holds `varint(length) || Manifest` (the signed
+//! manifest envelope, stored exactly as it was received; erased flash reads
+//! as "no manifest"); the image starts at offset PAGE_SIZE. The firmware
+//! provides the flash (a raw partition).
+//!
+//! Messages (swarm_wire.proto): `Summary` rides every POLL, `FwRequest` is a
+//! link unicast to the server, `FwData` a link broadcast, and the manifest is
+//! offered in a link frame of its own (net.rs FrameKind::FwManifest).
 
 use crate::crypto::{Sha256, P256_PUBLIC_KEY_LEN};
-use crate::manifest::{Manifest, ENCODED_LEN as MANIFEST_LEN};
+use crate::manifest::{Manifest, STAGED_MAX};
+use crate::wire::{self, pb};
 
 pub const PAGE_SIZE: usize = 4096;
 pub const CHUNK: usize = 96;
@@ -18,12 +25,14 @@ const IMAGE_OFFSET: u32 = PAGE_SIZE as u32;
 const NEIGHBOURS: usize = 16;
 const SERVE_SLOTS: usize = 4;
 
-/// Request: version u32, page u16, missing-chunk bitmap u64.
-pub const REQUEST_LEN: usize = 14;
-/// Data: version u32, page u16, chunk u8, up to CHUNK bytes.
-pub const DATA_HEAD: usize = 7;
-pub const DATA_MAX: usize = DATA_HEAD + CHUNK;
-pub const SUMMARY_LEN: usize = 12;
+/// Longest encoded FwRequest: version 6 + page 4 (a u16 page) + missing bitmap 9. (With
+/// pages below 16384, i.e. images up to 64 MB, it is 18.)
+pub const REQUEST_MAX: usize = 19;
+/// Longest encoded FwData: version 6 + page 4 + chunk 2 + data (2 + CHUNK). (109 with
+/// pages below 16384.)
+pub const DATA_MAX: usize = 6 + 4 + 2 + 2 + CHUNK;
+/// Longest encoded Summary: running 6 + staged 6 + pages 4 + total 4 + generation 6.
+pub const SUMMARY_MAX: usize = 26;
 
 /// The staging partition, as the firmware exposes it.
 pub trait Flash {
@@ -42,27 +51,23 @@ pub struct Summary {
     pub staged: u32,
     pub pages: u16,
     pub total: u16,
+    /// Swarm settings generation (net.rs fills it; the Updater leaves 0).
+    pub generation: u32,
 }
 
 impl Summary {
-    pub fn encode(&self) -> [u8; SUMMARY_LEN] {
-        let mut b = [0u8; SUMMARY_LEN];
-        b[0..4].copy_from_slice(&self.running.to_le_bytes());
-        b[4..8].copy_from_slice(&self.staged.to_le_bytes());
-        b[8..10].copy_from_slice(&self.pages.to_le_bytes());
-        b[10..12].copy_from_slice(&self.total.to_le_bytes());
-        b
+    pub fn encode(&self, out: &mut [u8]) -> Option<usize> {
+        wire::summary(self.running, self.staged, self.pages as u32, self.total as u32, self.generation, out)
     }
 
     pub fn decode(b: &[u8]) -> Option<Summary> {
-        if b.len() < SUMMARY_LEN {
-            return None;
-        }
+        let m = pb::SummaryView::parse(b).ok()?;
         Some(Summary {
-            running: u32::from_le_bytes([b[0], b[1], b[2], b[3]]),
-            staged: u32::from_le_bytes([b[4], b[5], b[6], b[7]]),
-            pages: u16::from_le_bytes([b[8], b[9]]),
-            total: u16::from_le_bytes([b[10], b[11]]),
+            running: m.running(),
+            staged: m.staged(),
+            pages: u16::try_from(m.pages()).ok()?,
+            total: u16::try_from(m.total()).ok()?,
+            generation: m.generation(),
         })
     }
 
@@ -198,6 +203,7 @@ impl Updater {
             staged: self.manifest.map_or(0, |m| m.version),
             pages: self.pages_done,
             total: self.total_pages(),
+            generation: 0,
         }
     }
 
@@ -213,11 +219,11 @@ impl Updater {
     /// At boot: pick up a staged image (signature + full hash check).
     /// A partial one restarts from page 0 (progress isn't persisted).
     pub fn boot(&mut self, flash: &mut dyn Flash) {
-        let mut hdr = [0u8; MANIFEST_LEN];
+        let mut hdr = [0u8; STAGED_MAX];
         if !flash.read(0, &mut hdr) {
             return;
         }
-        let Some(m) = Manifest::decode(&hdr) else { return };
+        let Some(m) = Manifest::decode_staged(&hdr) else { return };
         if !self.acceptable_size(&m, flash) || !m.verify(&self.public_key) {
             return;
         }
@@ -247,7 +253,9 @@ impl Updater {
             self.stats.rejected_signature += 1;
             return false;
         }
-        let ok = flash.erase(0, PAGE_SIZE as u32) && flash.write(0, &m.encode());
+        let mut staged = [0u8; STAGED_MAX];
+        let n = m.encode_staged(&mut staged);
+        let ok = flash.erase(0, PAGE_SIZE as u32) && flash.write(0, &staged[..n]);
         if !ok {
             self.stats.flash_errors += 1;
             return false;
@@ -308,7 +316,7 @@ impl Updater {
     }
 
     /// Our manifest, if a neighbour needs to hear about it (rate-limited).
-    /// The firmware sends it as a local mesh broadcast.
+    /// Sent as a link broadcast frame of its own (FrameKind::FwManifest).
     pub fn manifest_offer(&mut self, t_us: i64) -> Option<Manifest> {
         if !self.offer_pending || t_us - self.last_offer_us < self.offer_period_us || !self.servable() {
             return None;
@@ -320,16 +328,11 @@ impl Updater {
 
     /// A request for chunks of a page, addressed to us.
     pub fn on_request_at(&mut self, t_us: i64, p: &[u8]) {
-        if p.len() < REQUEST_LEN {
-            return;
-        }
-        let version = u32::from_le_bytes([p[0], p[1], p[2], p[3]]);
-        let page = u16::from_le_bytes([p[4], p[5]]);
-        let mut mb = [0u8; 8];
-        mb.copy_from_slice(&p[6..14]);
-        let missing = u64::from_le_bytes(mb) & self.page_mask(page);
+        let Ok(r) = pb::FwRequestView::parse(p) else { return };
+        let Ok(page) = u16::try_from(r.page()) else { return };
+        let missing = r.missing() & self.page_mask(page);
         let Some(m) = self.manifest else { return };
-        if !self.servable() || version != m.version || page >= self.pages_done || missing == 0 {
+        if !self.servable() || r.version() != m.version || page >= self.pages_done || missing == 0 {
             return;
         }
         self.queue(t_us, page, missing);
@@ -337,13 +340,12 @@ impl Updater {
 
     /// A data chunk heard off the air (broadcast).
     pub fn on_data(&mut self, t_us: i64, p: &[u8], flash: &mut dyn Flash) {
-        if p.len() < DATA_HEAD {
-            return;
-        }
-        let version = u32::from_le_bytes([p[0], p[1], p[2], p[3]]);
-        let page = u16::from_le_bytes([p[4], p[5]]);
-        let chunk = p[6] as usize;
-        let data = &p[DATA_HEAD..];
+        let Ok(d) = pb::FwDataView::parse(p) else { return };
+        let (Ok(page), Ok(chunk)) = (u16::try_from(d.page()), u8::try_from(d.chunk())) else { return };
+        self.chunk(t_us, d.version(), page, chunk as usize, d.data(), flash);
+    }
+
+    fn chunk(&mut self, t_us: i64, version: u32, page: u16, chunk: usize, data: &[u8], flash: &mut dyn Flash) {
         let Some(m) = self.manifest else { return };
         if self.verified || version != m.version || page != self.pages_done || chunk >= CHUNKS_PER_PAGE {
             return;
@@ -395,18 +397,12 @@ impl Updater {
     /// host likes as long as pages go in sequence.
     pub fn host_chunk(&mut self, t_us: i64, page: u16, chunk: u8, data: &[u8], flash: &mut dyn Flash) {
         let Some(m) = self.manifest else { return };
-        let mut p = [0u8; DATA_MAX];
-        p[0..4].copy_from_slice(&m.version.to_le_bytes());
-        p[4..6].copy_from_slice(&page.to_le_bytes());
-        p[6] = chunk;
-        let n = data.len().min(CHUNK);
-        p[DATA_HEAD..DATA_HEAD + n].copy_from_slice(&data[..n]);
-        self.on_data(t_us, &p[..DATA_HEAD + n], flash);
+        self.chunk(t_us, m.version, page, chunk as usize, &data[..data.len().min(CHUNK)], flash);
     }
 
     /// Our next request, if we're behind a neighbour and nothing useful has
-    /// arrived for a while: (destination, payload).
-    pub fn next_request(&mut self, t_us: i64) -> Option<(u16, [u8; REQUEST_LEN])> {
+    /// arrived for a while: (destination, encoded FwRequest, its length).
+    pub fn next_request(&mut self, t_us: i64) -> Option<(u16, [u8; REQUEST_MAX], usize)> {
         let m = self.manifest?;
         if self.verified
             || t_us - self.last_data_us < self.request_quiet_us
@@ -425,16 +421,18 @@ impl Updater {
         self.last_request_us = t_us;
         self.stats.requests_sent += 1;
         let missing = self.page_mask(self.pages_done) & !self.page_have;
-        let mut p = [0u8; REQUEST_LEN];
-        p[0..4].copy_from_slice(&m.version.to_le_bytes());
-        p[4..6].copy_from_slice(&self.pages_done.to_le_bytes());
-        p[6..14].copy_from_slice(&missing.to_le_bytes());
-        Some((server.id, p))
+        let mut p = [0u8; REQUEST_MAX];
+        let n = wire::fw_request(m.version, self.pages_done as u32, missing, &mut p)?;
+        Some((server.id, p, n))
     }
 
-    /// Next chunk to broadcast while serving requests: encoded into `out`.
+    /// Next chunk to broadcast while serving requests: an encoded FwData into `out`
+    /// (DATA_MAX bytes is always enough).
     pub fn next_data(&mut self, out: &mut [u8], flash: &mut dyn Flash) -> Option<usize> {
         let m = self.manifest?;
+        if out.len() < DATA_MAX {
+            return None;
+        }
         // Lowest page first: everyone needs it before the next.
         let i = (0..SERVE_SLOTS).filter(|&i| self.serve[i].is_some()).min_by_key(|&i| self.serve[i].unwrap().page)?;
         let mut s = self.serve[i].unwrap();
@@ -442,19 +440,14 @@ impl Updater {
         s.missing &= !(1u64 << chunk);
         self.serve[i] = if s.missing == 0 { None } else { Some(s) };
         let len = self.chunk_len(s.page, chunk);
-        if out.len() < DATA_HEAD + len {
-            return None;
-        }
-        out[0..4].copy_from_slice(&m.version.to_le_bytes());
-        out[4..6].copy_from_slice(&s.page.to_le_bytes());
-        out[6] = chunk as u8;
+        let mut data = [0u8; CHUNK];
         let off = IMAGE_OFFSET + s.page as u32 * PAGE_SIZE as u32 + (chunk * CHUNK) as u32;
-        if !flash.read(off, &mut out[DATA_HEAD..DATA_HEAD + len]) {
+        if !flash.read(off, &mut data[..len]) {
             self.stats.flash_errors += 1;
             return None;
         }
         self.stats.chunks_served += 1;
-        Some(DATA_HEAD + len)
+        wire::fw_data(m.version, s.page as u32, chunk as u32, &data[..len], out)
     }
 
     /// Neighbours heard recently: (id, summary, last heard).
@@ -611,10 +604,10 @@ mod tests {
                         }
                     }
                 }
-                if let Some((dest, req)) = nodes[i].u.next_request(t) {
+                if let Some((dest, req, rn)) = nodes[i].u.next_request(t) {
                     if let Some(j) = nodes.iter().position(|x| x.u.me == dest) {
                         if links(i, j) && !lost() {
-                            nodes[j].u.on_request_at(t, &req);
+                            nodes[j].u.on_request_at(t, &req[..rn]);
                         }
                     }
                 }
@@ -815,10 +808,27 @@ mod tests {
         assert_eq!(installed.status(), Status::Serving);
     }
 
+    /// Sector 0 holds `varint(length) || Manifest` exactly as received; erased flash is no manifest.
+    #[test]
+    fn staging_sector_holds_the_length_prefixed_envelope() {
+        let pk = public_key(&SEED);
+        let mut f = RamFlash::new(8 * PAGE_SIZE);
+        let mut u = Updater::new(1, pk, 1);
+        u.boot(&mut f);
+        assert_eq!(u.status(), Status::Idle, "erased flash");
+        let m = signed(&image(100), 2);
+        assert!(u.offer(Manifest::decode(m.raw()).unwrap(), &mut f));
+        assert_eq!(f.mem[0] as usize, m.raw().len());
+        assert_eq!(&f.mem[1..1 + m.raw().len()], m.raw());
+        assert!(f.mem[1 + m.raw().len()..PAGE_SIZE].iter().all(|&b| b == 0xFF));
+    }
+
     #[test]
     fn summary_round_trips() {
-        let s = Summary { running: 3, staged: 4, pages: 5, total: 6 };
-        assert_eq!(Summary::decode(&s.encode()), Some(s));
+        let s = Summary { running: 3, staged: 4, pages: 5, total: 6, generation: 300 };
+        let mut b = [0u8; SUMMARY_MAX];
+        let n = s.encode(&mut b).unwrap();
+        assert_eq!(Summary::decode(&b[..n]), Some(s));
         assert_eq!(CHUNKS_PER_PAGE, 43);
     }
 }

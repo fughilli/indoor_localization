@@ -6,20 +6,31 @@
 //! of these can be tested on the host.
 
 use crate::crypto::{HMAC_KEY_LEN, P256_PUBLIC_KEY_LEN};
-use crate::manifest::{Manifest, ENCODED_LEN as MANIFEST_LEN};
-use crate::mesh::{Event, Mesh, MeshConfig, BROADCAST, MAX_PACKET, MAX_PAYLOAD};
-use crate::settings::{self, Changes, Layer, Settings, ENTRY_LEN};
-use crate::update::{self, Flash, Status, Summary, Updater, REQUEST_LEN};
+use crate::manifest::{Manifest, MAX_ENCODED as MANIFEST_MAX};
+use crate::mesh::{Event, Mesh, MeshConfig, MAX_PACKET, MAX_PAYLOAD};
+use crate::settings::{self, Changes, Layer, Settings};
+use crate::update::{self, Flash, Status, Summary, Updater, REQUEST_MAX, SUMMARY_MAX};
+use crate::wire::{self, pb};
 
-/// Mesh ports beyond the settings ones (settings.rs: 2, 3, 4).
+/// Mesh ports beyond the settings ones (settings.rs: 2, 3, 4); swarm_wire.proto `Port`.
 pub const PORT_SETTINGS_GET: u8 = 5;
 pub const PORT_SETTINGS_REPORT: u8 = 6;
-pub const PORT_FW_MANIFEST: u8 = 7;
 /// Ports from here up are the firmware's own (delivered as AppPacket).
 pub const PORT_APP: u8 = 16;
 
-/// Summary carried in every POLL: firmware progress + settings generation.
-pub const SUMMARY_LEN: usize = update::SUMMARY_LEN + 4;
+const _: () = {
+    assert!(crate::mesh::PORT_ACK as i32 == pb::Port::Ack as i32);
+    assert!(settings::PORT_BUNDLE_DATA as i32 == pb::Port::BundleData as i32);
+    assert!(settings::PORT_BUNDLE_REQUEST as i32 == pb::Port::BundleRequest as i32);
+    assert!(settings::PORT_OVERRIDE as i32 == pb::Port::Override as i32);
+    assert!(PORT_SETTINGS_GET as i32 == pb::Port::SettingsGet as i32);
+    assert!(PORT_SETTINGS_REPORT as i32 == pb::Port::SettingsReport as i32);
+    assert!(PORT_APP as i32 == pb::Port::App as i32);
+};
+
+/// The Summary carried in every POLL (firmware progress + settings generation) is at most
+/// this long: it is variable-length now.
+pub const SUMMARY_LEN_MAX: usize = SUMMARY_MAX;
 
 /// What kind of link frame `next_tx` produced.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -30,12 +41,17 @@ pub enum FrameKind {
     FwRequest { dest: u16 },
     /// A firmware data chunk; link-layer broadcast.
     FwData,
+    /// Our signed manifest (the Manifest envelope, verbatim); link-layer broadcast, never
+    /// relayed.
+    FwManifest,
 }
 
-/// Report packet: part u8, parts u8, generation u32, override_seq u32,
-/// then entries (key | source << 14, value).
-const REPORT_HEAD: usize = 10;
-const REPORT_ENTRIES: usize = (MAX_PAYLOAD - REPORT_HEAD) / ENTRY_LEN;
+/// SettingsReport head: part 2 + parts 2 + generation 6 + override_seq 6; each entry is a
+/// 12-byte Setting with `source` set, so 6 entries make 88.
+const REPORT_HEAD: usize = 16;
+const REPORT_ENTRY: usize = 12;
+const REPORT_ENTRIES: usize = (MAX_PAYLOAD - REPORT_HEAD) / REPORT_ENTRY;
+const _: () = assert!(REPORT_ENTRIES == 6);
 pub const SOURCE_SWARM: u16 = 1;
 pub const SOURCE_OVERRIDE: u16 = 2;
 
@@ -103,25 +119,25 @@ impl Net {
         a
     }
 
-    pub fn summary(&self) -> [u8; SUMMARY_LEN] {
-        let mut b = [0u8; SUMMARY_LEN];
-        b[..update::SUMMARY_LEN].copy_from_slice(&self.updater.summary().encode());
-        b[update::SUMMARY_LEN..].copy_from_slice(&self.settings.generation().to_le_bytes());
-        b
+    /// This node's Summary: firmware progress + settings generation.
+    pub fn own_summary(&self) -> Summary {
+        Summary { generation: self.settings.generation(), ..self.updater.summary() }
+    }
+
+    /// The encoded Summary for a POLL: its bytes and length (at most SUMMARY_LEN_MAX).
+    pub fn summary(&self) -> ([u8; SUMMARY_MAX], usize) {
+        let mut b = [0u8; SUMMARY_MAX];
+        let n = self.own_summary().encode(&mut b).unwrap();
+        (b, n)
     }
 
     // ---- from the radio
 
     /// A neighbour's POLL summary.
     pub fn on_summary(&mut self, t_us: i64, from: u16, b: &[u8]) {
-        if b.len() < SUMMARY_LEN {
-            return;
-        }
-        if let Some(s) = Summary::decode(b) {
-            self.updater.on_summary(t_us, from, s);
-        }
-        let generation = u32::from_le_bytes([b[12], b[13], b[14], b[15]]);
-        if let Some(o) = self.settings.neighbour(t_us, from, generation) {
+        let Some(s) = Summary::decode(b) else { return };
+        self.updater.on_summary(t_us, from, s);
+        if let Some(o) = self.settings.neighbour(t_us, from, s.generation) {
             self.mesh.send_with_hops(o.dest, o.port, &o.payload[..o.len], false, o.hop_limit);
         }
     }
@@ -135,6 +151,16 @@ impl Net {
         self.updater.on_request_at(t_us, payload);
     }
 
+    /// A neighbour's manifest frame (link broadcast): adopted if signed, newer and it
+    /// fits. Not relayed: a node that adopts it offers it on its own, once it runs and has
+    /// validated the image (canary rule).
+    pub fn on_fw_manifest(&mut self, payload: &[u8], flash: &mut dyn Flash) {
+        let Some(m) = Manifest::decode(payload) else { return };
+        let was = self.updater.status();
+        self.updater.offer(m, flash);
+        self.note_fw(was);
+    }
+
     pub fn on_fw_data(&mut self, t_us: i64, payload: &[u8], flash: &mut dyn Flash) {
         let was = self.updater.status();
         self.updater.on_data(t_us, payload, flash);
@@ -146,13 +172,10 @@ impl Net {
         self.mesh.on_my_slot();
     }
 
-    /// Housekeeping: retries, manifest offers, settings serving, reports.
+    /// Housekeeping: retries, settings serving, reports.
     pub fn poll(&mut self, t_us: i64, flash: &mut dyn Flash) {
         self.mesh.poll(t_us);
         self.drain_mesh(t_us, flash);
-        if let Some(m) = self.updater.manifest_offer(t_us) {
-            self.mesh.send_with_hops(BROADCAST, PORT_FW_MANIFEST, &m.encode(), false, 0);
-        }
         while self.mesh.can_send() {
             let Some(o) = self.settings.next_outgoing() else { break };
             self.mesh.send_with_hops(o.dest, o.port, &o.payload[..o.len], false, o.hop_limit);
@@ -161,16 +184,23 @@ impl Net {
     }
 
     /// Next frame for this node's slot: mesh first (control traffic is
-    /// small and time-critical), then our firmware request, then data
-    /// we're serving.
+    /// small and time-critical), then a manifest offer, our firmware request,
+    /// then data we're serving. `out` should be MAX_FRAME_PAYLOAD bytes.
     pub fn next_tx(&mut self, t_us: i64, out: &mut [u8], flash: &mut dyn Flash) -> Option<(FrameKind, usize)> {
         if let Some(n) = self.mesh.next_tx(t_us, out) {
             return Some((FrameKind::Mesh, n));
         }
-        if let Some((dest, req)) = self.updater.next_request(t_us) {
-            if out.len() >= REQUEST_LEN {
-                out[..REQUEST_LEN].copy_from_slice(&req);
-                return Some((FrameKind::FwRequest { dest }, REQUEST_LEN));
+        if out.len() >= MANIFEST_MAX {
+            if let Some(m) = self.updater.manifest_offer(t_us) {
+                let raw = m.raw();
+                out[..raw.len()].copy_from_slice(raw);
+                return Some((FrameKind::FwManifest, raw.len()));
+            }
+        }
+        if out.len() >= REQUEST_MAX {
+            if let Some((dest, req, n)) = self.updater.next_request(t_us) {
+                out[..n].copy_from_slice(&req[..n]);
+                return Some((FrameKind::FwRequest { dest }, n));
             }
         }
         self.updater.next_data(out, flash).map(|n| (FrameKind::FwData, n))
@@ -189,7 +219,8 @@ impl Net {
         self.merge(c);
     }
 
-    /// A signed manifest from the host: adopt it. It isn't offered to the
+    /// A signed manifest (the serialized Manifest envelope, up to 114 bytes) from the
+    /// host: adopt it. It isn't offered to the
     /// swarm until this node runs it and validates it (canary rule, see
     /// Updater::servable).
     pub fn host_manifest(&mut self, b: &[u8], flash: &mut dyn Flash) -> bool {
@@ -219,7 +250,7 @@ impl Net {
 
     // ----
 
-    fn drain_mesh(&mut self, t_us: i64, flash: &mut dyn Flash) {
+    fn drain_mesh(&mut self, _t_us: i64, _flash: &mut dyn Flash) {
         while let Some(e) = self.mesh.next_event() {
             let Event::Deliver { packet, rssi, hops } = e else { continue };
             let h = packet.header;
@@ -230,17 +261,6 @@ impl Net {
                     self.merge(c);
                 }
                 PORT_SETTINGS_GET if h.dest == self.me() => self.report = Some((h.origin, 0)),
-                PORT_FW_MANIFEST if p.len() >= MANIFEST_LEN => {
-                    if let Some(m) = Manifest::decode(p) {
-                        let was = self.updater.status();
-                        if self.updater.offer(m, flash) {
-                            // Pass it on (the mesh relay already floods
-                            // global offers; this covers local ones).
-                            let _ = t_us;
-                        }
-                        self.note_fw(was);
-                    }
-                }
                 port if port >= PORT_APP || port == PORT_SETTINGS_REPORT => {
                     let mut a = AppPacket {
                         origin: h.origin,
@@ -261,7 +281,8 @@ impl Net {
         }
     }
 
-    /// Queue report parts while the mesh outbox has room.
+    /// Queue report parts while the mesh outbox has room: SettingsReport messages, six
+    /// settings (with `source`) at most per part.
     fn pump_report(&mut self) {
         while let Some((to, part)) = self.report {
             if !self.mesh.can_send() {
@@ -269,19 +290,18 @@ impl Net {
             }
             let entries = report_entries(&self.settings.swarm, &self.settings.overrides);
             let total = entries.1.max(1).div_ceil(REPORT_ENTRIES) as u8;
-            let mut p = [0u8; MAX_PAYLOAD];
-            p[0] = part;
-            p[1] = total;
-            p[2..6].copy_from_slice(&self.settings.generation().to_le_bytes());
-            p[6..10].copy_from_slice(&self.settings.override_seq.to_le_bytes());
             let start = part as usize * REPORT_ENTRIES;
             let end = (start + REPORT_ENTRIES).min(entries.1);
-            for (i, (k, v)) in entries.0[start..end].iter().enumerate() {
-                let at = REPORT_HEAD + i * ENTRY_LEN;
-                p[at..at + 2].copy_from_slice(&k.to_le_bytes());
-                p[at + 2..at + 6].copy_from_slice(&v.to_le_bytes());
+            let mut recs = [wire::SettingRec { key: 0, value: 0, source: 0 }; REPORT_ENTRIES];
+            for (i, &(key, source, value)) in entries.0[start..end].iter().enumerate() {
+                recs[i] = wire::SettingRec { key, value, source: source as u8 };
             }
-            self.mesh.send(to, PORT_SETTINGS_REPORT, &p[..REPORT_HEAD + (end - start) * ENTRY_LEN], false);
+            let mut p = [0u8; MAX_PAYLOAD];
+            let g = self.settings.generation();
+            let seq = self.settings.override_seq;
+            if let Some(n) = wire::settings_report(part as u32, total as u32, g, seq, &recs[..end - start], &mut p) {
+                self.mesh.send(to, PORT_SETTINGS_REPORT, &p[..n], false);
+            }
             self.report = if part + 1 < total { Some((to, part + 1)) } else { None };
         }
     }
@@ -298,24 +318,36 @@ impl Net {
     }
 }
 
-/// (key | source << 14, value) for both layers; overrides shadow nothing
-/// here (the host sees both).
-fn report_entries(swarm: &Layer, overrides: &Layer) -> ([(u16, u32); 2 * settings::MAX_KEYS], usize) {
-    let mut out = [(0u16, 0u32); 2 * settings::MAX_KEYS];
+/// (key, source, value) for both layers; overrides shadow nothing here (the host sees both).
+fn report_entries(swarm: &Layer, overrides: &Layer) -> ([(u16, u16, u32); 2 * settings::MAX_KEYS], usize) {
+    let mut out = [(0u16, 0u16, 0u32); 2 * settings::MAX_KEYS];
     let mut n = 0;
     for e in swarm.slice() {
-        out[n] = (e.key | SOURCE_SWARM << 14, e.value);
+        out[n] = (e.key, SOURCE_SWARM, e.value);
         n += 1;
     }
     for e in overrides.slice() {
-        out[n] = (e.key | SOURCE_OVERRIDE << 14, e.value);
+        out[n] = (e.key, SOURCE_OVERRIDE, e.value);
         n += 1;
     }
     (out, n)
 }
 
-/// Copy of a frame buffer size the radio needs.
-pub const MAX_FRAME_PAYLOAD: usize = if MAX_PACKET > update::DATA_MAX { MAX_PACKET } else { update::DATA_MAX };
+/// The largest link payload `next_tx` can produce (the manifest, 114 bytes).
+pub const MAX_FRAME_PAYLOAD: usize = {
+    let mut m = MAX_PACKET;
+    if update::DATA_MAX > m {
+        m = update::DATA_MAX;
+    }
+    if MANIFEST_MAX > m {
+        m = MANIFEST_MAX;
+    }
+    if REQUEST_MAX > m {
+        m = REQUEST_MAX;
+    }
+    m
+};
+const _: () = assert!(MAX_FRAME_PAYLOAD == 114);
 
 #[cfg(test)]
 mod tests {
@@ -368,10 +400,10 @@ mod tests {
             for i in 0..nodes.len() {
                 t += 5_000;
                 let me = nodes[i].net.me();
-                let s = nodes[i].net.summary();
+                let (s, sn) = nodes[i].net.summary();
                 for j in 0..nodes.len() {
                     if j != i {
-                        nodes[j].net.on_summary(t, me, &s);
+                        nodes[j].net.on_summary(t, me, &s[..sn]);
                     }
                 }
                 {
@@ -391,6 +423,7 @@ mod tests {
                         match kind {
                             FrameKind::Mesh => net.on_mesh(t, &buf[..n], -70.0, flash),
                             FrameKind::FwData => net.on_fw_data(t, &buf[..n], flash),
+                            FrameKind::FwManifest => net.on_fw_manifest(&buf[..n], flash),
                             FrameKind::FwRequest { dest } if dest == net.me() => net.on_fw_request(t, &buf[..n]),
                             FrameKind::FwRequest { .. } => {}
                         }
@@ -435,7 +468,10 @@ mod tests {
         run(&mut nodes, 20);
         let r = nodes[0].net.next_app().expect("report");
         assert_eq!((r.origin, r.port), (13, PORT_SETTINGS_REPORT));
-        assert_eq!(r.len, REPORT_HEAD + 2 * ENTRY_LEN, "one swarm + one override entry");
+        let v = pb::SettingsReportView::parse(&r.payload[..r.len]).unwrap();
+        assert_eq!((v.part(), v.parts(), v.generation(), v.override_seq()), (0, 1, 3, 1));
+        let got: Vec<(u32, u32, u32)> = v.settings().map(|s| (s.key(), s.value(), s.source())).collect();
+        assert_eq!(got, vec![(106, 7.0f32.to_bits(), 1), (300, 0.2f32.to_bits(), 2)], "one swarm + one override entry");
     }
 
     #[test]
@@ -446,7 +482,7 @@ mod tests {
         m.sign(&FW_SECRET);
         {
             let Node { net, flash } = &mut nodes[0];
-            assert!(net.host_manifest(&m.encode(), flash));
+            assert!(net.host_manifest(m.raw(), flash));
             for (page, p) in img.chunks(PAGE_SIZE).enumerate() {
                 for (c, d) in p.chunks(update::CHUNK).enumerate() {
                     net.host_chunk(0, page as u16, c as u8, d, flash);
