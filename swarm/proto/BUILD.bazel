@@ -54,7 +54,7 @@ cc_test(
 # swarm.v1: every node-to-node / node-to-host structure (swarm_wire.proto). C++ reads the link
 # layer in place with pbview, Python with protoc, Rust (swarm_net) with micropb; see
 # docs/swarm-wire.md.
-exports_files(["swarm_wire.proto"])
+exports_files(["swarm_wire.proto", "testdata/swarm_wire_golden.txt"])
 
 proto_fdset(
     name = "swarm_wire_fdset",
