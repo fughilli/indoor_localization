@@ -323,6 +323,19 @@ void HandleCommand(const char *line)
     radio::SetSyncLog(on != 0, (uint16_t)mask, (uint8_t)every);
     Ack("sync_log", true);
   }
+  else if (IsCmd(line, "cir"))
+  {
+    // {"cmd":"cir","on":1,"pre":8,"n":48,"every":4}: with sync_log on, also read the CIR
+    // window (n taps from `pre` before the first path) of every `every`th logged frame.
+    // Each capture is ~700 bytes of serial: keep `every` >= 4 at 460800 baud.
+    float on = 1, pre = 8, n = radio::kCirWindow, every = 4;
+    netcmd::Number(line, "on", &on);
+    netcmd::Number(line, "pre", &pre);
+    netcmd::Number(line, "n", &n);
+    netcmd::Number(line, "every", &every);
+    radio::SetCirCapture(on != 0, (uint8_t)pre, (uint8_t)n, (uint8_t)every);
+    Ack("cir", true);
+  }
   else if (IsCmd(line, "reboot_loader"))
   {
     store::WriteU32(store::kStayInLoader, 1);
@@ -453,6 +466,21 @@ void FusionTask(void *)
       }
     }
 
+    static radio::CirEvent ce;
+    if (radio::PollCir(&ce))
+    {
+      static char hex[2 * 6 * radio::kCirWindow + 1];
+      for (int i = 0; i < 6 * ce.n; i++)
+        snprintf(hex + 2 * i, 3, "%02x", ce.data[i]);
+      static char cir_line[2 * 6 * radio::kCirWindow + 192];
+      int ln = snprintf(cir_line, sizeof(cir_line),
+                        "{\"t\":%.4f,\"type\":\"cir\",\"from\":%u,\"to\":%u,\"ft\":%u,\"seq\":%u,"
+                        "\"ts\":%llu,\"fp\":%u,\"first\":%u,\"n\":%u,\"hex\":\"%s\"}\n",
+                        Secs(ce.t_us), ce.peer, ce.dst, ce.ftype, ce.seq, (unsigned long long)ce.ts, ce.fp_idx,
+                        ce.first, ce.n, hex);
+      if (ln > 0 && ln < (int)sizeof(cir_line))
+        Emit(cir_line, ln);
+    }
     while (xQueueReceive(g_radio_events, &ev, 0) == pdTRUE)
     {
       if (ev.kind == RadioEvent::kAdvert)

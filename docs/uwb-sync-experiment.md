@@ -72,14 +72,31 @@ result does not kill the broadcast idea; it only rules out absolute TDoA. Pick t
 window W that matches how often the nodes can re-estimate each other's offset and
 drift: a few seconds from the existing DS-TWR exchanges.
 
+## CIR capture (multipath)
+
+`{"cmd":"cir","on":1,"pre":8,"n":48,"every":4}` (with `sync_log` on) also reads the Ipatov
+CIR of every 4th logged frame: `n` taps starting `pre` taps before the chip's first-path
+index, printed as `{"type":"cir","from","to","ft","seq","ts","fp","first","n","hex"}` (`t`,
+`from`, `ft`, `seq`, `ts` as in the `rx` record, so they join with it). `hex` is 6 bytes a
+tap, 24-bit little-endian signed I then Q. Each record is ~700 bytes, 15 ms of the
+460800-baud link: keep `every` >= 4. The read happens right after the frame and before the
+reply, ~0.5 ms of SPI against the 3 ms reply timeout.
+
+`python3 swarm/tools/cir_peaks.py capture.jsonl` decodes them and compares where the
+magnitude first rises with the chip's first-path index.
+
+**First thing to do with hardware** (two nodes, a metre apart, line of sight): capture a
+minute and run `cir_peaks`. The check passes if the threshold crossing and the chip's first
+path (`fp >> 6`) agree to about a tap, and the peak sits within a few taps after them.
+Two assumptions in `libs/dw3000` are unverified until then, and this tells which is wrong:
+the unit of the accumulator offset register (taps, assumed) and the 6 fractional bits of
+the first-path index. A constant offset between crossing and `fp` means the latter; garbage
+or a window that does not move with `pre` means the former.
+
 ## Not built yet
 
-- **CIR capture** (the multipath itself). The driver has no accumulator readout. It
-  needs the ACC_MEM clock enables, an addressing mode that reaches offsets beyond the
-  7-bit sub-address, a dummy leading byte, the 18-bit complex tap packing and the CIA
-  first-path index; I have not verified any of that against the DW3000 user manual and
-  did not write register-level code from memory. The DWM3000 / DW3110 is single-antenna
-  without PDoA; PDoA waits for the QM33120 boards.
 - A broadcast frame with a scheduled (delayed) transmit time. The experiment above
   does not need one: it joins transmit and receive timestamps on the host.
+- PDoA: the DWM3000 / DW3110 is single-antenna without PDoA; it waits for the QM33120 boards.
 - Per-node yaw self-calibration (`landmarks.calibrate_yaw`) is simulation-only.
+- Solving for landmarks from the captured CIRs: `cir_peaks` only checks the capture.

@@ -123,6 +123,27 @@ void SetAdvert(const uint8_t *data, int len);
 // n), every `every`th of them. The host joins them across nodes to see how well the
 // nodes' clocks agree. Costs a few SPI reads per logged frame.
 void SetSyncLog(bool on, uint16_t mask, uint8_t every);
+// CIR capture (an experiment, on top of the sync log's frame selection): for every
+// `every`th frame heard whose type is in the sync-log mask, read `n` (<= kCirWindow)
+// taps of the Ipatov channel impulse response starting `pre` taps before the first path.
+// Read right after the frame, before the node replies: costs ~0.5 ms of SPI per capture,
+// which the reply timeout (kReplyTimeoutUs) absorbs. Needs SetSyncLog(true, ...) too.
+constexpr int kCirWindow = 48;
+struct CirEvent
+{
+  int64_t t_us;    // radio clock when logged, as RadioEvent::t_us
+  uint16_t peer;   // sender
+  uint16_t dst;
+  uint8_t ftype;
+  uint8_t seq;
+  uint64_t ts;     // RX timestamp, as in the sync log
+  uint16_t fp_idx; // raw first-path index (tap = fp_idx >> 6)
+  uint16_t first;  // tap number of data[0..5]
+  uint8_t n;       // taps in data
+  uint8_t data[6 * kCirWindow];   // per tap: 24-bit LE signed I, 24-bit LE signed Q
+};
+void SetCirCapture(bool on, uint8_t pre, uint8_t n, uint8_t every);
+bool PollCir(CirEvent *out);
 // Antenna delay change (settings), applied by the radio task.
 void SetAntennaDelay(int delay);
 // Run `call` on the radio task; returns its result (bool as 0/1, or a

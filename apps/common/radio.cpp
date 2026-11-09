@@ -56,6 +56,11 @@ volatile bool g_sync_log = false;
 volatile uint16_t g_sync_mask = 1 << kPoll;
 volatile uint8_t g_sync_every = 1;
 uint32_t g_sync_count = 0;
+// CIR capture (SetCirCapture).
+volatile bool g_cir_on = false;
+volatile uint8_t g_cir_pre = 8, g_cir_n = 48, g_cir_every = 1;
+uint32_t g_cir_count = 0;
+QueueHandle_t g_cir_events;
 
 // swarm_net glue: calls from other tasks, packets for the app.
 NetHooks g_hooks;
@@ -270,6 +275,30 @@ void LogHeard(const Header *h, uint64_t ts)
   ev.rssi = DWM3000.getSignalStrength();
   ev.fp_rssi = DWM3000.getFirstPathSignalStrength();
   xQueueSend(g_events, &ev, 0);
+  if (g_cir_on && g_cir_events && !(g_cir_count++ % g_cir_every))
+  {
+    static CirEvent ce;   // radio task only
+    ce.t_us = ev.t_us;
+    ce.peer = h->src;
+    ce.dst = h->dst;
+    ce.ftype = h->type;
+    ce.seq = h->seq;
+    ce.ts = ts;
+    ce.fp_idx = DWM3000.readFirstPathIndex();
+    int tap = ce.fp_idx >> 6;
+    int n = g_cir_n > kCirWindow ? kCirWindow : g_cir_n;
+    int first = tap - g_cir_pre;
+    if (first < 0)
+      first = 0;
+    if (first + n > DWM3000Class::kCirTaps)
+      first = DWM3000Class::kCirTaps - n;
+    if (DWM3000.readCir(first, n, ce.data))
+    {
+      ce.first = first;
+      ce.n = n;
+      xQueueSend(g_cir_events, &ce, 0);
+    }
+  }
 }
 
 // A frame this node sent to `dst`, stamped `ts` by the transmitter.
@@ -767,6 +796,7 @@ void Start(uint16_t id, QueueHandle_t events, const NetHooks &hooks)
 {
   g_id = id;
   g_events = events;
+  g_cir_events = xQueueCreate(3, sizeof(CirEvent));
   g_hooks = hooks;
   g_running = true;
   xTaskCreatePinnedToCore(Task, "radio", 12288, nullptr, 20, nullptr, 0);
@@ -778,6 +808,16 @@ void SetSyncLog(bool on, uint16_t mask, uint8_t every)
   g_sync_every = every ? every : 1;
   g_sync_log = on;
 }
+
+void SetCirCapture(bool on, uint8_t pre, uint8_t n, uint8_t every)
+{
+  g_cir_pre = pre;
+  g_cir_n = n ? n : kCirWindow;
+  g_cir_every = every ? every : 1;
+  g_cir_on = on;
+}
+
+bool PollCir(CirEvent *out) { return g_cir_events && xQueueReceive(g_cir_events, out, 0) == pdTRUE; }
 
 void SetAntennaDelay(int delay) { g_new_antenna_delay = delay; }
 

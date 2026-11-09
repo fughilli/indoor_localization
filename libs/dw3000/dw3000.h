@@ -192,6 +192,16 @@ public:
   static void readBytes(int base, int sub, uint8_t *out, int len);
   // Length (incl. 2-byte FCS) of the last received frame.
   static int rxFrameLength();
+  // Ipatov channel impulse response of the last received frame: `n` complex taps
+  // from tap `first` (0 .. kCirTaps-1), 6 bytes each into `out`: 24-bit little-endian
+  // signed I, then Q (18 significant bits). Read before the next RX is enabled; the
+  // accumulator is overwritten by the next preamble. Register sequence follows the
+  // public Qorvo dwt_readcir (clock enables, indirect pointer A); not yet run on
+  // hardware.
+  static constexpr int kCirTaps = 1016;   // 64 MHz PRF; 992 at 16 MHz
+  static bool readCir(int first, int n, uint8_t *out);
+  // First-path index (raw IP_DIAG_8 low 16 bits; 6 fractional bits, so tap = raw >> 6).
+  static uint16_t readFirstPathIndex();
   // SPI clock for all transfers; 0 (default) keeps the Arduino default
   // without per-transfer transactions. The DW3000 needs <= 7 MHz until its
   // PLL locks (init()); it accepts much more afterwards.

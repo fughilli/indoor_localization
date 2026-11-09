@@ -235,3 +235,23 @@ py_test(
     srcs = ["sync_residual_test.py"],
     deps = [":sync_residual_lib"],
 )
+
+# Look at the CIR windows a node logs (docs/uwb-sync-experiment.md).
+py_library(
+    name = "cir_peaks_lib",
+    srcs = ["cir_peaks.py"],
+    deps = ["@pypi//numpy"],
+)
+
+py_binary(
+    name = "cir_peaks",
+    srcs = ["cir_peaks.py"],
+    main = "cir_peaks.py",
+    deps = [":cir_peaks_lib"],
+)
+
+py_test(
+    name = "cir_peaks_test",
+    srcs = ["cir_peaks_test.py"],
+    deps = [":cir_peaks_lib"],
+)
