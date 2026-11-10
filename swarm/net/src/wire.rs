@@ -42,9 +42,9 @@ fn setting(s: &mut pb::SettingEnc<'_, '_>, r: &SettingRec) -> Result<(), EncodeE
 // proto3 defaults skipped). Each returns the encoded length, None if `out` is too small or a
 // bound of swarm_wire_bounds.txt is exceeded.
 
-pub fn summary(running: u32, staged: u32, pages: u32, total: u32, generation: u32, out: &mut [u8]) -> Option<usize> {
+pub fn summary(running: u32, staged: u32, pages: u32, total: u32, generation: u32, missing: u64, out: &mut [u8]) -> Option<usize> {
     len(pb::SummaryEnc::encode(out, |m| {
-        m.running(running)?.staged(staged)?.pages(pages)?.total(total)?.generation(generation)?;
+        m.running(running)?.staged(staged)?.pages(pages)?.total(total)?.generation(generation)?.missing(missing)?;
         Ok(())
     }))
 }

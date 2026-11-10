@@ -32,14 +32,14 @@ fn constants() {
 
 #[test]
 fn summary_in_a_poll() {
-    let s = Summary { running: u32::MAX, staged: u32::MAX, pages: u16::MAX, total: u16::MAX, generation: u32::MAX };
+    let s = Summary { running: u32::MAX, staged: u32::MAX, pages: u16::MAX, total: u16::MAX, generation: u32::MAX, missing: u64::MAX };
     let mut b = [0u8; 64];
     let n = s.encode(&mut b).unwrap();
-    assert_eq!(n, 26);
+    assert_eq!(n, 35);
     assert_eq!(n, SUMMARY_LEN_MAX);
-    // POLL: ver 2 + type 2 + src 4 + seq 3 + slot 2 = 13, advert 2 + 64, summary 2 + 26.
-    assert_eq!(13 + (2 + 64) + (2 + n), 107);
-    assert!(107 <= FRAME);
+    // POLL: ver 2 + type 2 + src 4 + seq 3 + slot 2 = 13, advert 2 + 64, summary 2 + 35.
+    assert_eq!(13 + (2 + 64) + (2 + n), 116);
+    assert!(116 <= FRAME);
 }
 
 #[test]
@@ -162,7 +162,7 @@ fn ack_and_tag_messages() {
 // frame budget fails the build, not a test.
 const _: () = assert!(pb::MeshPacketEnc::MAX_ENCODED_LEN <= 115, "MeshPacket in a mesh link frame (10 + 115)");
 const _: () = assert!(pb::ManifestEnc::MAX_ENCODED_LEN <= 115, "Manifest in its link frame (10 + 115)");
-const _: () = assert!(pb::SummaryEnc::MAX_ENCODED_LEN <= 26, "Summary in a POLL");
+const _: () = assert!(pb::SummaryEnc::MAX_ENCODED_LEN <= 35, "Summary in a POLL");
 const _: () = assert!(pb::FwDataEnc::MAX_ENCODED_LEN <= 115, "FwData in a broadcast link frame");
 const _: () = assert!(pb::FwRequestEnc::MAX_ENCODED_LEN <= 111, "FwRequest in a unicast link frame");
 const _: () = assert!(pb::SettingsReportEnc::MAX_ENCODED_LEN <= 88, "SettingsReport in a mesh payload");

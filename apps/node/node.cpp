@@ -55,7 +55,9 @@ constexpr int kStatsEvery = 200;           // 1 Hz
 constexpr int64_t kHealthyAfterUs = 10000000;
 constexpr uint32_t kHealthyFusionTicks = 1500;  // 7.5 s at 200 Hz
 // A new image that isn't healthy by then is reset by the RTC watchdog, and
-// the reset rolls it back.
+// the reset rolls it back. Counted in ticks of the RTC slow clock at its nominal rate; the real
+// RC oscillator runs ~10% fast, so 30 fires after ~27 s (measured 2026-11-09). A healthy image
+// is valid at 10-15.5 s, so that leaves ~11 s of margin.
 constexpr uint32_t kHealthDeadlineS = 30;
 constexpr int kBootPin = 0;  // BOOT button: held at reset -> loader
 

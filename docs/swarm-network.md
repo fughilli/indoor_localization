@@ -189,7 +189,8 @@ loader (boots when otadata doesn't select a valid main):
      pages; no fusion), report "loader" in its summaries, and when a newer
      verified image completes, mark it "install" and go to 1.
 main:
-  - pending verify (a fresh install): arm the RTC watchdog for 30 s. It is
+  - pending verify (a fresh install): arm the RTC watchdog for 30 nominal seconds (the RTC RC clock
+    runs ~10% fast: ~27 s real; a healthy image is valid at 10-15.5 s). It is
     independent of both cores, so a hang anywhere becomes a reset, and a
     reset of a pending image rolls back to the loader.
   - healthy (up 10 s, the radio task exchanging, the fusion task ticking) ->
@@ -265,13 +266,22 @@ never sees the image. It costs one boot (~10 s) per hop.
 
 Tested on hardware (2026-10-20, board 7408):
 - A hang image (`//apps/node:node_hang_esp32`) wedged at boot. The RTC
-  watchdog reset it 30 s later, and the loader came up in recovery with main
-  marked aborted.
+  watchdog reset it 30 s later (2026-11-09: ~27 s, see the health deadline above), and the
+  loader came up in recovery with main marked aborted.
 - A crash image (`node_crash_esp32`) aborted, and the loader was in
   recovery 1.5 s later.
 - Both times the other three nodes stayed on their image (0 chunks served),
   and a good image pushed into the waiting loader installed and spread
   normally.
+
+### What a recovery loader advertises
+
+The loader's POLL summary carries `running` = the highest version it has installed
+(`store::kInstalled`), even when that image was rolled back, so a neighbour lists a
+rolled-back node as "running 32". That value is deliberate: it is also the monotonic floor
+that stops the loader installing the aborted image again (its staged manifest would otherwise
+read as a newer, verified image). Nothing is served from a loader (the canary rule), so it is
+only misleading in the `nodes` list. Read `app` (loader/main) before the version.
 
 ### Spare slots
 

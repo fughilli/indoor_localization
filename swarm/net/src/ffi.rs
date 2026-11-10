@@ -13,7 +13,7 @@ use crate::update::{Flash, Status};
 
 /// Longest encoded Summary (swarm.v1 `Summary`, variable length): what a POLL carries.
 /// `swarm_net_summary` never writes more.
-pub const SWARM_NET_SUMMARY_MAX: usize = 26;
+pub const SWARM_NET_SUMMARY_MAX: usize = 35;
 const _: () = assert!(SWARM_NET_SUMMARY_MAX == SUMMARY_LEN_MAX);
 /// Largest link payload swarm_net_next_tx writes: the manifest frame, 114 bytes (a mesh
 /// packet is at most 112, a firmware data chunk 110, a request 19).
@@ -435,6 +435,11 @@ pub struct SwarmNetStatus {
     pub settings_applied: u32,
     pub settings_rejected_tag: u32,
     pub settings_rejected_replay: u32,
+    pub fw_data_rx: u32,
+    pub fw_chunks_duplicate: u32,
+    pub fw_chunks_ignored: u32,
+    pub fw_req_quiet: u32,
+    pub fw_req_no_server: u32,
 }
 
 #[no_mangle]
@@ -472,6 +477,11 @@ pub unsafe extern "C" fn swarm_net_status(out: *mut SwarmNetStatus) {
             settings_applied: st.bundles_applied + st.overrides_applied,
             settings_rejected_tag: st.rejected_tag,
             settings_rejected_replay: st.rejected_replay,
+            fw_data_rx: u.data_rx,
+            fw_chunks_duplicate: u.chunks_duplicate,
+            fw_chunks_ignored: u.chunks_ignored,
+            fw_req_quiet: u.req_quiet,
+            fw_req_no_server: u.req_no_server,
         }
     })
     .unwrap_or_default();

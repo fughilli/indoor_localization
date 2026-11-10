@@ -213,7 +213,9 @@ void EmitStatus(uint16_t id, const char *app)
         "\"rejected\":%lu},\"settings\":{\"generation\":%lu,\"override_seq\":%lu,\"key\":%s,\"applied\":%lu,"
         "\"rejected_tag\":%lu,\"rejected_replay\":%lu},\"mesh\":{\"sent\":%lu,\"delivered\":%lu,"
         "\"relayed\":%lu,\"relays_cancelled\":%lu,\"duplicates\":%lu,\"retries\":%lu,\"failed\":%lu,"
-        "\"frames_tx\":%lu,\"frames_rx\":%lu,\"spare_slots\":%lu},\"peers\":%u,\"nodes\":[%s]}\n",
+        "\"frames_tx\":%lu,\"frames_rx\":%lu,\"spare_slots\":%lu},\"diag\":{\"data_rx\":%lu,\"dup\":%lu,\"ignored\":%lu,"
+        "\"req_quiet\":%lu,\"req_no_server\":%lu,\"slot_calls\":%lu,\"slot_late\":%lu,\"slot_empty\":%lu,"
+        "\"slot_left_us\":%lu},\"peers\":%u,\"nodes\":[%s]}\n",
         esp_timer_get_time() / 1e6, id, app, (unsigned long)s.fw_running, (unsigned long)s.fw_staged,
         s.fw_pages, s.fw_total, kFw[s.fw_status < 4 ? s.fw_status : 0], (unsigned long)s.fw_chunks_written,
         (unsigned long)s.fw_chunks_served, (unsigned long)s.fw_requests_sent, (unsigned long)s.fw_rejected,
@@ -223,7 +225,11 @@ void EmitStatus(uint16_t id, const char *app)
         (unsigned long)s.mesh_delivered, (unsigned long)s.mesh_relayed,
         (unsigned long)s.mesh_relays_cancelled, (unsigned long)s.mesh_duplicates,
         (unsigned long)s.mesh_retries, (unsigned long)s.mesh_failed, (unsigned long)r.net_tx,
-        (unsigned long)r.net_rx, (unsigned long)r.spare_slots, r.peers, nodes);
+        (unsigned long)r.net_rx, (unsigned long)r.spare_slots, (unsigned long)s.fw_data_rx,
+        (unsigned long)s.fw_chunks_duplicate, (unsigned long)s.fw_chunks_ignored,
+        (unsigned long)s.fw_req_quiet, (unsigned long)s.fw_req_no_server,
+        (unsigned long)r.own_slot_net_calls, (unsigned long)r.own_slot_net_late,
+        (unsigned long)r.own_slot_net_empty, (unsigned long)r.own_slot_left_us, r.peers, nodes);
 }
 
 bool Handle(const char *line)

@@ -52,6 +52,9 @@ bazel build //apps/loader:loader_esp32 //apps/node:node_esp32 //apps/common:part
 (`--bootloader`, rollback enabled) from the Arduino core: use the one you flashed the current
 boards with.
 
+Run `swarm_ctl.py` with `PYTHONPATH=bazel-bin/swarm/proto` after
+`bazel build //swarm/proto:swarm_wire_py_proto` (it has no Bazel binary target yet).
+
 ## 3. Flash and provision (every board, over USB)
 
 ```
@@ -78,7 +81,8 @@ Watch the `stats` records (`timeouts`, `rx_errors`, `foreign`, `polls_tx`, `rang
 3. **Settings.** `swarm_ctl.py settings --port P`, `set --port P range_sigma=0.08`,
    `set --port P --node <other id> antenna_delay=16380` (a tagged override over the mesh),
    `set --swarm ...` (bundle fragments across the mesh).
-4. **Firmware over the air.** `swarm_ctl.py push --port P node_esp32.bin` to one board, watch
+4. **Firmware over the air** (checked on two boards, 12 slots: 156 pages in 63 s, about 107
+   chunks/s; the `net` record's `diag` object has the counters). `swarm_ctl.py push --port P node_esp32.bin` to one board, watch
    `swarm_ctl.py status`: manifest frame (`FRAME_TYPE_FW_MANIFEST`), page requests and data,
    verification, install through the loader, `installed` record, new version running. Check a
    second board picks it up from the first.
@@ -86,6 +90,23 @@ Watch the `stats` records (`timeouts`, `rx_errors`, `foreign`, `polls_tx`, `rang
    mesh and still serves/receives images.
 6. **Canary/rollback** (optional): the `node_hang_esp32` / `node_crash_esp32` images must roll
    back and not spread.
+
+Hardware run 2026-11-09 (two ACEBOTT ESP32-Max V1.1 + DWM3000EVB boards, 1.1 m apart, 12 slots):
+
+- Checks 1-4 and 6 pass; check 5 passes except the hold-BOOT-at-reset path (not run).
+- OTA: 156 pages in 63 s (about 107 chunks/s), no duplicates, receiver transmits nothing (the
+  receiver's POLL summary carries the missing-chunk bitmap; its own slot has no time left after
+  the ranging exchange). About 60% of the server's chunks are lost on air, cause not yet found.
+- `reboot_loader` -> loader up in 1.7 s and ranging; `{"cmd":"boot_main"}` returns to main.
+- Canary: the hang image was reset by the RTC watchdog about 27 s after main started (30
+  nominal seconds; the RTC RC clock runs ~10% fast), the crash image reached the loader 1.6 s
+  after the abort. Neither spread; good images pushed afterwards installed and spread.
+- A recovery loader advertises the highest installed version as `running` (see
+  docs/swarm-network.md); read `app` before it.
+- Antenna-delay check and bias calibration (14 cm long at 1.095 m): not done, needs a clear
+  environment.
+- A board that boots with `radio:false` and devid `0x00000000`: reseat the DWM3000EVB shield.
+
 
 If something fails, capture the serial output of both ends plus `swarm_ctl.py status`; the codec
 and the Rust state machine are host-tested, so the likely suspects are timing and the C++/FFI

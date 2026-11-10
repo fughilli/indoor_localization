@@ -32,7 +32,7 @@ pub const REQUEST_MAX: usize = 19;
 /// pages below 16384.)
 pub const DATA_MAX: usize = 6 + 4 + 2 + 2 + CHUNK;
 /// Longest encoded Summary: running 6 + staged 6 + pages 4 + total 4 + generation 6.
-pub const SUMMARY_MAX: usize = 26;
+pub const SUMMARY_MAX: usize = 35;
 
 /// The staging partition, as the firmware exposes it.
 pub trait Flash {
@@ -53,11 +53,13 @@ pub struct Summary {
     pub total: u16,
     /// Swarm settings generation (net.rs fills it; the Updater leaves 0).
     pub generation: u32,
+    /// Chunks of page `pages` still needed (bit i = chunk i); 0: none or unknown.
+    pub missing: u64,
 }
 
 impl Summary {
     pub fn encode(&self, out: &mut [u8]) -> Option<usize> {
-        wire::summary(self.running, self.staged, self.pages as u32, self.total as u32, self.generation, out)
+        wire::summary(self.running, self.staged, self.pages as u32, self.total as u32, self.generation, self.missing, out)
     }
 
     pub fn decode(b: &[u8]) -> Option<Summary> {
@@ -68,6 +70,7 @@ impl Summary {
             pages: u16::try_from(m.pages()).ok()?,
             total: u16::try_from(m.total()).ok()?,
             generation: m.generation(),
+            missing: m.missing(),
         })
     }
 
@@ -99,6 +102,12 @@ pub struct UpdateStats {
     pub chunks_served: u32,
     pub verify_failed: u32,
     pub flash_errors: u32,
+    // Diagnostics (OTA throughput): data frames heard, ones for another page/version, and why
+    // next_request had nothing to send.
+    pub data_rx: u32,
+    pub chunks_ignored: u32,
+    pub req_quiet: u32,
+    pub req_no_server: u32,
 }
 
 #[derive(Clone, Copy)]
@@ -204,6 +213,7 @@ impl Updater {
             pages: self.pages_done,
             total: self.total_pages(),
             generation: 0,
+            missing: if self.manifest.is_some() && !self.verified { self.page_mask(self.pages_done) & !self.page_have } else { 0 },
         }
     }
 
@@ -289,11 +299,16 @@ impl Updater {
             }
             if self.servable() && s.staged == m.version && s.pages < self.pages_done && s.running < m.version {
                 let page = s.pages;
+                let reported = s.missing & self.page_mask(page);
                 let recent = self
                     .last_queued_us
                     .iter()
                     .any(|&(p, at)| p == page && t_us - at < self.push_after_us);
-                if !recent {
+                if reported != 0 {
+                    // The neighbour says exactly which chunks of its page it lacks.
+                    self.queue(t_us, page, reported);
+                } else if !recent {
+                    // An older node (or one with nothing reported): push the whole page blind.
                     let missing = self.page_mask(page);
                     self.queue(t_us, page, missing);
                 }
@@ -341,6 +356,7 @@ impl Updater {
     /// A data chunk heard off the air (broadcast).
     pub fn on_data(&mut self, t_us: i64, p: &[u8], flash: &mut dyn Flash) {
         let Ok(d) = pb::FwDataView::parse(p) else { return };
+        self.stats.data_rx += 1;
         let (Ok(page), Ok(chunk)) = (u16::try_from(d.page()), u8::try_from(d.chunk())) else { return };
         self.chunk(t_us, d.version(), page, chunk as usize, d.data(), flash);
     }
@@ -348,6 +364,7 @@ impl Updater {
     fn chunk(&mut self, t_us: i64, version: u32, page: u16, chunk: usize, data: &[u8], flash: &mut dyn Flash) {
         let Some(m) = self.manifest else { return };
         if self.verified || version != m.version || page != self.pages_done || chunk >= CHUNKS_PER_PAGE {
+            self.stats.chunks_ignored += 1;
             return;
         }
         if data.len() != self.chunk_len(page, chunk) {
@@ -404,10 +421,11 @@ impl Updater {
     /// arrived for a while: (destination, encoded FwRequest, its length).
     pub fn next_request(&mut self, t_us: i64) -> Option<(u16, [u8; REQUEST_MAX], usize)> {
         let m = self.manifest?;
-        if self.verified
-            || t_us - self.last_data_us < self.request_quiet_us
-            || t_us - self.last_request_us < self.request_quiet_us
-        {
+        if self.verified {
+            return None;
+        }
+        if t_us - self.last_data_us < self.request_quiet_us || t_us - self.last_request_us < self.request_quiet_us {
+            self.stats.req_quiet += 1;
             return None;
         }
         // The most advanced live neighbour with our version that has the
@@ -417,7 +435,11 @@ impl Updater {
             .iter()
             .flatten()
             .filter(|n| t_us - n.last_us < 2_000_000 && n.summary.staged == m.version && n.summary.pages > self.pages_done)
-            .max_by_key(|n| n.summary.pages)?;
+            .max_by_key(|n| n.summary.pages);
+        let Some(server) = server else {
+            self.stats.req_no_server += 1;
+            return None;
+        };
         self.last_request_us = t_us;
         self.stats.requests_sent += 1;
         let missing = self.page_mask(self.pages_done) & !self.page_have;
@@ -671,6 +693,50 @@ mod tests {
         assert!(sf < 400, "took {} superframes", sf);
     }
 
+    /// The receiver never transmits (its slot has no time after the ranging exchange): the
+    /// missing-chunk bitmap in its POLL summary alone must complete the image over a lossy link.
+    #[test]
+    fn summary_missing_alone_completes_the_image_without_requests() {
+        let img = image(6 * PAGE_SIZE + 77);
+        let m = signed(&img, 3);
+        let mut nodes = swarm(2, 1);
+        inject(&mut nodes[0], &img, m);
+        let mut rng = 0x9E37_79B9_7F4A_7C15u64;
+        let mut lost = move || {
+            rng ^= rng << 13;
+            rng ^= rng >> 7;
+            rng ^= rng << 17;
+            ((rng >> 11) as f64 / (1u64 << 53) as f64) < 0.45
+        };
+        let mut t = 0i64;
+        let mut sfs = 0;
+        while nodes[1].u.status() != Status::Ready && sfs < 2000 {
+            sfs += 1;
+            t += 60_000;
+            // Manifest offer, then the receiver's POLL summary (its bitmap) to the server.
+            if let Some(mo) = nodes[0].u.manifest_offer(t) {
+                let Node { u, flash } = &mut nodes[1];
+                u.offer(mo, flash);
+            }
+            let s = nodes[1].u.summary();
+            nodes[0].u.on_summary(t, 2, s);
+            // The server's spare slots: ~10 chunk frames per superframe, 45% lost.
+            for _ in 0..10 {
+                let mut out = [0u8; DATA_MAX];
+                let Node { u, flash } = &mut nodes[0];
+                let Some(len) = u.next_data(&mut out, flash) else { break };
+                if !lost() {
+                    let Node { u, flash } = &mut nodes[1];
+                    u.on_data(t, &out[..len], flash);
+                }
+            }
+        }
+        assert_eq!(nodes[1].u.status(), Status::Ready, "stuck at {:?} after {} superframes", nodes[1].u.summary(), sfs);
+        assert_eq!(&nodes[1].flash.mem[PAGE_SIZE..PAGE_SIZE + img.len()], &img[..]);
+        assert_eq!(nodes[1].u.stats.requests_sent, 0);
+        assert!(sfs < 200, "took {} superframes", sfs);
+    }
+
     /// A line: the image spreads hop by hop, each node serving the next.
     #[test]
     fn image_crosses_hops() {
@@ -825,7 +891,7 @@ mod tests {
 
     #[test]
     fn summary_round_trips() {
-        let s = Summary { running: 3, staged: 4, pages: 5, total: 6, generation: 300 };
+        let s = Summary { running: 3, staged: 4, pages: 5, total: 6, generation: 300, missing: 0x1234_5678_9ABC };
         let mut b = [0u8; SUMMARY_MAX];
         let n = s.encode(&mut b).unwrap();
         assert_eq!(Summary::decode(&b[..n]), Some(s));

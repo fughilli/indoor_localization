@@ -98,13 +98,13 @@ void ZeroValuesStayDistinguishable() {
 
 void WorstCaseFramesFit() {
   uint8_t buf[wire::kMaxFrame];
-  Bytes advert(wire::kMaxAdvert, 0x5a), summary(26, 0x11);
+  Bytes advert(wire::kMaxAdvert, 0x5a), summary(35, 0x11);
   wire::Body poll;
   poll.slot = 127;
   poll.advert = B(advert);
   poll.summary = B(summary);
   int n = wire::Build(buf, wire::FrameType::kPoll, 65534, 65534, 255, poll);
-  CHECK(n > 0 && n <= 111);  // docs/swarm-wire.md: POLL 111 (addressed to a peer: dst present)
+  CHECK(n > 0 && n <= 120);  // docs/swarm-wire.md: POLL 120 (addressed to a peer: dst present)
 
   wire::Body resp;
   resp.advert = B(advert);

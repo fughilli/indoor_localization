@@ -518,8 +518,17 @@ bool OwnsSpareSlot(int slot, int my)
 }
 
 // In our own slot, after the exchange: network frames until `deadline`.
-void NetTx(int64_t deadline)
+void NetTx(int64_t deadline, bool own_slot = false)
 {
+  if (own_slot)
+  {
+    int64_t left = deadline - Now();
+    g_stats.own_slot_net_calls++;
+    if (left <= 0)
+      g_stats.own_slot_net_late++;
+    else
+      g_stats.own_slot_left_us += (uint32_t)left;
+  }
   uint8_t payload[SWARM_NET_MAX_FRAME], tx[kMaxFrame];
   while (Now() < deadline)
   {
@@ -527,7 +536,11 @@ void NetTx(int64_t deadline)
     uint16_t dest;
     size_t n = swarm_net_next_tx(Now(), payload, sizeof(payload), &kind, &dest);
     if (!n)
+    {
+      if (own_slot)
+        g_stats.own_slot_net_empty++;
       break;
+    }
     FrameType type = kind == SWARM_NET_KIND_MESH           ? FrameType::kMesh
                      : kind == SWARM_NET_KIND_FW_REQUEST   ? FrameType::kFwRequest
                      : kind == SWARM_NET_KIND_FW_MANIFEST  ? FrameType::kFwManifest
@@ -706,7 +719,7 @@ void Task(void *)
       last_sf = sf;
       swarm_net_on_my_slot();
       Initiate(NextPeer());
-      NetTx(slot_end - kNetGuardUs);
+      NetTx(slot_end - kNetGuardUs, true);
       continue;
     }
     // A spare slot we own: network frames only, the whole slot. The
