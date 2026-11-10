@@ -52,6 +52,9 @@ bazel build //apps/loader:loader_esp32 //apps/node:node_esp32 //apps/common:part
 (`--bootloader`, rollback enabled) from the Arduino core: use the one you flashed the current
 boards with.
 
+Run `swarm_ctl.py` with `PYTHONPATH=bazel-bin/swarm/proto` after
+`bazel build //swarm/proto:swarm_wire_py_proto` (it has no Bazel binary target yet).
+
 ## 3. Flash and provision (every board, over USB)
 
 ```
@@ -78,7 +81,8 @@ Watch the `stats` records (`timeouts`, `rx_errors`, `foreign`, `polls_tx`, `rang
 3. **Settings.** `swarm_ctl.py settings --port P`, `set --port P range_sigma=0.08`,
    `set --port P --node <other id> antenna_delay=16380` (a tagged override over the mesh),
    `set --swarm ...` (bundle fragments across the mesh).
-4. **Firmware over the air.** `swarm_ctl.py push --port P node_esp32.bin` to one board, watch
+4. **Firmware over the air** (checked on two boards, 12 slots: 156 pages in 63 s, about 107
+   chunks/s; the `net` record's `diag` object has the counters). `swarm_ctl.py push --port P node_esp32.bin` to one board, watch
    `swarm_ctl.py status`: manifest frame (`FRAME_TYPE_FW_MANIFEST`), page requests and data,
    verification, install through the loader, `installed` record, new version running. Check a
    second board picks it up from the first.

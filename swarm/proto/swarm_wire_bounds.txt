@@ -6,7 +6,7 @@
 # LinkFrame (C++ only)
 swarm.v1.LinkFrame.payload max_len 115
 swarm.v1.LinkFrame.advert max_len 64
-swarm.v1.LinkFrame.summary max_len 26
+swarm.v1.LinkFrame.summary max_len 35
 
 # Firmware distribution
 swarm.v1.ManifestBody.sha256 max_len 32

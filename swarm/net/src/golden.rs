@@ -30,7 +30,7 @@ const SM2: SettingRec = SettingRec { key: 300, value: 0x3E4C_CCCD, source: 0 };
 fn summary() {
     let g = golden("summary");
     let s = crate::update::Summary::decode(&g).unwrap();
-    assert_eq!(s, crate::update::Summary { running: 7, staged: 8, pages: 5, total: 12, generation: 300 });
+    assert_eq!(s, crate::update::Summary { running: 7, staged: 8, pages: 5, total: 12, generation: 300, missing: 0 });
     let mut b = [0u8; 32];
     let n = s.encode(&mut b).unwrap();
     assert_eq!(&b[..n], &g[..]);

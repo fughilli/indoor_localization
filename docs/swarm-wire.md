@@ -33,7 +33,7 @@ The DW3000 standard PHR allows 127 bytes, 2 of them FCS: a frame is at most **12
 
 | Frame | Link header (worst case) | Body | Total |
 |---|---|---|---|
-| POLL (to a peer; a beacon has no dst) | ver 2, type 2, src 4, dst 4, seq 3, slot 2 = 17 | advert 2 + 64, summary 2 + 26 | 111 |
+| POLL (to a peer; a beacon has no dst) | ver 2, type 2, src 4, dst 4, seq 3, slot 2 = 17 | advert 2 + 64, summary 2 + 35 | 120 |
 | RESPONSE | 2 + 2 + 4 + 4 + 3 = 15 | advert 2 + 64 | 81 |
 | REPORT | 15 | two fixed32: 10 | 25 |
 | RESULT | 15 | sint32: 4 | 19 |

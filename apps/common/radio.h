@@ -63,6 +63,11 @@ struct RadioStats
   uint32_t net_tx;         // network frames sent in our slots
   uint32_t net_rx;         // network frames received
   uint32_t spare_slots;    // spare TDMA slots used for network frames
+  // Diagnostics: our own ranging slot's network window.
+  uint32_t own_slot_net_calls;  // times NetTx ran after our exchange
+  uint32_t own_slot_net_late;   // ... with no time left before the deadline
+  uint32_t own_slot_net_empty;  // ... with time left but nothing to send
+  uint32_t own_slot_left_us;    // total time left at those calls (average = this / calls)
   uint16_t sync_master;    // whose superframe timing we follow (0: none)
   uint8_t slot;
   uint8_t peers;

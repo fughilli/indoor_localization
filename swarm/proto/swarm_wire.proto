@@ -70,13 +70,18 @@ message LinkFrame {
 // ---------------------------------------------------------------------------------------
 
 // What a node advertises in every POLL: firmware progress and settings generation.
-// Worst case 6 + 6 + 4 + 4 + 6 = 26 bytes.
+// Worst case 6 + 6 + 4 + 4 + 6 + 9 = 35 bytes.
 message Summary {
   uint32 running = 1;      // firmware version running here (0: flashed by hand)
   uint32 staged = 2;       // version of the staged image (0: none)
   uint32 pages = 3;        // pages staged so far
   uint32 total = 4;        // pages in the staged image
   uint32 generation = 5;   // swarm settings generation
+  // While receiving: the chunks of page `pages` still needed (bit i = chunk i). It rides every
+  // POLL, so a server learns exactly what to resend without the receiver transmitting a
+  // request (the receiver's own slot has no time left after the ranging exchange). 0 (absent):
+  // nothing missing, or an older node; the server then falls back to pushing the whole page.
+  fixed64 missing = 6;
 }
 
 // The signed part of a manifest. Serialized once by the signer; the signature covers
