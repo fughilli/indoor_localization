@@ -91,6 +91,23 @@ Watch the `stats` records (`timeouts`, `rx_errors`, `foreign`, `polls_tx`, `rang
 6. **Canary/rollback** (optional): the `node_hang_esp32` / `node_crash_esp32` images must roll
    back and not spread.
 
+Hardware run 2026-11-09 (two ACEBOTT ESP32-Max V1.1 + DWM3000EVB boards, 1.1 m apart, 12 slots):
+
+- Checks 1-4 and 6 pass; check 5 passes except the hold-BOOT-at-reset path (not run).
+- OTA: 156 pages in 63 s (about 107 chunks/s), no duplicates, receiver transmits nothing (the
+  receiver's POLL summary carries the missing-chunk bitmap; its own slot has no time left after
+  the ranging exchange). About 60% of the server's chunks are lost on air, cause not yet found.
+- `reboot_loader` -> loader up in 1.7 s and ranging; `{"cmd":"boot_main"}` returns to main.
+- Canary: the hang image was reset by the RTC watchdog about 27 s after main started (30
+  nominal seconds; the RTC RC clock runs ~10% fast), the crash image reached the loader 1.6 s
+  after the abort. Neither spread; good images pushed afterwards installed and spread.
+- A recovery loader advertises the highest installed version as `running` (see
+  docs/swarm-network.md); read `app` before it.
+- Antenna-delay check and bias calibration (14 cm long at 1.095 m): not done, needs a clear
+  environment.
+- A board that boots with `radio:false` and devid `0x00000000`: reseat the DWM3000EVB shield.
+
+
 If something fails, capture the serial output of both ends plus `swarm_ctl.py status`; the codec
 and the Rust state machine are host-tested, so the likely suspects are timing and the C++/FFI
 glue.
