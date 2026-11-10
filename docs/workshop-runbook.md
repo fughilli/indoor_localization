@@ -1,24 +1,21 @@
 # Workshop runbook: first hardware bring-up
 
-State of the code when this was written (2026-11-09). **No firmware in this repo has been
-compiled or run since the CIR/sync-log work and the protobuf migration**: the host test suites
-pass, `radio.cpp` and `netcmd.cpp` were syntax-checked against stub headers, and that is all.
-Expect compile errors on the first firmware build; they should be small.
+State of the code when this was written (2026-11-09). The loader and node firmware **compile and
+link for xtensa** (master, `--copt=-DSWARM_SLOTS=12`), but **nothing has run on hardware since the
+CIR/sync-log work and the protobuf migration**; the host test suites pass.
 
 | Thing | Verified | Not verified |
 |---|---|---|
 | Simulator, solver, host tools, swarm_net (Rust), link codec | host tests pass | |
-| `radio.cpp`, `netcmd.cpp`, `libs/dw3000` CIR read, `node.cpp` commands | type-checked against stubbed ESP headers | xtensa compile, link, run |
-| Loader (`apps/loader`) | not even stub-checked | everything |
+| `radio.cpp`, `netcmd.cpp`, `libs/dw3000` CIR read, `node.cpp` commands | xtensa compile and link | run |
+| Loader (`apps/loader`) | xtensa compile and link | run |
 | DS-TWR with the larger protobuf frames | | timing on air |
 | CIR register sequence | read from Qorvo's public driver | offset unit and first-path format (checks below) |
 
-## 0. Get a toolchain that builds (this Mac's `/nix` is nearly full)
+## 0. Toolchain
 
-`bazel build //apps/node:node_esp32` pulls the Xtensa toolchain through nix. When this was tried
-the `/nix` volume had 2.9 GB free and the build died with `No space left on device`; the esp
-toolchain, Arduino core and Rust need roughly 10 GB. Free space first (`nix-collect-garbage`
-removes unreferenced store paths; I did not run it).
+`bazel build //apps/node:node_esp32` pulls the Xtensa toolchain through nix; it needs roughly
+10 GB free on `/nix`. A first build takes about 3 minutes with the toolchain downloaded.
 
 The `third_party/embedded` submodule (fughilli/embedded) has `fakeHash` placeholders for
 aarch64-darwin. Two are filled in (uncommitted) in this checkout's submodule from what nix
