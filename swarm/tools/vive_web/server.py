@@ -154,6 +154,19 @@ class Hub:
         self.last_hid = 0.0
         self.buttons = {}  # dev -> {"held": set of ids, "presses": n}
 
+    def remove_lighthouse(self, lh_id):
+        with self.lock:
+            gone = self.lighthouses.pop(lh_id, None)
+        if gone is not None:
+            self.broadcast({"type": "lighthouse_removed", "id": lh_id})
+
+    def clear_lighthouses(self):
+        """A new lhd solves the stations afresh: the old ones (and their world) are gone."""
+        with self.lock:
+            ids = list(self.lighthouses)
+        for lh_id in ids:
+            self.remove_lighthouse(lh_id)
+
     def subscribe(self):
         q = queue.Queue(maxsize=600)
         with self.lock:
@@ -286,6 +299,10 @@ class Hub:
                 self.broadcast({"type": "lighthouse", **rec})
             self.add_log("calibrated (%s): %s" % (e.get("reason"), ", ".join(
                 "%s rms %.0f urad" % (s["id"], s["rms"] * 1e6) for s in e.get("stations", []))))
+        elif kind == "station_dropped":
+            # lhd dropped the station (no tracker saw it for a while): not in the world any more.
+            self.remove_lighthouse(str(e["id"]))
+            self.add_log("station %s dropped (%s)" % (e["id"], e.get("why")))
         elif kind == "buttons":
             mask = int(e.get("buttons", 0))
             self.set_buttons(e["serial"], {i for i in range(32) if mask >> i & 1})
@@ -522,6 +539,7 @@ class Lhd:
                                          start_new_session=True)
             self.started = time.time()
             self.hub.status["survive"] = "running"
+            self.hub.clear_lighthouses()
             self.hub.add_log("--- started lhd %s" % " ".join(self.args))
             threading.Thread(target=self.read, args=(self.proc,), daemon=True).start()
 

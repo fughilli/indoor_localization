@@ -27,6 +27,24 @@ def lhd_hub():
 
 
 class LhdAdapter(unittest.TestCase):
+    def test_a_dropped_station_leaves_the_world(self):
+        hub = lhd_hub()
+        q = hub.subscribe()
+        self.assertEqual([lh["id"] for lh in q.get_nowait()["lighthouses"]], ["12"])
+        hub.lhd_event({"type": "station_dropped", "id": 12, "why": "NotSeen"})
+        self.assertEqual(hub.lighthouses, {})
+        msgs = [q.get_nowait() for _ in range(q.qsize())]
+        self.assertIn({"type": "lighthouse_removed", "id": "12"}, msgs)
+        self.assertEqual([lh["id"] for lh in hub.subscribe().get_nowait()["lighthouses"]], [])
+
+    def test_a_new_lhd_starts_without_the_old_stations(self):
+        hub = lhd_hub()
+        q = hub.subscribe()
+        q.get_nowait()
+        hub.clear_lighthouses()
+        self.assertEqual(hub.lighthouses, {})
+        self.assertIn({"type": "lighthouse_removed", "id": "12"}, [q.get_nowait() for _ in range(q.qsize())])
+
     def test_optical_fields_are_unavailable_not_zero(self):
         hub = lhd_hub()
         for i in range(60):
