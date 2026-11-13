@@ -95,6 +95,11 @@ class SseSource(PoseSource):
                             msg = json.loads(line[5:])
                         except ValueError:
                             continue
+                        if msg.get("type") == "lighthouse_removed":
+                            # lhd dropped it (or restarted and solves afresh): the P4 stops
+                            # getting it and forgets it too.
+                            self.lighthouses.pop(str(msg["id"]), None)
+                            continue
                         if msg.get("type") in ("snapshot", "lighthouse"):
                             # lhd's base stations (world <- station), for --p4: the P4
                             # adopts them so its world is this one. A snapshot is the whole

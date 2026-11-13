@@ -110,12 +110,16 @@ use_repo(swarm_crate, "swarm_crates")
 # Lighthouse (Vive Tracker) tracking: kernel, protocol, device (no_std), lhd and
 # the tools, from fughilli/lighthouse (moved out of this repo so Splanc's ESP32-P4
 # player can pin it too). lhd: bazel build -c opt @lighthouse//daemon:lhd
+# @85c6457 = fughilli/lighthouse#5 on main: the lone-station lock (#1, without which a
+# single base station never tracks), reacquisition (#2), lhd --help (#3), one station as a
+# full fix (#4); stations expire when unseen, tilted ones are levelled from their gravity,
+# and lhd solves the stations afresh at every start (#5).
 bazel_dep(name = "lighthouse", version = "0.0.0")
 archive_override(
     module_name = "lighthouse",
-    integrity = "sha256-8KeGlT7pzwdNLef7lhSrY6z3Dh94V+n5u6gwwPRVEKw=",
-    strip_prefix = "lighthouse-4919232c4e350efcfe4dd6e49a83929cdf046c4f",
-    urls = ["https://github.com/fughilli/lighthouse/archive/4919232c4e350efcfe4dd6e49a83929cdf046c4f.tar.gz"],
+    integrity = "sha256-smOYbV9AOfAIYd4B7bLiQ3TCean5spRUkemJK7/egOk=",
+    strip_prefix = "lighthouse-85c6457bc169df33b5474fc4811ef550ab896c02",
+    urls = ["https://github.com/fughilli/lighthouse/archive/85c6457bc169df33b5474fc4811ef550ab896c02.tar.gz"],
 )
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")

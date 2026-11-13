@@ -264,6 +264,14 @@ function makeLighthouse(id) {
   return l;
 }
 
+function removeLighthouse(id) {
+  const l = lighthouses.get(id);
+  if (!l) return;
+  scene.remove(l.root);
+  scene.remove(l.ray);
+  lighthouses.delete(id);
+}
+
 function setFrustum(l, len) {
   const h = Math.tan(THREE.MathUtils.degToRad(60)) * len;
   const c = [[-h, -h], [h, -h], [h, h], [-h, h]].map(([x, y]) => new THREE.Vector3(x, y, -len));
@@ -413,6 +421,7 @@ function connect() {
     const m = JSON.parse(ev.data);
     if (m.type === "batch") onBatch(m);
     else if (m.type === "lighthouse") onLighthouse(m);
+    else if (m.type === "lighthouse_removed") removeLighthouse(String(m.id));
     else if (m.type === "config") onConfig(m.dev, m);
     else if (m.type === "snapshot") {
       for (const l of m.lighthouses) onLighthouse(l);
