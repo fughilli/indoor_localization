@@ -522,7 +522,7 @@ State at end of session (nothing committed yet; all on disk):
   mm, slider straightness 0.55 mm, still noise 0.02-0.05 mm.
 - **Patches** for libsurvive (still used by the non-lhd viewer):
   `third_party/libsurvive/{ootx-null-check,disambiguator-robust,rawhid-tap}.patch`.
-- **Splanc demo**: `lighthouse/demos/splanc/` (see its README); synthetic tests
+- **Splanc demo**: moved to fughilli/splanc `tools/vive/demos` (2026-11-23); synthetic tests
   pass; needs Splanc MCP (list_players, export_map, deploy_effect) + physical
   calibration.
 - **Open**: world anchoring command; calibration uncertainty into pose
